@@ -133,6 +133,7 @@ let levels = [
 
 scene("game", (levelIdx = 0) => {
   setGravity(3000);
+  camScale(0.5, 0.5);
   console.log("level", levelIdx);
   let isLastLevel = levelIdx === levels.length - 1;
   let level = addLevel(levels[levelIdx], {
