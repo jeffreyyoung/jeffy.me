@@ -8,6 +8,7 @@
     <a href="/" style="position: absolute; top: 0; right: 0; z-index: 99999; background-color: rgba(255, 255, 255);">Quit</a>
     <script type="module">
       import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+      import { addNotificationText } from './utils/addNotificationText.js';
       // initialize context
       kaboom({
         background: [51, 204, 255],
@@ -176,18 +177,7 @@
           score++;
           // addKaboom(food.pos);
           spawnFood();
-          let notification = add([
-            text("+1", {
-              size: 24,
-            }),
-            color(Color.PINK),
-            pos(bean.pos),
-            anchor("center"),
-            move(0, -50),
-          ])
-          wait(0.5, () => {
-            notification.destroy();
-          })
+          addNotificationText('+1', bean.pos)
           // drawText({
           //   text: 'yay!!!',
           //   pos: bean.pos
