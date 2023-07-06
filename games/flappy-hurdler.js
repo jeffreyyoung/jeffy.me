@@ -7,7 +7,6 @@ kaboom({
 
 let score = 0;
 
-
 loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
 
 scene("start", () => {
@@ -118,8 +117,6 @@ scene("game", () => {
     if (bean.isGrounded()) {
         bean.jump(1000);
     }
-    // addKaboom(mousePos())
-    // bean.move(direction, 1200);
   });
   onKeyPress(() => {
     if (bean.isGrounded()) {
