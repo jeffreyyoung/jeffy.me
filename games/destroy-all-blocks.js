@@ -65,7 +65,7 @@ let levels = [
     "L**=***=***=***=***=*****R",
     "L**=***=*** ***=***=*****R",
     "L**=***=*** ***=***=*****R",
-    "L**=***=***=***=*********R",
+    "L**=*******=***=*********R",
     "L  = B     =   =         R",
     "==========================",
   ],
@@ -121,8 +121,8 @@ scene("game", (levelIdx = 0) => {
   bean.onUpdate(() => {
     if (!bean.isGrounded()) {
       bean.move(200 * direction, 0);
+      camPos(bean.pos);
     }
-    camPos(bean.pos);
   });
 
   onCollide("bean", "watermelon", (bean, watermelon) => {
@@ -162,7 +162,13 @@ scene("game", (levelIdx = 0) => {
     }
     bean.jump(1000);
   });
-  onKeyPress(() => {
+  onKeyPress((key) => {
+    if (key === "left") {
+        direction = -1;
+    }
+    if (key === "right") {
+        direction = 1;
+    }
     bean.jump(1000);
   });
 });
