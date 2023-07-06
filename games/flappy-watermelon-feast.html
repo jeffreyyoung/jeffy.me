@@ -31,13 +31,15 @@
           anchor("center"),
         ]);
 
-        onClick(() => {
+        function handlePress() {
           clicks--;
           titleText.text = getText();
           if (clicks === 0) {
             go("game");
           }
-        });
+        }
+        onClick(handlePress);
+        onKeyPress(handlePress);
       });
 
       scene("game", () => {
@@ -120,7 +122,7 @@
           bean.jump(1000);
           // bean.move(direction, 1200);
         });
-        onKeyPress("space", () => {
+        onKeyPress(() => {
           bean.jump(1000);
         });
 
