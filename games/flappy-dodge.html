@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flappy watermelon feast</title>
+  </head>
+  <body>
+    <script type="module">
+      import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+
+      // initialize context
+      kaboom({
+        background: [51, 204, 255],
+      });
+
+      let score = 0;
+      
+      loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
+      loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
+      scene("start", () => {
+        let clicks = 5;
+
+        let getText = () =>
+          `score: ${score}\nTap ${clicks} times to start again`;
+
+        let titleText = add([
+          text(getText(), { size: 14 }),
+          pos(center()),
+          anchor("center"),
+        ]);
+
+        onClick(() => {
+          clicks--;
+          titleText.text = getText();
+          if (clicks === 0) {
+            go("game");
+          }
+        });
+      });
+
+      scene("game", () => {
+        score = 0;
+
+        const scoreText = () => `score: ${score}`;
+
+        setGravity(3000);
+
+        // load assets
+
+        // add a character to screen
+        let bean = add([
+          // list of components
+          sprite("bean"),
+          pos(12, 40),
+          area(),
+          offscreen({ destroy: false }),
+          body(),
+          "bean",
+        ]);
+
+        let platform = add([
+          rect(width(), 48),
+          pos(0, height() - 48),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(0, 200, 0),
+        ]);
+
+        bean.onExitScreen(() => {
+          bean.moveTo(12, 40);
+        });
+
+        let scoreComponent = add([
+          text(scoreText(), {
+            size: 14,
+          }),
+          pos(center()),
+          anchor("center"),
+        ]);
+
+        function addWatermelon(size = 1) {
+          // add tree
+          let melon = add([
+            sprite("watermelon"),
+            scale(size),
+            area(),
+            outline(4),
+            pos(width(), rand(48, height() - 48)),
+            anchor("botleft"),
+            offscreen({ destroy: true }),
+            // color(255, 180, 255),
+            move(LEFT, 240),
+            "watermelon", // add a tag here
+          ]);
+
+          melon.onExitScreen(() => {
+            score++;
+            scoreComponent.text = scoreText();
+            console.log('score!!!!');
+            // destroy(melon);
+          });
+
+          wait(rand(0.25, 1), () => {
+            addWatermelon(rand(0.25, 1));
+          });
+        }
+
+        addWatermelon();
+
+        onCollide("watermelon", "bean", (args) => {
+          shake();
+          go("start");
+        });
+
+        // add a kaboom on mouse click
+        onClick(() => {
+          // addKaboom(mousePos())
+          bean.jump(1000);
+          // bean.move(direction, 1200);
+        });
+        onKeyPress("space", () => {
+          bean.jump(1000);
+        });
+      });
+
+      go("game");
+    </script>
+  </body>
+</html>
