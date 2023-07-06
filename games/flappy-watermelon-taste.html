@@ -52,19 +52,7 @@
         // loadSprite("bean", "sprites/bean.png");
 
         // add a character to screen
-        let bean = add([
-          // list of components
-          sprite("bean"),
-          pos(80, 40),
-          area(),
-          offscreen({ destroy: false }),
-          body(),
-          "bean",
-        ]);
 
-        bean.onExitScreen(() => {
-          bean.moveTo(center());
-        });
         let platformWidth = 10;
         // add platform
         add([
@@ -111,6 +99,20 @@
           pos(center()),
           anchor("center"),
         ]);
+
+        let bean = add([
+          // list of components
+          sprite("bean"),
+          pos(80, 40),
+          area(),
+          offscreen({ destroy: false }),
+          body(),
+          "bean",
+        ]);
+
+        bean.onExitScreen(() => {
+          bean.moveTo(center());
+        });
 
         let direction = LEFT;
         // add a kaboom on mouse click
@@ -174,6 +176,22 @@
           score++;
           // addKaboom(food.pos);
           spawnFood();
+          let notification = add([
+            text("+1", {
+              size: 24,
+            }),
+            color(Color.PINK),
+            pos(bean.pos),
+            anchor("center"),
+            move(0, -50),
+          ])
+          wait(0.5, () => {
+            notification.destroy();
+          })
+          // drawText({
+          //   text: 'yay!!!',
+          //   pos: bean.pos
+          // })
           // shake(score);
           scoreAndTime.text = scoreText();
         });
