@@ -5,132 +5,133 @@
   </head>
   <body>
     <script type="module">
+      /**
+       * @typedef {import("https://unpkg.com/kaboom@3000.0.1/dist/kaboom.d.ts")}
+       */
+      import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
       
-        import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+      // initialize context
+      kaboom({
+        background: [51, 204, 255],
+      });
 
-// initialize context
-kaboom({
-  background: [51, 204, 255],
-});
+      let score = 0;
+      let time = 0;
 
-let score = 0;
-let time = 0;
+      loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
+      loadSprite("pig", "https://kaboomjs.com/sprites/watermelon.png");
+      scene("start", () => {
+        let clicks = 5;
 
-loadSprite('bean', 'https://kaboomjs.com/sprites/bean.png');
-loadSprite('pig', 'https://kaboomjs.com/sprites/watermelon.png');
-scene('start', () => {
-  let clicks = 5;
+        let getText = () =>
+          `score: ${score}\nTap ${clicks} times to start again`;
 
-  let getText = () => `score: ${score}\nTap ${clicks} times to start again`;
+        let titleText = add([
+          text(getText(), { size: 14 }),
+          pos(center()),
+          anchor("center"),
+        ]);
 
-  let titleText = add([
-    text(getText(), { size: 14 }),
-    pos(center()),
-    anchor('center'),
-  ]);
+        onClick(() => {
+          clicks--;
+          titleText.text = getText();
+          if (clicks === 0) {
+            go("game");
+          }
+        });
+      });
 
-  onClick(() => {
-    clicks--;
-    titleText.text = getText();
-    if (clicks === 0) {
-      go('game');
-    }
-  });
-});
+      scene("game", () => {
+        score = 0;
+        time = 30;
 
-scene('game', () => {
-  score = 0;
-  time = 30;
+        const scoreText = () => `score: ${score}, time: ${time}`;
 
-  const scoreText = () => `score: ${score}, time: ${time}`;
+        setGravity(3000);
 
-  setGravity(3000);
+        // load assets
 
-  // load assets
+        // add a character to screen
+        let bean = add([
+          // list of components
+          sprite("bean"),
+          pos(12, 40),
+          area(),
+          offscreen({ destroy: false }),
+          body(),
+          "bean",
+        ]);
 
-  // add a character to screen
-  let bean = add([
-    // list of components
-    sprite('bean'),
-    pos(12, 40),
-    area(),
-    offscreen({ destroy: false }),
-    body(),
-    'bean',
-  ]);
+        let platform = add([
+          rect(width(), 48),
+          pos(0, height() - 48),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(0, 200, 0),
+        ]);
 
-  let platform = add([
-    rect(width(), 48),
-    pos(0, height() - 48),
-    outline(4),
-    area(),
-    body({ isStatic: true }),
-    color(0, 200, 0),
-  ]);
+        bean.onExitScreen(() => {
+          bean.moveTo(12, 40);
+        });
 
-  bean.onExitScreen(() => {
-    bean.moveTo(12, 40);
-  });
+        let scoreAndTime = add([
+          text(scoreText(), {
+            size: 14,
+          }),
+          pos(center()),
+          anchor("center"),
+        ]);
 
-  let scoreAndTime = add([
-    text(scoreText(), {
-      size: 14,
-    }),
-    pos(center()),
-    anchor('center'),
-  ]);
+        function addPig(size = 1) {
+          // add tree
+          add([
+            sprite("pig"),
+            scale(size),
+            area(),
+            outline(4),
+            pos(width(), rand(48, height() - 48)),
+            anchor("botleft"),
+            offscreen({ destroy: true }),
+            // color(255, 180, 255),
+            move(LEFT, 240),
+            "pig", // add a tag here
+          ]);
 
-  function addPig(size = 1) {
-    // add tree
-    add([
-      sprite('pig'),
-      scale(size),
-      area(),
-      outline(4),
-      pos(width(), rand(48, height() - 48)),
-      anchor('botleft'),
-      offscreen({ destroy: true }),
-      // color(255, 180, 255),
-      move(LEFT, 240),
-      'pig', // add a tag here
-    ]);
+          wait(rand(0.25, 1), () => {
+            addPig(rand(0.25, 1));
+          });
+        }
 
-    wait(rand(0.25, 1), () => {
-      addPig(rand(0.25, 1));
-    });
-  }
+        addPig();
 
-  addPig();
+        onCollide("pig", "bean", (args) => {
+          addKaboom(bean.pos, {
+            text: "Yummy!!!",
+          });
+          args.destroy();
+          shake(8);
+          score++;
+          scoreAndTime.text = scoreText();
+        });
 
-  onCollide('pig', 'bean', (args) => {
-    addKaboom(bean.pos, {
-      text: 'Yummy!!!'
-    });
-    args.destroy();
-    shake(8);
-    score++;
-    scoreAndTime.text = scoreText();
-  });
+        // add a kaboom on mouse click
+        onClick(() => {
+          // addKaboom(mousePos())
+          bean.jump(1000);
+          // bean.move(direction, 1200);
+        });
 
-  // add a kaboom on mouse click
-  onClick(() => {
-    // addKaboom(mousePos())
-    bean.jump(1000);
-    // bean.move(direction, 1200);
-  });
+        loop(1, () => {
+          time--;
+          scoreAndTime.text = scoreText();
+          if (time === 0) {
+            go("start");
+          }
+        });
+      });
 
-  loop(1, () => {
-    time--;
-    scoreAndTime.text = scoreText();
-    if (time === 0) {
-      go('start');
-    }
-  });
-});
-
-go('game');
-
-
+      go("game");
     </script>
   </body>
 </html>
