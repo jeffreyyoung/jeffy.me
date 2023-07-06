@@ -38,35 +38,55 @@ scene("start", (isEnd = false) => {
 let levels = [
   [
     "==========================",
-    "L************************R",
-    "L************************R",
-    "L************************R",
-    "L************************R",
-    "L************************R",
-    "L************************R",
-    "L    B                   R",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=  B              *      =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
     "==========================",
   ],
   [
     "==========================",
-    "L**********=*************R",
-    "L**********=*************R",
-    "L********** *************R",
-    "L********** *************R",
-    "L**********=*************R",
-    "L**********=*************R",
-    "L    B     =             R",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=   B             *      =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
     "==========================",
   ],
   [
     "==========================",
-    "L******=***=*******=*****R",
-    "L******=***=*******=*****R",
-    "L**=***=***=***=***=*****R",
-    "L**=***=*** ***=***=*****R",
-    "L**=***=*** ***=***=*****R",
-    "L**=*******=***=*********R",
-    "L  = B     =   =         R",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=     B           *      =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
+    "=                        =",
     "==========================",
   ],
 ];
@@ -86,25 +106,25 @@ scene("game", (levelIdx = 0) => {
         body({ isStatic: true }),
         "wall",
       ],
-      L: () => [
-        rect(block_size, block_size),
-        color(100, 100, 100),
-        area(),
-        body({ isStatic: true }),
-        "left-wall",
-      ],
-      R: () => [
-        rect(block_size, block_size),
-        color(100, 100, 100),
-        area(),
-        body({ isStatic: true }),
-        "right-wall",
-      ],
       B: () => [
         sprite("bean"),
         area(),
         offscreen({ destroy: false }),
         body(),
+        (() => {
+          let jumpDirection = 1;
+          return {
+            setJumpDirection(direction) {
+              jumpDirection = direction;
+            },
+            update() {
+              if (!bean.isGrounded()) {
+                bean.move(200 * jumpDirection, 0);
+                camPos(bean.pos);
+              }
+            },
+          };
+        })(),
         "bean",
       ],
       "*": () => [sprite("watermelon"), area(), "watermelon"],
@@ -117,14 +137,6 @@ scene("game", (levelIdx = 0) => {
     bean.moveTo(level.pos);
   });
 
-  let direction = 1;
-  bean.onUpdate(() => {
-    if (!bean.isGrounded()) {
-      bean.move(200 * direction, 0);
-      camPos(bean.pos);
-    }
-  });
-
   onCollide("bean", "watermelon", (bean, watermelon) => {
     destroy(watermelon);
     let remaining = level.get("watermelon").length;
@@ -133,21 +145,18 @@ scene("game", (levelIdx = 0) => {
       addNotificationText("+1", watermelon.pos);
     } else {
       addNotificationText("You win!", watermelon.pos);
-      wait(1, () => {
-        if (isLastLevel) {
-          go("start", true);
-        } else {
-          go("game", levelIdx + 1);
-        }
-      });
+      if (isLastLevel) {
+        go("start", true);
+      } else {
+        go("game", levelIdx + 1);
+      }
     }
   });
 
-  onCollide("bean", "left-wall", (bean) => {
-    direction = 1;
-  });
-  onCollide("bean", "right-wall", (bean) => {
-    direction = -1;
+  onCollide("bean", "wall", (bean, wall) => {
+    shake();
+    addNotificationText("Ouch!", bean.pos);
+    wait(0.3, go("game", levelIdx));
   });
 
   // add a kaboom on mouse click
@@ -156,18 +165,18 @@ scene("game", (levelIdx = 0) => {
     let beanX = toScreen(bean.pos).x;
     debug.log(`x: ${x}, beanX: ${beanX}`);
     if (x < beanX) {
-      direction = -1;
+      bean.setJumpDirection(-1);
     } else {
-      direction = 1;
+      bean.setJumpDirection(1);
     }
     bean.jump(1000);
   });
   onKeyPress((key) => {
     if (key === "left") {
-        direction = -1;
+      bean.setJumpDirection(-1);
     }
     if (key === "right") {
-        direction = 1;
+      bean.setJumpDirection(1);
     }
     bean.jump(1000);
   });
