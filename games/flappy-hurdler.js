@@ -21,13 +21,15 @@ scene("start", () => {
     anchor("center"),
   ]);
 
-  onClick(() => {
+  function handleClick() {
     clicks--;
     titleText.text = getText();
     if (clicks === 0) {
       go("game");
     }
-  });
+  }
+  onClick(handleClick);
+  onKeyPress(handleClick);
 });
 
 scene("game", () => {
@@ -94,8 +96,9 @@ scene("game", () => {
         barrier.destroy();
         setScore(score + 1);
     })
-
-    wait(rand(1, 1.5), () => {
+    let minTime = Math.max(1-(score * .1), .8);
+    let maxTime = Math.max(1.5-(score*.1), 1);
+    wait(rand(minTime, maxTime), () => {
       addBarrier();
     });
   }
@@ -118,7 +121,7 @@ scene("game", () => {
     // addKaboom(mousePos())
     // bean.move(direction, 1200);
   });
-  onKeyPress("space", () => {
+  onKeyPress(() => {
     if (bean.isGrounded()) {
         bean.jump(1000);
     }
