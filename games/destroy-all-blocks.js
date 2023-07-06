@@ -11,10 +11,12 @@ loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
 
 const block_size = 50;
 
-scene("start", () => {
+scene("start", (isEnd = false) => {
   let clicks = 5;
-
-  let getText = () => `Tap ${clicks} times to start again`;
+  let getText = () =>
+    `${
+      isEnd ? "You completed the game!!!!!\n" : ""
+    }Tap ${clicks} times to start again`;
 
   let titleText = add([
     text(getText(), { size: 14 }),
@@ -56,6 +58,17 @@ let levels = [
     "L    B     =             R",
     "==========================",
   ],
+  [
+    "==========================",
+    "L******=***=*******=*****R",
+    "L**=***=***=***=***=*****R",
+    "L**=***=***=***=***=*****R",
+    "L**=***=*** ***=***=*****R",
+    "L**=***=***=***=***=*****R",
+    "L**=***=***=***=***=*****R",
+    "L  = B     =   =         R",
+    "==========================",
+  ]
 ];
 
 scene("game", (levelIdx = 0) => {
@@ -123,7 +136,7 @@ scene("game", (levelIdx = 0) => {
       addNotificationText("You win!", watermelon.pos);
       wait(1, () => {
         if (isLastLevel) {
-        //   go("start");
+          go("start", true);
         } else {
           go("game", levelIdx + 1);
         }
