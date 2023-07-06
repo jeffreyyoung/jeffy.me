@@ -121,6 +121,20 @@
           // bean.move(direction, 1200);
         });
 
+        onKeyPress("space", () => {
+          bean.jump();
+        });
+
+        onKeyPress("left", () => {
+          direction = LEFT;
+          bean.jump(1000);
+        });
+
+        onKeyPress("right", () => {
+          direction = RIGHT;
+          bean.jump(1000);
+        });
+
         onUpdate("bean", (obj) => {
           if (bean.isGrounded()) {
             return;
