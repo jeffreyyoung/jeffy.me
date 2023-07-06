@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flappy watermelon feast</title>
+  </head>
+  <body>
+    <script type="module">
+      
+        import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+
+      // import 'kaboom/global';
+
+      // initialize context
+      kaboom({
+        background: [51, 204, 255],
+      });
+
+      let score = 0;
+      let time = 0;
+
+      loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
+      loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
+
+      scene("start", () => {
+        let clicks = 5;
+
+        let getText = () =>
+          `score: ${score}\nTap ${clicks} times to start again`;
+
+        let titleText = add([
+          text(getText(), { size: 14 }),
+          pos(center()),
+          anchor("center"),
+        ]);
+
+        onClick(() => {
+          clicks--;
+          titleText.text = getText();
+          if (clicks === 0) {
+            go("game");
+          }
+        });
+      });
+
+      scene("game", () => {
+        score = 0;
+        time = 30;
+
+        const scoreText = () => `score: ${score}, time: ${time}`;
+
+        setGravity(4000);
+
+        // load assets
+        // loadSprite("bean", "sprites/bean.png");
+
+        // add a character to screen
+        let bean = add([
+          // list of components
+          sprite("bean"),
+          pos(80, 40),
+          area(),
+          offscreen({ destroy: false }),
+          body(),
+          "bean",
+        ]);
+
+        bean.onExitScreen(() => {
+          bean.moveTo(center());
+        });
+        let platformWidth = 10;
+        // add platform
+        add([
+          rect(width() * 2, platformWidth),
+          pos(0, height() - platformWidth),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(),
+          "floor",
+        ]);
+        add([
+          rect(width(), platformWidth),
+          pos(0, 0),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(),
+          "roof",
+        ]);
+        add([
+          rect(platformWidth, height()),
+          pos(0, 0),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(),
+          "wall",
+        ]);
+        add([
+          rect(platformWidth, height()),
+          pos(width() - platformWidth, 0),
+          outline(4),
+          area(),
+          body({ isStatic: true }),
+          color(),
+          "wall",
+        ]);
+
+        let scoreAndTime = add([
+          text(scoreText(), {
+            size: 14,
+          }),
+          pos(center()),
+          anchor("center"),
+        ]);
+
+        let direction = LEFT;
+        // add a kaboom on mouse click
+        onClick(() => {
+          let { x } = mousePos();
+          let half = width() / 2;
+          direction = x < half ? LEFT : RIGHT;
+          // addKaboom(mousePos())
+          bean.jump(1000);
+          // bean.move(direction, 1200);
+        });
+
+        onUpdate("bean", (obj) => {
+          if (bean.isGrounded()) {
+            return;
+          }
+          bean.move(direction === LEFT ? -200 : 200, 0);
+        });
+
+        onCollide("bean", "wall", (collision) => {
+          if (bean.isGrounded()) {
+            return;
+          }
+          direction = direction === LEFT ? RIGHT : LEFT;
+        });
+
+        let food;
+        function spawnFood() {
+          if (food) {
+            destroy(food);
+          }
+          food = add([
+            sprite("watermelon"),
+
+            pos(rand(50, width() - 50), rand(50, height() - 50)),
+            area(),
+            outline(5, Color.GREEN),
+            // body(),
+            "food",
+          ]);
+        }
+
+        spawnFood();
+
+        onCollide("bean", "food", () => {
+          console.log("collide");
+          score++;
+          // addKaboom(food.pos);
+          spawnFood();
+          // shake(score);
+          scoreAndTime.text = scoreText();
+        });
+
+        loop(1, () => {
+          time--;
+          scoreAndTime.text = scoreText();
+          if (time === 0) {
+            go("start");
+          }
+        });
+      });
+
+      go("game");
+    </script>
+  </body>
+</html>
