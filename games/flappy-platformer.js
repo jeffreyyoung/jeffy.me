@@ -61,7 +61,7 @@ let levels = [
     "=                        =",
     "=                        =",
     "=  B              *      =",
-    "=                        =",
+    "=  _              _      =",
     "=                        =",
     "=                        =",
     "=                        =",
@@ -78,7 +78,7 @@ let levels = [
     "=          =             =",
     "=          =             =",
     "=   B      =      *      =",
-    "=          =             =",
+    "=   _      =      _      =",
     "=          =             =",
     "=          =             =",
     "=          =             =",
@@ -96,7 +96,7 @@ let levels = [
     "=        =               =",
     "=        =               =",
     "=     B  =               =",
-    "=        =               =",
+    "=     _  =               =",
     "=        =               =",
     "=        =      =        =",
     "=        =      =        =",
@@ -105,16 +105,16 @@ let levels = [
     "=               =        =",
     "=               =        =",
     "=               =    *   =",
-    "=               =        =",
+    "=               =    _   =",
     "==========================",
   ],
   [
     "==========================",
+    "=                        =",
+    "=                        =",
+    "=                        =",
     "=  B                     =",
-    "=                        =",
-    "=                        =",
-    "=                        =",
-    "=                        =",
+    "=  _                     =",
     "==================       =",
     "=                        =",
     "=                        =",
@@ -126,7 +126,7 @@ let levels = [
     "=                        =",
     "=                        =",
     "=                  *     =",
-    "=                        =",
+    "=                  _     =",
     "==========================",
   ],
 ];
@@ -140,12 +140,19 @@ scene("game", (levelIdx = 0) => {
     tileHeight: block_size,
     tileWidth: block_size,
     tiles: {
+      "_": () => [
+        rect(block_size, block_size),
+        color(Color.GREEN),
+        area(),
+        body({ isStatic: true }),
+        "platform",
+      ],
       "=": () => [
         rect(block_size, block_size),
         color(100, 100, 100),
         area(),
         body({ isStatic: true }),
-        "wall",
+        "lava",
       ],
       B: () => [
         sprite("bean"),
@@ -186,16 +193,24 @@ scene("game", (levelIdx = 0) => {
       addNotificationText("+1", watermelon.pos);
     } else {
       addNotificationText("You win!", watermelon.pos);
-      if (isLastLevel) {
-        go("start", true);
-      } else {
-        go("level-complete", levelIdx);
-      }
+      wait(.3, () => {
+        if (isLastLevel) {
+          go("start", true)
+        } else {
+
+          go('game', levelIdx + 1);
+        }
+      })
+      // if (isLastLevel) {
+      //   go("start", true);
+      // } else {
+      //   go("level-complete", levelIdx);
+      // }
     }
   });
 
-  onCollide("bean", "wall", (bean, wall) => {
-    shake();
+  onCollide("bean", "lava", (bean, lava) => {
+    // shake();
     addNotificationText("Ouch!", bean.pos);
     wait(0.3, go("game", levelIdx));
   });
