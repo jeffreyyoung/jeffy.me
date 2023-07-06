@@ -31,7 +31,7 @@ scene("start", () => {
   onClick(handleClick);
   onKeyPress(handleClick);
 });
-
+const PLATFORM_HEIGHT = 48;
 scene("game", () => {
   score = 0;
 
@@ -43,7 +43,7 @@ scene("game", () => {
   let bean = add([
     // list of components
     sprite("bean"),
-    pos(12, 40),
+    pos(12, height() - 80),
     area(),
     offscreen({ destroy: false }),
     body(),
