@@ -35,6 +35,25 @@ scene("start", (isEnd = false) => {
   onKeyPress(handleClick);
 });
 
+scene("level-complete", (levelIdx = 0) => {
+    let announcement = add([
+        text(`Level ${levelIdx + 1} complete!`, { size: 18 }),
+        pos(center()),
+        anchor("center"),
+    ]);
+    function countdown(secondsLeft = 3) {
+      addNotificationText(`Next level in ${secondsLeft}...`, center().add(0, 50));
+      if (secondsLeft === 0) {
+        go("game", levelIdx + 1);
+      } else {
+        wait(1, () => {
+          countdown(secondsLeft - 1);
+        });
+      }
+    }
+    countdown();
+})
+
 let levels = [
   [
     "==========================",
@@ -55,15 +74,15 @@ let levels = [
   ],
   [
     "==========================",
-    "=                        =",
-    "=                        =",
-    "=                        =",
-    "=   B             *      =",
-    "=                        =",
-    "=                        =",
-    "=                        =",
-    "=                        =",
-    "=                        =",
+    "=          =             =",
+    "=          =             =",
+    "=          =             =",
+    "=   B      =      *      =",
+    "=          =             =",
+    "=          =             =",
+    "=          =             =",
+    "=          =             =",
+    "=          =             =",
     "=                        =",
     "=                        =",
     "=                        =",
@@ -73,19 +92,40 @@ let levels = [
   ],
   [
     "==========================",
+    "=        =               =",
+    "=        =               =",
+    "=        =               =",
+    "=     B  =               =",
+    "=        =               =",
+    "=        =               =",
+    "=        =      =        =",
+    "=        =      =        =",
+    "=        =      =        =",
+    "=               =        =",
+    "=               =        =",
+    "=               =        =",
+    "=               =    *   =",
+    "=               =        =",
+    "==========================",
+  ],
+  [
+    "==========================",
+    "=  B                     =",
     "=                        =",
     "=                        =",
     "=                        =",
-    "=     B           *      =",
+    "=                        =",
+    "==================       =",
     "=                        =",
     "=                        =",
     "=                        =",
     "=                        =",
     "=                        =",
+    "=      ===================",
     "=                        =",
     "=                        =",
     "=                        =",
-    "=                        =",
+    "=                  *     =",
     "=                        =",
     "==========================",
   ],
@@ -148,7 +188,7 @@ scene("game", (levelIdx = 0) => {
       if (isLastLevel) {
         go("start", true);
       } else {
-        go("game", levelIdx + 1);
+        go("level-complete", levelIdx);
       }
     }
   });
@@ -169,7 +209,7 @@ scene("game", (levelIdx = 0) => {
     } else {
       bean.setJumpDirection(1);
     }
-    bean.jump(1000);
+    bean.jump(750);
   });
   onKeyPress((key) => {
     if (key === "left") {
@@ -178,7 +218,7 @@ scene("game", (levelIdx = 0) => {
     if (key === "right") {
       bean.setJumpDirection(1);
     }
-    bean.jump(1000);
+    bean.jump(750);
   });
 });
 
