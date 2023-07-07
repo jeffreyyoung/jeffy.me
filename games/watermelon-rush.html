@@ -19,8 +19,28 @@
 
       loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
       loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
-
       scene("start", () => {
+        let title = add([
+          text('Flappy\'s watermelon rush', { size: 24, width: width() *2/3, align: 'center' }),
+          pos(center()),
+          anchor('center'),
+        ])
+        let directions = add([
+          text('Press on left side to jump left and right to jump right', { size: 14, width: width()*2/3, align: 'center' }),
+          pos(title.pos.add(0,50)),
+          anchor('center'),
+        ])
+        add([
+          text('Press anywhere to begin', { size: 14, width: width()*2/3, align: 'center' }),
+          pos(center().x, height() - 100),
+          anchor('center'),
+        ])
+        
+        onClick(() => go('game'));
+        onKeyPress(() => go('game'));
+      })
+
+      scene("end", () => {
         let clicks = 5;
 
         let getText = () =>
@@ -31,14 +51,15 @@
           pos(center()),
           anchor("center"),
         ]);
-
-        onClick(() => {
+        function onPress() {
           clicks--;
           titleText.text = getText();
           if (clicks === 0) {
             go("game");
           }
-        });
+        }
+        onClick(onPress);
+        onKeyPress(onPress);
       });
 
       scene("game", () => {
@@ -190,12 +211,12 @@
           time--;
           scoreAndTime.text = scoreText();
           if (time === 0) {
-            go("start");
+            go("end");
           }
         });
       });
 
-      go("game");
+      go("start");
     </script>
   </body>
 </html>
