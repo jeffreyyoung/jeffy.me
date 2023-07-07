@@ -164,19 +164,19 @@ scene("game", () => {
 
   onHoverUpdate(() => handleTouch(mousePos()))
 
-  onKeyPress('left', () => {
-    bluePaddle.moveBy(-10);
+  onKeyDown('left', () => {
+    bluePaddle.moveBy(-5, 0);
   })
-  onKeyPress('right', () => {
-    bluePaddle.moveBy(10);
+  onKeyDown('right', () => {
+    bluePaddle.moveBy(5, 0);
   })
 
-  onKeyPress('a', () => {
-    redPaddle.moveBy(-10, 0);
+  onKeyDown('a', () => {
+    redPaddle.moveBy(-5, 0);
   });
   
-  onKeyPress('d', () => {
-    redPaddle.moveBy(10, 0);
+  onKeyDown('d', () => {
+    redPaddle.moveBy(5, 0);
   })
 });
 
