@@ -1,5 +1,5 @@
 import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
-import { addNotificationText } from "./utils/addNotificationText.js";
+import { addNotificationText, addTitleScene } from "./utils/addNotificationText.js";
 
 // initialize context
 kaboom({
@@ -10,6 +10,15 @@ loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
 loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
 
 const block_size = 50;
+
+addTitleScene({
+  sceneName: "initial",
+  titleText: 'Flappy\'s Watermelon Obstacle Quest',
+  instructions: 'Press left side to jump left and right side to jump right',
+  nextScene: 'game',
+})
+
+go("initial");
 
 scene("start", (isEnd = false) => {
   let clicks = 5;
@@ -238,4 +247,3 @@ scene("game", (levelIdx = 0) => {
   });
 });
 
-go("game");

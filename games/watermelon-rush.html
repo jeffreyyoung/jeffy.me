@@ -8,7 +8,7 @@
     <a href="/" style="position: absolute; user-select: none; padding: 2px; right: 0; z-index: 99999; background-color: rgba(255, 255, 255);">Quit</a>
     <script type="module">
       import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
-      import { addNotificationText } from './utils/addNotificationText.js';
+      import { addNotificationText, addTitleScene } from './utils/addNotificationText.js';
       // initialize context
       kaboom({
         background: [51, 204, 255],
@@ -19,6 +19,7 @@
 
       loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
       loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
+
       scene("start", () => {
         let title = add([
           text('Flappy\'s watermelon rush', { size: 24, width: width() *2/3, align: 'center' }),
