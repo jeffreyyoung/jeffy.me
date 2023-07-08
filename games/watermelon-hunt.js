@@ -138,12 +138,35 @@ let levels = [
     "=                  _     =",
     "==========================",
   ],
+  [
+    "========================================================",
+    "=                                                      =",
+    "=                                              *       =",
+    "=      B                                       _       =",
+    "=      _                                               =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=                                                      =",
+    "=   *                                                  =",
+    "=   _                                                  =",
+    "========================================================",
+  ],
 ];
 
 scene("game", (levelIdx = 0) => {
   setGravity(3000);
   camScale(0.5, 0.5);
   console.log("level", levelIdx);
+  add([
+    text(`Level ${levelIdx + 1}`, { size: 12 }),
+    pos(5, 5),
+    fixed(),
+  ]);
   let isLastLevel = levelIdx === levels.length - 1;
   let level = addLevel(levels[levelIdx], {
     tileHeight: block_size,
@@ -203,7 +226,7 @@ scene("game", (levelIdx = 0) => {
     } else {
       bean.paused = true;
       addNotificationText("You win!", watermelon.pos);
-      wait(.3, () => {
+      wait(.5, () => {
         if (isLastLevel) {
           go("start", true)
         } else {
@@ -211,18 +234,14 @@ scene("game", (levelIdx = 0) => {
           go('game', levelIdx + 1);
         }
       })
-      // if (isLastLevel) {
-      //   go("start", true);
-      // } else {
-      //   go("level-complete", levelIdx);
-      // }
     }
   });
 
   onCollide("bean", "lava", (bean, lava) => {
     // shake();
     addNotificationText("Ouch!", bean.pos);
-    wait(0.3, go("game", levelIdx));
+    bean.paused = true;
+    wait(.5, () => go("game", levelIdx));
   });
 
   // add a kaboom on mouse click
