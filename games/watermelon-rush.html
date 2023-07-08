@@ -21,14 +21,9 @@
       loadSprite("watermelon", "https://kaboomjs.com/sprites/watermelon.png");
 
       scene("start", () => {
-        let title = add([
-          text('Flappy\'s watermelon rush', { size: 24, width: width() *2/3, align: 'center' }),
-          pos(center()),
-          anchor('center'),
-        ])
         let directions = add([
           text('Press on left side to jump left and right to jump right', { size: 14, width: width()*2/3, align: 'center' }),
-          pos(title.pos.add(0,50)),
+          pos(center()),
           anchor('center'),
         ])
         add([
