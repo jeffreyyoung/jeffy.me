@@ -66,7 +66,7 @@ scene("level-complete", (levelIdx = 0) => {
 let levels = [
   [
     "==========================",
-    "=                        =",
+    "=                        =" ,
     "=                        =",
     "=                        =",
     "=  B              *      =",
@@ -201,6 +201,7 @@ scene("game", (levelIdx = 0) => {
     if (remaining > 0) {
       addNotificationText("+1", watermelon.pos);
     } else {
+      bean.paused = true;
       addNotificationText("You win!", watermelon.pos);
       wait(.3, () => {
         if (isLastLevel) {
