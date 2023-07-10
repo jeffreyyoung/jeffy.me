@@ -248,7 +248,6 @@ scene("game", (levelIdx = 0) => {
   onClick(() => {
     let { x } = mousePos();
     let beanX = toScreen(bean.pos).x;
-    debug.log(`x: ${x}, beanX: ${beanX}`);
     if (x < beanX) {
       bean.setJumpDirection(-1);
     } else {

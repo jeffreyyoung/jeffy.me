@@ -86,16 +86,18 @@ scene("game", () => {
   add([
     rect(wallWidth, height()),
     pos(0, 0),
-    area(),
+    area({ collisionIgnore: ['hitter']}),
     body({ isStatic: true }),
+    z(-1),
     "wall",
     "leftWall",
   ]);
   add([
     rect(wallWidth, height()),
     pos(width() - wallWidth, 0),
-    area(),
+    area({ collisionIgnore: ['hitter']}),
     body({ isStatic: true }),
+    z(-1),
     "wall",
     "rightWall",
   ]);
@@ -103,7 +105,7 @@ scene("game", () => {
     rect(width(), wallWidth),
     pos(0, -wallWidth),
     area(),
-    body({ isStatic: true }),
+    body({ isStatic: true,  }),
     "wall",
     "topWall",
   ]);
@@ -115,6 +117,19 @@ scene("game", () => {
     "wall",
     "bottomWall",
   ]);
+  add([
+    rect(width(), 2),
+    pos(0, height()/4),
+    z(-1),
+    'quarterLine',
+  ]);
+  add([
+    rect(width(), 2),
+    pos(0, height()*3/4),
+    z(-1),
+    'quarterLine',
+  ]);
+
 
   onCollide("puck", "hitter", (puck, hitter) => {
     let angle = Vec2.fromAngle(puck.pos.angle(hitter.pos)).scale(puckVelocityScale);
@@ -165,17 +180,29 @@ scene("game", () => {
   onHoverUpdate(() => handleTouch(mousePos()))
 
   onKeyDown('left', () => {
+    if (bluePaddle.pos.x < -10) {
+      return;
+    }
     bluePaddle.moveBy(-5, 0);
   })
   onKeyDown('right', () => {
+    if (bluePaddle.pos.x > width() + 10) {
+      return;
+    }
     bluePaddle.moveBy(5, 0);
   })
 
   onKeyDown('a', () => {
+    if (redPaddle.pos.x < -10) {
+      return;
+    }
     redPaddle.moveBy(-5, 0);
   });
   
   onKeyDown('d', () => {
+    if (redPaddle.pos.x > width() + 10) {
+      return;
+    }
     redPaddle.moveBy(5, 0);
   })
 });
