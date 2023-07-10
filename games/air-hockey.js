@@ -43,6 +43,7 @@ scene("game", () => {
 
   let puckVelocityScale = 500;
   let puckVelocityDelta = 20;
+  let maxPuckVelocity = 1000;
 
   function moving() {
     let self = {
@@ -133,7 +134,7 @@ scene("game", () => {
 
 
   onCollide("puck", "hitter", (puck, hitter) => {
-    puckVelocityScale+=puckVelocityDelta;
+    puckVelocityScale = Math.min(maxPuckVelocity, puckVelocityScale + puckVelocityDelta);
     let angle = Vec2.fromAngle(puck.pos.angle(hitter.pos)).scale(puckVelocityScale);
     // debugger;
     puck.yVelocity = angle.y;
