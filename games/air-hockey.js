@@ -79,6 +79,7 @@ scene("game", () => {
     pos(center().add(0, 10 + RADIUS)),
     body(),
     area(),
+    offscreen({ destroy: false }),
     // move(redPaddle.pos.angle(bluePaddle.pos), 1000),
     moving(),
     "puck",
@@ -176,6 +177,10 @@ scene("game", () => {
         redPaddle.moveTo(touch.x, touch.y+50);
     }
   }
+  puck.onExitScreen(() => {
+    puck.moveTo(center());
+  })
+
   onTouchStart(handleTouch);
 
   onTouchMove(handleTouch);
