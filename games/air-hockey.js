@@ -10,7 +10,7 @@ scene("game", () => {
   let redPaddleScore = 0;
 
   let score = add([
-    text(`red: ${redPaddleScore}, blue: ${bluePaddleScore}`),
+    text(`red: ${redPaddleScore}, blue: ${bluePaddleScore}`, { size: 18 }),
     anchor('center'),
     pos(center()),
   ])
@@ -66,6 +66,10 @@ scene("game", () => {
             } else if (this.pos.y >= height() && this.yVelocity > 0) {
                 this.yVelocity = -this.yVelocity;
             }
+            if (this.pos.x < 0 || this.pos.x > width() || this.pos.y < 0 || this.pos.y > height()) {
+              this.moveTo(center());
+            }
+
             this.move(this.xVelocity, this.yVelocity);
         }
     }
@@ -177,9 +181,6 @@ scene("game", () => {
         redPaddle.moveTo(touch.x, touch.y+50);
     }
   }
-  puck.onExitScreen(() => {
-    puck.moveTo(center());
-  })
 
   onTouchStart(handleTouch);
 
