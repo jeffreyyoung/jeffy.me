@@ -189,12 +189,10 @@
                     state.status === "waiting",
                     html`
                       <p>
-                        Share this to invite others:
+                        Share this link to invite others:
                         <a
-                          href="${window.location
-                            .host}/games/the-mind.html?lobbyId=${lobbyId}"
-                          >${window.location
-                            .host}/games/the-mind.html?lobbyId=${lobbyId}</a
+                          href="/games/the-mind.html?lobbyId=${lobbyId}"
+                          >${lobbyId}</a
                         >
                       </p>
                     `
