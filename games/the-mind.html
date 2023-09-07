@@ -279,9 +279,10 @@
                   </ul>
                   <p>
                     Share this link to invite others:
-                    <a href="/games/the-mind.html?lobbyId=${lobbyId}"
-                      >${escapeHtml(lobbyId)}</a
+                    <a href="${window.location.href}"
+                      >${window.location.href}</a
                     >
+                    <button onclick="navigator.share(window.location.href)">Share invite link</button>
                   </p>
                   <br />
                   <br />
