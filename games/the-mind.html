@@ -10,11 +10,11 @@
       import { createGameServer } from "./utils/game-server.js";
 
       function render() {
-        const urlSearchParams = new URLSearchParams(window.location.search);
+        const urlSearchParams = new URLSearchParams(window.location.search.split("?")?.[1] || '');
         const params = Object.fromEntries(urlSearchParams.entries());
         const username = localStorage.getItem("username") || "";
         const lobbyId = params.lobbyId || "";
-
+        console.log(lobbyId, params);
         if (!username) {
           document.body.innerHTML = html`
             <div>
@@ -62,6 +62,7 @@
             }`;
           });
         } else if (lobbyId) {
+          
           let isHost = !!window.localStorage.getItem(`isHost-${lobbyId}`);
 
           let server = createGameServer({
@@ -95,22 +96,26 @@
                 state.level = 1;
                 state.status = "playing";
                 Object.keys(state.players).forEach((player) => {
-                  state.players[player] = [getNumber()];
+                  state.players[player] = {
+                    playedCards: [],
+                    unplayedCards: [getNumber()]
+                  };
                 });
                 state.actionLog.push(`${action.actor} started the game`);
               }
 
               if (
                 action.type === "send-number" &&
-                state.players[action.actor]?.length
+                state.players[action.actor]?.unplayedCards?.length
               ) {
-                let n = state.players[action.actor].shift();
+                let n = state.players[action.actor].unplayedCards.shift();
+                state.players[action.actor].playedCards.push(n);
                 let isError = false;
                 let levelIsComplete = true;
                 for (let player of Object.keys(state.players)) {
-                  if (state.players[player].length > 0) {
+                  if (state.players[player].unplayedCards.length > 0) {
                     levelIsComplete = false;
-                    if (state.players[player][0] < n) {
+                    if (state.players[player].unplayedCards[0] < n) {
                       isError = true;
                     }
                   }
@@ -132,7 +137,10 @@
                       getNumber()
                     );
                     numbers = numbers.sort(function(a, b){return a-b});
-                    state.players[player] = numbers;
+                    state.players[player] = {
+                      playedCards: [],
+                      unplayedCards: numbers,
+                    };
                   });
                 }
               }
@@ -164,7 +172,7 @@
                             )}
                             ${iff(
                               state.status === "playing",
-                              `[${state.players[player].length} cards left]`
+                              `[${state.players[player]?.unplayedCards?.length} cards left]`
                             )}
                           </li>`
                       )
@@ -174,17 +182,33 @@
                   ${iff(
                     state.status === "playing",
                     html`<p>Your cards:</p>
-                      <p>${state.players[username]?.join?.(", ")}</p>`
+                    <div>
+                      <div style="display: flex; flex-wrap: wrap">
+                        ${state.players[username]?.playedCards
+                          ?.map(
+                            (card) =>
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 50px; min-width: 50px;"><p style="text-align: center">${card}</p>✅</div>`
+                          )
+                          .join("")}
+                        ${state.players[username]?.unplayedCards
+                          ?.map(
+                            (card, idx) =>
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px min-height: 50px; min-width: 50px;"><p style="text-align: center">${card}</p>
+                              ${idx === 0 ? '<button style="margin-left: 5px" id="send-number">Play</button>' : ''}
+                              </div>`
+                          )
+                          .join("")}
+
+                    </div>
+                      <p>${state.players[username]?.join?.(", ")}</p>
+                    `
                   )}
                   ${iff(
                     isHost && state.status === "waiting",
-                    html`<button id="start">Start</button>`
+                    html`<button id="start">Start</button>`,
+                    html`<p>Waiting for host to start...</p>`
                   )}
-                  ${iff(
-                    state.status === "playing" &&
-                      state.players[username].length > 0,
-                    html` <button id="send-number">Send number</button> `
-                  )}
+
                   ${iff(
                     state.status === "waiting",
                     html`
