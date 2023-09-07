@@ -11,7 +11,7 @@
       }
     </style>
     <script type="module">
-      import { html } from "./utils/html.js";
+      import { html, escapeHtml } from "./utils/html.js";
       import { createGameServer } from "./utils/game-server.js";
 
       function render() {
@@ -115,8 +115,12 @@
               }
 
               if (action.type === "join" && !state.players[action.actor]) {
-                state.players[action.actor] = [];
-                state.actionLog.push(`👋 ${action.actor} joined`);
+                state.players[action.actor] = {
+                  playedCards: [],
+                  unplayedCards: [],
+                  history: [],
+                };
+                state.actionLog.push(`👋 ${escapeHtml(action.actor)} joined`);
               }
 
               if (action.type === "start") {
@@ -129,7 +133,7 @@
                     history: ["⬜️"],
                   };
                 });
-                state.actionLog.push(`🔔 ${action.actor} started the game`);
+                state.actionLog.push(`🔔 ${escapeHtml(action.actor)} started the game`);
               }
 
               if (
@@ -207,7 +211,7 @@
                       .map(
                         (player) =>
                           html`<li>
-                            ${player}${iff(
+                            ${escapeHtml(player)}${iff(
                               player === username,
                               " (you)",
                               iff()
@@ -267,23 +271,18 @@
                     !isHost && state.status === "waiting",
                     html`<p>waiting for host to start...</p>`
                   )}
-                  ${iff(
-                    state.status === "waiting",
-                    html`
-                      <p>
-                        Share this link to invite others:
-                        <a href="/games/the-mind.html?lobbyId=${lobbyId}"
-                          >${lobbyId}</a
-                        >
-                      </p>
-                    `
-                  )}
                   <ul>
                     ${[...state.actionLog]
                       .reverse()
                       .map((action) => html`<li>${action}</li>`)
                       .join("")}
                   </ul>
+                  <p>
+                    Share this link to invite others:
+                    <a href="/games/the-mind.html?lobbyId=${lobbyId}"
+                      >${escapeHtml(lobbyId)}</a
+                    >
+                  </p>
                   <br />
                   <br />
                   <br />

@@ -48,29 +48,38 @@ export function createGameServer({
   let queuedActions = [];
 
   console.log("connection to roomId", roomId);
-  let peer = new Peer();
   let _host = null;
-  peer.on("open", (id) => {
-    console.log("my peer id is", id);
-    let host = peer.connect(roomId);
-
-    host.on("open", () => {
-        _host = host;
-      queuedActions.forEach((action) => host.send(action));
-      console.log("on open");
-
-      host.on("data", (data) => {
-        console.log("data", data);
-        onStateChange(data);
+  
+  function connectToHost() {
+    let peer = new Peer();
+    console.log("connecting to host");
+    peer.on("open", (id) => {
+        console.log("my peer id is", id);
+        let host = peer.connect(roomId);
+    
+        host.on("open", () => {
+            _host = host;
+          queuedActions.forEach((action) => host.send(action));
+          console.log("on open");
+    
+          host.on("data", (data) => {
+            console.log("data", data);
+            onStateChange(data);
+          });
+        });
+    
+        host.on('close', () => {
+            console.log("host closed");
+            _host = null;
+            peer.destroy();
+            setTimeout(connectToHost, 1000);
+            // setup
+        })
       });
-    });
+  }
 
-    host.on('close', () => {
-        console.log("host closed");
-        _host = null;
-        // setup
-    })
-  });
+  connectToHost();
+
 
   return {
     send(action) {
