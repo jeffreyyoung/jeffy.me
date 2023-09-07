@@ -9,6 +9,9 @@
       * {
         word-break: break-word;
       }
+      ul {
+        padding-left: 20px;
+      }
     </style>
     <script type="module">
       import { html, escapeHtml } from "./utils/html.js";
@@ -50,7 +53,7 @@
               <p>host a new game</p>
               <button id="create">create a game</button>
               <hr />
-              <p>enter a lobby id to join a game</p>
+              <p>join game with lobby code</p>
               <form>
                 <input id="lobbyId" type="text" value="${lobbyId}" />
                 <button>join</button>
@@ -133,7 +136,9 @@
                     history: ["⬜️"],
                   };
                 });
-                state.actionLog.push(`🔔 ${escapeHtml(action.actor)} started the game`);
+                state.actionLog.push(
+                  `🔔 ${escapeHtml(action.actor)} started the game`
+                );
               }
 
               if (
@@ -203,7 +208,7 @@
 
                   ${iff(
                     state.status === "playing",
-                    `<p>level ${state.level}, ${state.errors} errors</p>`
+                    `<p>🏆 level ${state.level}</p><p>😳 ${state.errors} errors</p>`
                   )}
                   <h4>players</h4>
                   <ul>
@@ -271,21 +276,21 @@
                     !isHost && state.status === "waiting",
                     html`<p>waiting for host to start...</p>`
                   )}
+                  <h4>activity</h4>
                   <ul>
                     ${[...state.actionLog]
                       .reverse()
                       .map((action) => html`<li>${action}</li>`)
                       .join("")}
                   </ul>
+                  <h4>invite</h4>
+                  <p>lobby code: ${escapeHtml(lobbyId)}</p>
                   <p>
-                    Others can join using the code ${escapeHtml(lobbyId)} or by visiting this link:
+                    lobby link:
                     <a href="${window.location.href}"
                       >${window.location.href}</a
                     >
                   </p>
-                  <br />
-                  <br />
-                  <br />
                   <h4>how to play</h4>
                   <p>
                     All players form a single team. In the first round (level 1)
