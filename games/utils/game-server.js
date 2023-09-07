@@ -1,7 +1,8 @@
 /**
  * Create a game server
- *
- * @param {{ isHost: boolean, roomId: string, initialState: any, onAction: (action: any, state: any) => any, onStateChange: (state) => any}} args - Is this the host server?
+ * @template T
+ * @template Action
+ * @param {{ isHost: boolean, roomId: string, initialState: T, onAction: (action: Action, state: T) => any, onStateChange: (state: T) => any}} args - Is this the host server?
  */
 
 export function createGameServer({
@@ -82,6 +83,11 @@ export function createGameServer({
 
 
   return {
+    /**
+     * 
+     * @param {Action} action 
+     * @returns 
+     */
     send(action) {
       if (!_host) {
         queuedActions.push(action);
