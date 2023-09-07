@@ -1,10 +1,11 @@
+// https://peerjs.com/docs/#peeron-error
+
 /**
  * Create a game server
  * @template T
  * @template Action
  * @param {{ isHost: boolean, roomId: string, initialState: T, onAction: (action: Action, state: T) => any, onStateChange: (state: T) => any}} args - Is this the host server?
  */
-
 export function createGameServer({
   isHost,
   roomId,

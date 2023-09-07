@@ -12,6 +12,55 @@
       ul {
         padding-left: 20px;
       }
+      body {
+        margin: 40px auto;
+        max-width: 650px;
+        line-height: 1.6;
+        font-size: 18px;
+        padding: 0 10px;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        line-height: 1.2;
+      }
+      .reset-button {
+        border: none;
+        margin: 0;
+        padding: 0;
+        width: auto;
+        overflow: visible;
+
+        background: transparent;
+
+        /* inherit font & color from ancestor */
+        color: inherit;
+        font: inherit;
+
+        /* Normalize `line-height`. Cannot be changed from `normal` in Firefox 4+. */
+        line-height: normal;
+
+        /* Corrects font smoothing for webkit */
+        -webkit-font-smoothing: inherit;
+        -moz-osx-font-smoothing: inherit;
+
+        /* Corrects inability to style clickable `input` types in iOS */
+        -webkit-appearance: none;
+      }
+      .grow {
+        transition: all 0.2s ease-in-out;
+      }
+
+      .grow:hover {
+        transform: scale(1.02);
+      }
+
+      /* Remove excess padding and border in Firefox 4+ */
+      &::-moz-focus-inner {
+        border: 0;
+        padding: 0;
+      }
     </style>
     <script type="module">
       import { html, escapeHtml } from "./utils/html.js";
@@ -238,12 +287,14 @@
                     state.status === "playing",
                     html`<h4>your cards</h4>
                       <div>
-                        <div style="display: flex; flex-wrap: wrap">
+                        <div
+                          style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px;"
+                        >
                           ${state.players[username]?.playedCards
                             ?.map(
                               (card, i) =>
                                 html`<div
-                                  style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"
+                                  style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: min-content; width: min-content; min-width: 6em; min-height: 9em; border: 1px solid black;"
                                 >
                                   <p style="text-align: center">${card}</p>
                                   <p style="text-align: center">
@@ -255,14 +306,17 @@
                           ${state.players[username]?.unplayedCards
                             ?.map(
                               (card, idx) =>
-                                html`<div
-                                  style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"
+                                html`<${idx === 0 ? "button" : "div"}
+                                  ${idx === 0 ? `id="send-number" class="reset-button grow"` : ""}
+                                  style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: min-content; width: min-content; min-width: 6em; min-height: 9em; border: 1px solid black;"
                                 >
                                   <p style="text-align: center">${card}</p>
-                                  ${idx === 0
-                                    ? '<button style="display: block; margin: 0 8px;" id="send-number">play</button>'
-                                    : ""}
-                                </div>`
+                                  ${
+                                    idx === 0
+                                      ? '<p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">send</p>'
+                                      : '<p style="text-align: center">⬜️</p>'
+                                  }
+                                </${idx === 0 ? "button" : "div"}>`
                             )
                             .join("")}
                         </div>
@@ -283,7 +337,7 @@
                       .map((action) => html`<li>${action}</li>`)
                       .join("")}
                   </ul>
-                  <h4>invite</h4>
+                  <h4>invite with</h4>
                   <p>lobby code: ${escapeHtml(lobbyId)}</p>
                   <p>
                     lobby link:
