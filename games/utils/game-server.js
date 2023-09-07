@@ -1,15 +1,7 @@
 /**
  * Create a game server
  *
- * @param {boolean} isHost - Is this the host server?
- *
- * @param {string} roomId - The room ID
- *
- * @param {object} initialState - The initial state of the game
- *
- * @param {function} onAction - A function to be called when an action is received
- *
- * @param {function} onStateChange - A function to be called when the state changes
+ * @param {{ isHost: boolean, roomId: string, initialState: any, onAction: (action: any, state: any) => any, onStateChange: (state) => any}} args - Is this the host server?
  */
 
 export function createGameServer({
@@ -72,6 +64,12 @@ export function createGameServer({
         onStateChange(data);
       });
     });
+
+    host.on('close', () => {
+        console.log("host closed");
+        _host = null;
+        // setup
+    })
   });
 
   return {

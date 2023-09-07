@@ -15,7 +15,9 @@
       import { createGameServer } from "./utils/game-server.js";
 
       function render() {
-        const urlSearchParams = new URLSearchParams(window.location.search.split("?")?.[1] || '');
+        const urlSearchParams = new URLSearchParams(
+          window.location.search.split("?")?.[1] || ""
+        );
         const params = Object.fromEntries(urlSearchParams.entries());
         const username = localStorage.getItem("username") || "";
         const lobbyId = params.lobbyId || "";
@@ -45,19 +47,34 @@
             <div>
               <a href="/index.html">home</a>
               <h3>the mind. 🧠</h3>
+              <p>host a new game</p>
+              <button id="create">create a game</button>
+              <hr />
               <p>enter a lobby id to join a game</p>
               <form>
                 <input id="lobbyId" type="text" value="${lobbyId}" />
                 <button>join</button>
               </form>
               <hr />
-              <p>or host a new game</p>
-              <button id="create">create a game</button>
-              <hr />
               <h4>how to play</h4>
-              <p>All players form a single team. In the first round (level 1) each player receives 1 card, in the second round (level 2) they receive 2 cards, and so on.</p>
-              <p>At each level the team members must put down all their cards in increasing order in the center of the table on an open stack, one after the other. For example (4 players, level 1): 18-34-41-73. The players do not take turns in any particular order.</p>
-              <p>Whoever wants to put down a card, simply does so. Watch out, here's where it gets interesting: the players must not disclose anything about their own cards - no sharing of information, no secret signals.</p>
+              <p>
+                All players form a single team. In the first round (level 1)
+                each player receives 1 card, in the second round (level 2) they
+                receive 2 cards, and so on.
+              </p>
+              <p>
+                At each level the team members must put down all their cards in
+                increasing order in the center of the table on an open stack,
+                one after the other. For example (4 players, level 1):
+                18-34-41-73. The players do not take turns in any particular
+                order.
+              </p>
+              <p>
+                Whoever wants to put down a card, simply does so. Watch out,
+                here's where it gets interesting: the players must not disclose
+                anything about their own cards - no sharing of information, no
+                secret signals.
+              </p>
             </div>
           `;
           document.querySelector("#create").addEventListener("click", (e) => {
@@ -73,7 +90,6 @@
             }`;
           });
         } else if (lobbyId) {
-          
           let isHost = !!window.localStorage.getItem(`isHost-${lobbyId}`);
 
           let server = createGameServer({
@@ -110,7 +126,7 @@
                   state.players[player] = {
                     playedCards: [],
                     unplayedCards: [getNumber()],
-                    history: ["⬜️"]
+                    history: ["⬜️"],
                   };
                 });
                 state.actionLog.push(`🔔 ${action.actor} started the game`);
@@ -120,7 +136,6 @@
                 action.type === "send-number" &&
                 state.players[action.actor]?.unplayedCards?.length
               ) {
-                
                 let n = state.players[action.actor].unplayedCards.shift();
                 state.players[action.actor].playedCards.push(n);
                 let isError = false;
@@ -133,16 +148,18 @@
                     }
                   }
                 }
-                
+
                 let playerState = state.players[action.actor];
                 if (isError) {
                   state.errors++;
-                  playerState.history[playerState.playedCards.length - 1] = '❌';
+                  playerState.history[playerState.playedCards.length - 1] =
+                    "❌";
                   state.actionLog.push(
                     `❌ ${action.actor} sent ${n} but it was wrong!`
                   );
                 } else {
-                  playerState.history[playerState.playedCards.length - 1] = '✅';
+                  playerState.history[playerState.playedCards.length - 1] =
+                    "✅";
                   state.actionLog.push(`✅ ${action.actor} sent ${n}`);
                 }
                 if (levelIsComplete) {
@@ -152,10 +169,12 @@
                     let numbers = Array.from({ length: state.level }, () =>
                       getNumber()
                     );
-                    numbers = numbers.sort(function(a, b){return a-b});
+                    numbers = numbers.sort(function (a, b) {
+                      return a - b;
+                    });
                     state.players[player] = {
                       playedCards: [],
-                      history: numbers.map(() => '⬜️'),
+                      history: numbers.map(() => "⬜️"),
                       unplayedCards: numbers,
                     };
                   });
@@ -171,10 +190,18 @@
               document.body.innerHTML = html`
                 <div>
                   <a href="/games/the-mind.html">back</a>
-                  <h3>the mind. 🧠 <span style="color: dodgerblue; font-size: .75em;">lobby ${lobbyId}</span></h3>
-                  
-                  ${iff(state.status === 'playing', `<p>level ${state.level}, ${state.errors} errors</p>`)}
-                  <p>players:</p>
+                  <h3>
+                    the mind. 🧠
+                    <span style="color: dodgerblue; font-size: .75em;"
+                      >lobby ${lobbyId}</span
+                    >
+                  </h3>
+
+                  ${iff(
+                    state.status === "playing",
+                    `<p>level ${state.level}, ${state.errors} errors</p>`
+                  )}
+                  <h4>players</h4>
                   <ul>
                     ${Object.keys(state.players)
                       .map(
@@ -191,7 +218,7 @@
                             )}
                             ${iff(
                               state.status === "playing",
-                              `[${state.players[player]?.history?.join?.('')}]`
+                              `[${state.players[player]?.history?.join?.("")}]`
                             )}
                           </li>`
                       )
@@ -200,40 +227,52 @@
 
                   ${iff(
                     state.status === "playing",
-                    html`<p>your cards:</p>
-                    <div>
-                      <div style="display: flex; flex-wrap: wrap">
-                        ${state.players[username]?.playedCards
-                          ?.map(
-                            (card, i) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"><p style="text-align: center">${card}</p><p style="text-align: center">${state.players[username]?.history?.[i]}</p></div>`
-                          )
-                          .join("")}
-                        ${state.players[username]?.unplayedCards
-                          ?.map(
-                            (card, idx) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"><p style="text-align: center">${card}</p>
-                              ${idx === 0 ? '<button style="display: block; margin: 0 8px;" id="send-number">play</button>' : ''}
-                              </div>`
-                          )
-                          .join("")}
-
-                    </div>
-                    `
+                    html`<h4>your cards</h4>
+                      <div>
+                        <div style="display: flex; flex-wrap: wrap">
+                          ${state.players[username]?.playedCards
+                            ?.map(
+                              (card, i) =>
+                                html`<div
+                                  style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"
+                                >
+                                  <p style="text-align: center">${card}</p>
+                                  <p style="text-align: center">
+                                    ${state.players[username]?.history?.[i]}
+                                  </p>
+                                </div>`
+                            )
+                            .join("")}
+                          ${state.players[username]?.unplayedCards
+                            ?.map(
+                              (card, idx) =>
+                                html`<div
+                                  style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"
+                                >
+                                  <p style="text-align: center">${card}</p>
+                                  ${idx === 0
+                                    ? '<button style="display: block; margin: 0 8px;" id="send-number">play</button>'
+                                    : ""}
+                                </div>`
+                            )
+                            .join("")}
+                        </div>
+                      </div> `
                   )}
                   ${iff(
                     isHost && state.status === "waiting",
                     html`<button id="start">Start</button>`
                   )}
-                  ${iff(!isHost && state.status === "waiting", html`<p>waiting for host to start...</p>`)}
-
+                  ${iff(
+                    !isHost && state.status === "waiting",
+                    html`<p>waiting for host to start...</p>`
+                  )}
                   ${iff(
                     state.status === "waiting",
                     html`
                       <p>
                         Share this link to invite others:
-                        <a
-                          href="/games/the-mind.html?lobbyId=${lobbyId}"
+                        <a href="/games/the-mind.html?lobbyId=${lobbyId}"
                           >${lobbyId}</a
                         >
                       </p>
@@ -245,6 +284,28 @@
                       .map((action) => html`<li>${action}</li>`)
                       .join("")}
                   </ul>
+                  <br />
+                  <br />
+                  <br />
+                  <h4>how to play</h4>
+                  <p>
+                    All players form a single team. In the first round (level 1)
+                    each player receives 1 card, in the second round (level 2)
+                    they receive 2 cards, and so on.
+                  </p>
+                  <p>
+                    At each level the team members must put down all their cards
+                    in increasing order in the center of the table on an open
+                    stack, one after the other. For example (4 players, level
+                    1): 18-34-41-73. The players do not take turns in any
+                    particular order.
+                  </p>
+                  <p>
+                    Whoever wants to put down a card, simply does so. Watch out,
+                    here's where it gets interesting: the players must not
+                    disclose anything about their own cards - no sharing of
+                    information, no secret signals.
+                  </p>
                 </div>
               `;
 
@@ -262,7 +323,7 @@
                 });
             },
           });
-          server.send({ type: "join", actor: username })
+          server.send({ type: "join", actor: username });
         }
       }
 
