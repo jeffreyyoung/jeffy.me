@@ -5,6 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <style>
+      * {
+        word-break: break-word;
+      }
+    </style>
     <script type="module">
       import { html } from "./utils/html.js";
       import { createGameServer } from "./utils/game-server.js";
@@ -38,15 +43,21 @@
         } else if (!lobbyId) {
           document.body.innerHTML = html`
             <div>
-              <h3>The Mind</h3>
-              <p>Enter a lobby id to join a game</p>
+              <a href="/index.html">home</a>
+              <h3>the mind. 🧠</h3>
+              <p>enter a lobby id to join a game</p>
               <form>
                 <input id="lobbyId" type="text" value="${lobbyId}" />
-                <button>Join</button>
+                <button>join</button>
               </form>
               <hr />
-              <p>Or create a new game</p>
-              <button id="create">Create a game</button>
+              <p>or host a new game</p>
+              <button id="create">create a game</button>
+              <hr />
+              <h4>how to play</h4>
+              <p>All players form a single team. In the first round (level 1) each player receives 1 card, in the second round (level 2) they receive 2 cards, and so on.</p>
+              <p>At each level the team members must put down all their cards in increasing order in the center of the table on an open stack, one after the other. For example (4 players, level 1): 18-34-41-73. The players do not take turns in any particular order.</p>
+              <p>Whoever wants to put down a card, simply does so. Watch out, here's where it gets interesting: the players must not disclose anything about their own cards - no sharing of information, no secret signals.</p>
             </div>
           `;
           document.querySelector("#create").addEventListener("click", (e) => {
@@ -159,9 +170,11 @@
               }
               document.body.innerHTML = html`
                 <div>
-                  <h3 style="color: dodgerblue">Lobby ${lobbyId}</h3>
-                  ${iff(state.status === 'playing', `<p>Level ${state.level}, ${state.errors} errors</p>`)}
-                  <p>Players:</p>
+                  <a href="/games/the-mind.html">back</a>
+                  <h3>the mind. 🧠 <span style="color: dodgerblue; font-size: .75em;">lobby ${lobbyId}</span></h3>
+                  
+                  ${iff(state.status === 'playing', `<p>level ${state.level}, ${state.errors} errors</p>`)}
+                  <p>players:</p>
                   <ul>
                     ${Object.keys(state.players)
                       .map(
@@ -187,33 +200,32 @@
 
                   ${iff(
                     state.status === "playing",
-                    html`<p>Your cards:</p>
+                    html`<p>your cards:</p>
                     <div>
                       <div style="display: flex; flex-wrap: wrap">
                         ${state.players[username]?.playedCards
                           ?.map(
-                            (card) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 80px; min-width: 50px;"><p style="text-align: center">${card}</p>✅</div>`
+                            (card, i) =>
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"><p style="text-align: center">${card}</p><p style="text-align: center">${state.players[username]?.history?.[i]}</p></div>`
                           )
                           .join("")}
                         ${state.players[username]?.unplayedCards
                           ?.map(
                             (card, idx) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px min-height: 80px; min-width: 50px;"><p style="text-align: center">${card}</p>
-                              ${idx === 0 ? '<button style="margin-left: 5px" id="send-number">Play</button>' : ''}
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 100px; min-width: 50px;"><p style="text-align: center">${card}</p>
+                              ${idx === 0 ? '<button style="display: block; margin: 0 8px;" id="send-number">play</button>' : ''}
                               </div>`
                           )
                           .join("")}
 
                     </div>
-                      <p>${state.players[username]?.join?.(", ")}</p>
                     `
                   )}
                   ${iff(
                     isHost && state.status === "waiting",
-                    html`<button id="start">Start</button>`,
-                    html`<p>Waiting for host to start...</p>`
+                    html`<button id="start">Start</button>`
                   )}
+                  ${iff(!isHost && state.status === "waiting", html`<p>waiting for host to start...</p>`)}
 
                   ${iff(
                     state.status === "waiting",
