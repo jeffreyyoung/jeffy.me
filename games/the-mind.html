@@ -89,7 +89,7 @@
 
               if (action.type === "join" && !state.players[action.actor]) {
                 state.players[action.actor] = [];
-                state.actionLog.push(`${action.actor} joined`);
+                state.actionLog.push(`👋 ${action.actor} joined`);
               }
 
               if (action.type === "start") {
@@ -98,16 +98,18 @@
                 Object.keys(state.players).forEach((player) => {
                   state.players[player] = {
                     playedCards: [],
-                    unplayedCards: [getNumber()]
+                    unplayedCards: [getNumber()],
+                    history: ["⬜️"]
                   };
                 });
-                state.actionLog.push(`${action.actor} started the game`);
+                state.actionLog.push(`🔔 ${action.actor} started the game`);
               }
 
               if (
                 action.type === "send-number" &&
                 state.players[action.actor]?.unplayedCards?.length
               ) {
+                
                 let n = state.players[action.actor].unplayedCards.shift();
                 state.players[action.actor].playedCards.push(n);
                 let isError = false;
@@ -120,18 +122,21 @@
                     }
                   }
                 }
-
+                
+                let playerState = state.players[action.actor];
                 if (isError) {
                   state.errors++;
+                  playerState.history[playerState.playedCards.length - 1] = '❌';
                   state.actionLog.push(
-                    `${action.actor} sent ${n} but it was wrong!`
+                    `❌ ${action.actor} sent ${n} but it was wrong!`
                   );
                 } else {
-                  state.actionLog.push(`${action.actor} sent ${n}`);
+                  playerState.history[playerState.playedCards.length - 1] = '✅';
+                  state.actionLog.push(`✅ ${action.actor} sent ${n}`);
                 }
                 if (levelIsComplete) {
                   state.level++;
-                  state.actionLog.push(`level ${state.level} started`);
+                  state.actionLog.push(`🎉 level ${state.level} started`);
                   Object.keys(state.players).forEach((player) => {
                     let numbers = Array.from({ length: state.level }, () =>
                       getNumber()
@@ -139,6 +144,7 @@
                     numbers = numbers.sort(function(a, b){return a-b});
                     state.players[player] = {
                       playedCards: [],
+                      history: numbers.map(() => '⬜️'),
                       unplayedCards: numbers,
                     };
                   });
@@ -172,7 +178,7 @@
                             )}
                             ${iff(
                               state.status === "playing",
-                              `[${state.players[player]?.unplayedCards?.length} cards left]`
+                              `[${state.players[player]?.history?.join?.('')}]`
                             )}
                           </li>`
                       )
@@ -187,13 +193,13 @@
                         ${state.players[username]?.playedCards
                           ?.map(
                             (card) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 50px; min-width: 50px;"><p style="text-align: center">${card}</p>✅</div>`
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px; min-height: 80px; min-width: 50px;"><p style="text-align: center">${card}</p>✅</div>`
                           )
                           .join("")}
                         ${state.players[username]?.unplayedCards
                           ?.map(
                             (card, idx) =>
-                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px min-height: 50px; min-width: 50px;"><p style="text-align: center">${card}</p>
+                              html`<div style="padding: 5px; margin: 5px; border: 1px solid black; border-radius: 5px min-height: 80px; min-width: 50px;"><p style="text-align: center">${card}</p>
                               ${idx === 0 ? '<button style="margin-left: 5px" id="send-number">Play</button>' : ''}
                               </div>`
                           )
