@@ -2,14 +2,18 @@
 <html lang="en">
   <head>
     <title>jeffy.me</title>
-    <meta name="description" content="jeffrey's beautiful website">
+    <meta name="description" content="jeffrey's beautiful website" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
     <main style="max-width: 600px; margin: 0 auto">
       <h1>hi!</h1>
       <p>my name is jeffrey.</p>
-      <pre style="overflow-x: scroll" role="img" aria-label="guinea pig ASCII art">
+      <pre
+        style="overflow-x: scroll"
+        role="img"
+        aria-label="guinea pig ASCII art"
+      >
        .-.                             ,-.
     .-(   )-.                       ,-(   )-.
    (     __) )-.                 ,-(_      __)
@@ -38,7 +42,8 @@
       <h3>my games</h3>
       <ul>
         <li>
-          <a href="games/the-mind.html">the mind</a> - multiplayer game that supports multiple clients using p2p webrtc
+          <a href="games/the-mind.html">the mind</a> - multiplayer game that
+          supports multiple clients using p2p webrtc
         </li>
         <li>
           <a href="games/air-hockey.html">air hockey</a> - player one uses a+d,
@@ -62,6 +67,27 @@
 
       <h3>my pages</h3>
       <ul>
+        <li>
+          <a id="mayall" href=""></a>
+          <script>
+            // maybe prevents spam bots from scraping my email?
+            document.querySelector("#mayall").innerHTML = ["em", "ail", " me"].join(
+              ""
+            );
+    
+            setTimeout(() => {
+              document.querySelector("#mayall").href = [
+                "m",
+                "ailto:",
+                "hello",
+                "@",
+                "jeffy",
+                ".",
+                "me",
+              ].join("");
+            }, 100);
+          </script>
+        </li>
         <li>
           <a href="https://www.github.com/jeffreyyoung/jeffy.me">github</a>
         </li>
