@@ -305,8 +305,12 @@
                   ${iff(state.status === 'next-level-wait-room', html`
                     <h4>amazing</h4>
                     <p>you have completed level ${state.level}</p>
-                    <p>are you ready for level ${state.level + 1}?</p>
-                    ${iff(state.players[username] !== true, html`<button id="im-ready">I'm ready</button>`)}
+                    ${iff(state.players[username] !== true, html`
+                      <p>are you ready for level ${state.level + 1}?</p>
+                      <button id="im-ready">I'm ready</button>
+                    `, html`
+                      <p>waiting for other players...</p>
+                    `)}
                   `)}
 
                   ${iff(
