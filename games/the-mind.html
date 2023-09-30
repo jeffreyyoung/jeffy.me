@@ -175,6 +175,34 @@
                 state.actionLog.push(`👋 ${escapeHtml(action.actor)} joined`);
               }
 
+              if (state.status === 'next-level-wait-room' && action.type === 'ready') {
+                state.players[action.actor] = true;
+              }
+
+              if (state.status === 'next-level-wait-room') {
+                let allAreReady = Object.values(state.players).every(obj => obj === true);
+                // go to next level
+                if (allAreReady) {
+                  state.status = 'playing';
+                  state.level++;
+                  state.actionLog.push(`🎉 level ${state.level} started`);
+                  Object.keys(state.players).forEach((player) => {
+                    let numbers = Array.from({ length: state.level }, () =>
+                      getNumber()
+                    );
+                    numbers = numbers.sort(function (a, b) {
+                      return a - b;
+                    });
+                    state.players[player] = {
+                      playedCards: [],
+                      history: numbers.map(() => "⬜️"),
+                      unplayedCards: numbers,
+                    };
+                  });
+                }
+                
+              }
+
               if (action.type === "start") {
                 state.level = 1;
                 state.status = "playing";
@@ -191,6 +219,7 @@
               }
 
               if (
+                state.status === 'playing' &&
                 action.type === "send-number" &&
                 state.players[action.actor]?.unplayedCards?.length
               ) {
@@ -220,22 +249,9 @@
                     "✅";
                   state.actionLog.push(`✅ ${action.actor} sent ${n}`);
                 }
+
                 if (levelIsComplete) {
-                  state.level++;
-                  state.actionLog.push(`🎉 level ${state.level} started`);
-                  Object.keys(state.players).forEach((player) => {
-                    let numbers = Array.from({ length: state.level }, () =>
-                      getNumber()
-                    );
-                    numbers = numbers.sort(function (a, b) {
-                      return a - b;
-                    });
-                    state.players[player] = {
-                      playedCards: [],
-                      history: numbers.map(() => "⬜️"),
-                      unplayedCards: numbers,
-                    };
-                  });
+                  state.status = 'next-level-wait-room';
                 }
               }
 
@@ -256,7 +272,7 @@
                   </h3>
 
                   ${iff(
-                    state.status === "playing",
+                    state.status === "playing" || state.status === 'next-level-wait-room',
                     `<p>🏆 level ${state.level} · 😳 ${state.errors} errors</p>`
                   )}
                   <h4>players</h4>
@@ -274,6 +290,9 @@
                               isHost && player === username,
                               ' <span style="background-color: lightgreen">host</span>'
                             )}
+                            ${iff(state.status === 'next-level-wait-room', 
+                              state.players[player] === true ? '[ready]' : '[not-ready]'
+                            )}
                             ${iff(
                               state.status === "playing",
                               `[${state.players[player]?.history?.join?.("")}]`
@@ -282,6 +301,13 @@
                       )
                       .join("")}
                   </ul>
+
+                  ${iff(state.status === 'next-level-wait-room', html`
+                    <h4>amazing</h4>
+                    <p>you have completed level ${state.level}</p>
+                    <p>are you ready for level ${state.level + 1}?</p>
+                    ${iff(state.players[username] !== true, html`<button id="im-ready">I'm ready</button>`)}
+                  `)}
 
                   ${iff(
                     state.status === "playing",
@@ -313,7 +339,7 @@
                                   <p style="text-align: center">${card}</p>
                                   ${
                                     idx === 0
-                                      ? '<p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">send</p>'
+                                      ? '<p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">play</p>'
                                       : '<p style="text-align: center">⬜️</p>'
                                   }
                                 </${idx === 0 ? "button" : "div"}>`
@@ -367,6 +393,11 @@
                 </div>
               `;
 
+              document.querySelector('#im-ready')
+                ?.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  server.send({ type: 'ready', actor: username });
+                })
               document
                 .querySelector("#start")
                 ?.addEventListener("click", (e) => {
