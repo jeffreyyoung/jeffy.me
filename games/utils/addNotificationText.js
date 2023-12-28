@@ -1,6 +1,3 @@
-import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
-
-
 export function addTitleScene({ sceneName = 'start', titleText = 'Title', instructions = 'Press anywhere to jump', nextScene = 'game' }) {
     scene(sceneName, () => {
         let title = add([

@@ -1,5 +1,23 @@
 // https://peerjs.com/docs/#peeron-error
 
+let servers = {};
+
+/**
+ * Get singleton of a game server
+ * @template T
+ * @template Action
+ * @param {{ isHost: boolean, roomId: string, initialState: T, onAction: (action: Action, state: T) => any, onStateChange: (state: T) => any}} args - Is this the host server?
+ */
+export function getGameServer(args) {
+  let key = `${args.roomId}-${args.isHost}`;
+  if (!servers[key]) {
+    servers[key] = createGameServer(args);
+  }
+
+  return servers[key];
+}
+
+
 /**
  * Create a game server
  * @template T
@@ -37,8 +55,10 @@ export function createGameServer({
         }
       });
     });
-
     return {
+      getLatestState() {
+        return state;
+      },
       send(action) {
         state = onAction(state, action);
         connections.forEach((connection) => connection.send(state));
@@ -84,6 +104,9 @@ export function createGameServer({
 
 
   return {
+    getLatestState() {
+      return state;
+    },
     /**
      * 
      * @param {Action} action 

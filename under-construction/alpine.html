@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <title>Under Construction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/@awcodes/alpine-floating-ui@3.4.0/dist/cdn.min.js"
+      defer
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@next/css/pico.min.css"
+    />
+    <style>
+      .panel {
+        width: max-content;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #222;
+        color: white;
+        font-weight: bold;
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 90%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h1 class="text-center">Under Construction</h1>
+        </div>
+      </div>
+
+      <section x-data="{ count: 0, areYouSure1: false, areYouSure2: false }">
+        <p x-text="count"></p>
+        <button x-on:click="areYouSure1 = true">inc</button>
+        <dialog x-teleport="body" x-bind:open="areYouSure1">
+          <article>
+            <p>Are you sure?</p>
+            <button x-on:click="areYouSure1 = false">No</button>
+            <button x-on:click="areYouSure2 = true">Yes</button>
+          </article>
+
+        </dialog>
+
+
+        <button x-on:click="count--">dec</button>
+      </section>
+
+
+
+      
+    </div>
+  </body>
+</html>
