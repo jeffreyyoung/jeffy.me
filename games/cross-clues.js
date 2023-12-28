@@ -250,7 +250,7 @@ function ui() {
   }
 
   return html`
-    <h4>lobby: ${lobbyId}</h4>
+    <h4><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a></h4>
     <h5>players:</h5>
     <ul>
       ${Object.values(gameState.players || {}).map(
@@ -325,11 +325,9 @@ function ui() {
           <h5>give a clue</h5>
           <p>
             your tile is
-            <strong>${gameState.players[username]?.coord}</strong>
+            <strong>${gameState.players[username]?.coord}</strong>. give a 1 word clue!
           </p>
-          <p>
-            announce a 1 word clue to your team that relates to the two words of your tile.  if your team guesses your tile correctly, click "correct".  If they guess incorrectly, click "miss".
-          </p>
+          <p>my team guessed...</p>
           <button @click=${() => server.send({
             type: 'guess',
             actor: username,
@@ -342,6 +340,9 @@ function ui() {
             coord: gameState.players[username]?.coord,
             result: 'miss',
           })}>miss</button>
+          <p>
+            announce a 1 word clue to your team that relates to the two words of your tile.  if your team guesses your tile correctly, click "correct".  If they guess incorrectly, click "miss".
+          </p>
         `
       : html``}
   `;
