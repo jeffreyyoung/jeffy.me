@@ -4,45 +4,6 @@ import {
 } from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
 import { getGameServer } from "./utils/game-server.js";
 import { words } from "./cross-clues-words.js";
-console.log(words);
-/**
-@typedef {{
-    players: {
-      [playerId: string]: {
-        name: string,
-        isHost: boolean,
-        coord?: string,
-      }
-    },
-    words: {
-      [columnName: string]: string,
-    },
-    guesses: {
-      [coord: string]: 'correct' | 'miss'
-    }
-  }} GameState
-
-
-  @typedef {
-    {
-      type: 'join',
-      actor: string,
-    } | {
-      type: 'give-clue',
-      actor: string,
-      clue: string
-    } | {
-      type: 'guess',
-      actor: string,
-      for: string,
-      coord: string,
-    }
-  } Action
- */
-
-/**
-  @type {GameState}
- */
 
 const urlSearchParams = new URLSearchParams(
   window.location.search.split("?")?.[1] || ""
@@ -125,12 +86,6 @@ const server = getGameServer({
     },
     guesses: {},
   },
-  /**
-   *
-   * @param {*} state
-   * @param {*} action
-   * @returns typeof initialState
-   */
   onAction(state, action) {
     if (action.type === "join") {
       return {
@@ -176,6 +131,10 @@ const server = getGameServer({
     update();
   },
 });
+server.send({
+  type: 'join',
+  actor: username,
+})
 
 function ui() {
   if (!username) {
@@ -222,13 +181,6 @@ function ui() {
   }
   let gameState = server.getLatestState();
 
-  if (!gameState.players[username]) {
-    server.send({
-      type: "join",
-      actor: username,
-    });
-  }
-
   function renderRows(gameState, rowLetter) {
     const actorState = gameState.players[username];
     return range(1, 5).map((number) => {
@@ -248,13 +200,13 @@ function ui() {
       </td>`;
     });
   }
-
+  console.log('ishost' , isHost)
   return html`
     <h4><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a></h4>
     <h5>players:</h5>
     <ul>
       ${Object.values(gameState.players || {}).map(
-        (player) => html` <li>${player?.name}</li> `
+        (player) => html` <li>${player?.name} ${isHost && player?.name === username ? '(host)' : ''}</li> `
       )}
     </ul>
     <p>tiles remaining: ${getUnusedCoordCount(gameState)}</p>
