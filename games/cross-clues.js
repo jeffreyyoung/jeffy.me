@@ -32,9 +32,9 @@ function wordGetter() {
 const getWord = wordGetter();
 
 function getUsedCoordsSet(gameState = {}) {
-  const playerCoords = Object.values(gameState?.players || {}).map(
-    (player) => player.coord
-  ).filter(Boolean);
+  const playerCoords = Object.values(gameState?.players || {})
+    .map((player) => player.coord)
+    .filter(Boolean);
 
   const coords = new Set([
     ...playerCoords,
@@ -43,8 +43,16 @@ function getUsedCoordsSet(gameState = {}) {
 
   return coords;
 }
-function getUnusedCoordCount(gameState) { 
-  return 25 - getUsedCoordsSet(gameState).size;
+
+function getUnguessedCoordCount(gameState) {
+  const coords = getUsedCoordsSet(gameState);
+  let playerCoords = 0;
+  for (const player of Object.values(gameState.players)) {
+    if (player.coord) {
+      playerCoords++;
+    }
+  }
+  return 25 - coords.size + playerCoords;
 }
 
 function getUnusedCoord(gameState) {
@@ -57,7 +65,7 @@ function getUnusedCoord(gameState) {
       return coord;
     }
   }
-  return '';
+  return "";
 }
 
 const server = getGameServer({
@@ -94,7 +102,7 @@ const server = getGameServer({
           ...state.players,
           [action.actor]: {
             name: action.actor,
-            isHost: false,
+            isHost: action.actor === username && isHost,
             coord: getUnusedCoord(state),
           },
         },
@@ -106,7 +114,7 @@ const server = getGameServer({
         board: action.board,
       };
     }
-    console.log('action', action)
+    console.log("action", action);
     if (action.type === "guess") {
       return {
         ...state,
@@ -120,21 +128,21 @@ const server = getGameServer({
             ...state.players[action.actor],
             coord: getUnusedCoord(state),
           },
-        }
+        },
       };
     }
 
     return state;
   },
   onStateChange(state) {
-    console.log('on state change', state);
+    console.log("on state change", state);
     update();
   },
 });
 server.send({
-  type: 'join',
+  type: "join",
   actor: username,
-})
+});
 
 function ui() {
   if (!username) {
@@ -196,20 +204,31 @@ function ui() {
         ${isMyTile
           ? html` <div class="my-tile">this is your tile 🤫</div> `
           : html``}
-        ${isGuessed === "correct" ? html`<div class="correct">✅</div>` : html``}
+        ${isGuessed === "correct"
+          ? html`<div class="correct">✅</div>`
+          : html``}
       </td>`;
     });
   }
-  console.log('ishost' , isHost)
+  const remainingTileCount = getUnguessedCoordCount(gameState);
+  console.log("ishost", isHost);
   return html`
-    <h4><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a></h4>
+    <p>
+      <small><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a> - invite others with this link</small>
+    </p>
     <h5>players:</h5>
     <ul>
       ${Object.values(gameState.players || {}).map(
-        (player) => html` <li>${player?.name} ${isHost && player?.name === username ? '(host)' : ''}</li> `
+        (player) =>
+          html`
+            <li>
+              ${player?.name}
+              ${player?.isHost  ? "(host)" : ""}
+              ${player?.name === username ? "(you)" : ""}
+            </li>
+          `
       )}
     </ul>
-    <p>tiles remaining: ${getUnusedCoordCount(gameState)}</p>
 
     <h5>board:</h5>
     <table>
@@ -272,31 +291,71 @@ function ui() {
         ${renderRows(gameState, "E")}
       </tr>
     </table>
+
     ${gameState.players[username]?.coord
       ? html`
           <h5>give a clue</h5>
           <p>
             your tile is
-            <strong>${gameState.players[username]?.coord}</strong>. give a 1 word clue!
+            <strong>${gameState.players[username]?.coord}</strong>. give a 1
+            word clue!
           </p>
           <p>my team guessed...</p>
-          <button @click=${() => server.send({
-            type: 'guess',
-            actor: username,
-            coord: gameState.players[username]?.coord,
-            result: 'correct',
-          })}>correct</button>
-          <button @click=${() => server.send({
-            type: 'guess',
-            actor: username,
-            coord: gameState.players[username]?.coord,
-            result: 'miss',
-          })}>miss</button>
-          <p>
-            announce a 1 word clue to your team that relates to the two words of your tile.  if your team guesses your tile correctly, click "correct".  If they guess incorrectly, click "miss".
-          </p>
+          <button
+            @click=${() =>
+              server.send({
+                type: "guess",
+                actor: username,
+                coord: gameState.players[username]?.coord,
+                result: "correct",
+              })}
+          >
+            correct
+          </button>
+          <button
+            @click=${() =>
+              server.send({
+                type: "guess",
+                actor: username,
+                coord: gameState.players[username]?.coord,
+                result: "miss",
+              })}
+          >
+            miss
+          </button>
         `
       : html``}
+
+    <p>${remainingTileCount} tiles remaining</p>
+    ${!gameState.players[username]?.coord && remainingTileCount > 0
+      ? html`
+          <p>
+            Waiting for
+            ${Object.entries(gameState.players)
+              .filter(([name, player]) => player.coord)
+              .map(([name, player]) => name)
+              .join(", ")}
+            to give clues
+          </p>
+        `
+      : ""}
+    ${remainingTileCount === 0
+      ? html`
+          <p>
+            🎉🎉${Object.values(gameState.guesses).filter(
+              (result) => result === "correct"
+            ).length}/25
+            correct🎉🎉
+          </p>
+        `
+      : ""}
+
+    <h5>how to play</h5>
+    <p>
+      announce a 1 word clue to your team that relates to the two words of your
+      tile. if your team guesses your tile correctly, click "correct". If they
+      guess incorrectly, click "miss".
+    </p>
   `;
 }
 
