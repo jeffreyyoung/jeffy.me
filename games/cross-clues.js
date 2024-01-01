@@ -170,10 +170,11 @@ function ui() {
   if (!lobbyId) {
     return html`
       <form @submit=${(e) => {}}>
-        <h3>join a game</h3>
+        <p>join game with lobby code</p>
         <input type="text" name="lobbyId" placeholder="lobby code" />
         <button type="submit">join</button>
       </form>
+      <hr>
       <form
         @submit=${(e) => {
           e.preventDefault();
@@ -182,7 +183,7 @@ function ui() {
           window.location.href = `/games/cross-clues.html?lobbyId=${gameId}`;
         }}
       >
-        <h3>host a game</h3>
+        <p>host a game</p>
         <button type="submit">create</button>
       </form>
     `;
@@ -216,7 +217,7 @@ function ui() {
     <p>
       <small><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a> - invite others with this link</small>
     </p>
-    <h5>players:</h5>
+    <h4>players:</h4>
     <ul>
       ${Object.values(gameState.players || {}).map(
         (player) =>
@@ -230,7 +231,7 @@ function ui() {
       )}
     </ul>
 
-    <h5>board:</h5>
+    <h4>board:</h4>
     <table>
       <tr>
         <th></th>
@@ -294,13 +295,13 @@ function ui() {
 
     ${gameState.players[username]?.coord
       ? html`
-          <h5>give a clue</h5>
+          <h4>give a clue</h4>
           <p>
             your tile is
             <strong>${gameState.players[username]?.coord}</strong>. give a 1
             word clue!
           </p>
-          <p>my team guessed...</p>
+          <p>Did your team guess correctly?</p>
           <button
             @click=${() =>
               server.send({
@@ -325,7 +326,7 @@ function ui() {
           </button>
         `
       : html``}
-
+    <hr>
     <p>${remainingTileCount} tiles remaining</p>
     ${!gameState.players[username]?.coord && remainingTileCount > 0
       ? html`
@@ -350,7 +351,7 @@ function ui() {
         `
       : ""}
 
-    <h5>how to play</h5>
+    <h4>how to play</h4>
     <p>
       announce a 1 word clue to your team that relates to the two words of your
       tile. if your team guesses your tile correctly, click "correct". If they
@@ -362,7 +363,7 @@ function ui() {
 function layout(children) {
   return html`
     <a href="/">home</a>
-    <h1>cross clues</h1>
+    <h3>cross clues 🕵️</h3>
     ${children}
   `;
 }
