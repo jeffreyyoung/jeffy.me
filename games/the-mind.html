@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
     <style>
+      .reset-button {
+        appearance: none;
+        display: inline-block;
+        padding: 3px;
+      }
+      .playable-card {
+        font-family: serif;
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 3px;
+        margin: 3px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
       * {
         word-break: break-word;
       }
@@ -268,7 +284,7 @@
                   </ul>
 
                   ${iff(state.status === 'next-level-wait-room', html`
-                    <h4>amazing</h4>
+                    <h4>amazing!</h4>
                     <p>you have completed level ${state.level}</p>
                     ${iff(state.players[username] !== true, html`
                       <p>are you ready for level ${state.level + 1}?</p>
@@ -289,29 +305,33 @@
                             ?.map(
                               (card, i) =>
                                 html`<div
-                                  style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: min-content; width: min-content; min-width: 6em; min-height: 9em; border: 1px solid black;"
+                                  class="reset-button playable-card"
                                 >
-                                  <p style="text-align: center">${card}</p>
-                                  <p style="text-align: center">
+                                  <p style="padding: 0 24px;">${card}</p>
+                                  <p>
                                     ${state.players[username]?.history?.[i]}
                                   </p>
                                 </div>`
                             )
                             .join("")}
-                          ${state.players[username]?.unplayedCards
+                          ${state.players[username]?.unplayedCards?.[0] ? html`
+                            <button
+                              id="send-number"
+                              class="reset-button grow playable-card"
+                            >
+                              <p style="padding: 0 24px;">${state.players[username]?.unplayedCards?.[0]}</p>
+                              <p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">play</p>
+                            </button>
+                          ` : html``}
+                          ${state.players[username]?.unplayedCards?.slice(1)
                             ?.map(
                               (card, idx) =>
-                                html`<${idx === 0 ? "button" : "div"}
-                                  ${idx === 0 ? `id="send-number" class="reset-button grow"` : ""}
-                                  style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: min-content; width: min-content; min-width: 6em; min-height: 9em; border: 1px solid black;"
+                                html`<div
+                                  class="reset-button playable-card"
                                 >
-                                  <p style="text-align: center">${card}</p>
-                                  ${
-                                    idx === 0
-                                      ? '<p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">play</p>'
-                                      : '<p style="text-align: center">⬜️</p>'
-                                  }
-                                </${idx === 0 ? "button" : "div"}>`
+                                  <p style="padding: 0 24px;">${card}</p>
+                                  <p>⬜️</p>
+                                </div>`
                             )
                             .join("")}
                         </div>

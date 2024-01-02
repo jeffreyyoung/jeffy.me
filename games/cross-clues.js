@@ -174,7 +174,7 @@ function ui() {
         <input type="text" name="lobbyId" placeholder="lobby code" />
         <button type="submit">join</button>
       </form>
-      <hr>
+      <hr />
       <form
         @submit=${(e) => {
           e.preventDefault();
@@ -213,23 +213,16 @@ function ui() {
   }
   const remainingTileCount = getUnguessedCoordCount(gameState);
   console.log("ishost", isHost);
+  let playerCoord = gameState.players[username]?.coord;
   return html`
     <p>
-      <small><a href="/games/cross-clues.html?lobbyId=${lobbyId}">lobby: ${lobbyId}</a> - invite others with this link</small>
+      <small
+        ><a href="/games/cross-clues.html?lobbyId=${lobbyId}"
+          >lobby: ${lobbyId}</a
+        >
+        - invite others with this link</small
+      >
     </p>
-    <h4>players:</h4>
-    <ul>
-      ${Object.values(gameState.players || {}).map(
-        (player) =>
-          html`
-            <li>
-              ${player?.name}
-              ${player?.isHost  ? "(host)" : ""}
-              ${player?.name === username ? "(you)" : ""}
-            </li>
-          `
-      )}
-    </ul>
 
     <h4>board:</h4>
     <table>
@@ -293,21 +286,19 @@ function ui() {
       </tr>
     </table>
 
-    ${gameState.players[username]?.coord
+    ${playerCoord
       ? html`
-          <h4>give a clue</h4>
-          <p>
-            your tile is
-            <strong>${gameState.players[username]?.coord}</strong>. give a 1
-            word clue!
-          </p>
+          <h4>Your tile is <strong>${playerCoord}</strong></h4>
+          <p><small>
+            Give a 1 word hint associated associated with the row and column of your tile (${gameState.words[playerCoord[0]]} and ${gameState.words[playerCoord[1]]}). If your team guesses correctly, click "correct". If they guess incorrectly, click "miss".
+          </small></p>
           <p>Did your team guess correctly?</p>
           <button
             @click=${() =>
               server.send({
                 type: "guess",
                 actor: username,
-                coord: gameState.players[username]?.coord,
+                coord: playerCoord,
                 result: "correct",
               })}
           >
@@ -318,7 +309,7 @@ function ui() {
               server.send({
                 type: "guess",
                 actor: username,
-                coord: gameState.players[username]?.coord,
+                coord: playerCoord,
                 result: "miss",
               })}
           >
@@ -326,9 +317,9 @@ function ui() {
           </button>
         `
       : html``}
-    <hr>
+    <hr />
     <p>${remainingTileCount} tiles remaining</p>
-    ${!gameState.players[username]?.coord && remainingTileCount > 0
+    ${!playerCoord && remainingTileCount > 0
       ? html`
           <p>
             Waiting for
@@ -350,7 +341,18 @@ function ui() {
           </p>
         `
       : ""}
-
+    <h4>players:</h4>
+    <ul>
+      ${Object.values(gameState.players || {}).map(
+        (player) =>
+          html`
+            <li>
+              ${player?.name} ${player?.isHost ? "(host)" : ""}
+              ${player?.name === username ? "(you)" : ""}
+            </li>
+          `
+      )}
+    </ul>
     <h4>how to play</h4>
     <p>
       announce a 1 word clue to your team that relates to the two words of your
