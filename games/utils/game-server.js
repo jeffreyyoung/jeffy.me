@@ -61,6 +61,9 @@ export function createGameServer({
       });
     });
     return {
+      isConnected() {
+        return true;
+      },
       getLatestState() {
         return state;
       },
@@ -83,7 +86,19 @@ export function createGameServer({
     peer.on("open", (id) => {
         console.log("my peer id is", id);
         let host = peer.connect(roomId);
-        console.log('connecting to host');
+        host.on('error', (e) => {
+            console.log('error', e);
+            peer.destroy();
+            setTimeout(connectToHost, 1000);
+        })
+        console.log('connecting to host, retrying...');
+        setTimeout(() => {
+          if (!host.open) {
+            console.log('host not open');
+            peer.destroy();
+            connectToHost();
+          }
+        }, 5000);
         host.on("open", () => {
           console.log('connected to host');
             _host = host;
@@ -113,6 +128,10 @@ export function createGameServer({
   return {
     getLatestState() {
       return state;
+    },
+
+    isConnected() {
+      return _host !== null;
     },
     /**
      * 

@@ -95,7 +95,7 @@ const server = getGameServer({
     guesses: {},
   },
   onAction(state, action) {
-    if (action.type === "join") {
+    if (action.type === "join" && !state.players[action.actor]) {
       return {
         ...state,
         players: {
@@ -203,7 +203,9 @@ function ui() {
         class="needs-guess ${isGuessed}"
       >
         ${isMyTile
-          ? html` <div class="my-tile fadeInUp-animation">this is your tile 🤫</div> `
+          ? html`
+              <div class="my-tile fadeInUp-animation">this is your tile 🤫</div>
+            `
           : html``}
         ${isGuessed === "correct"
           ? html`<div class="correct fadeInUp-animation">✅</div>`
@@ -289,9 +291,15 @@ function ui() {
     ${playerCoord
       ? html`
           <h4>Your tile is <strong>${playerCoord}</strong></h4>
-          <p><small>
-            Give a 1 word hint associated associated with the row and column of your tile (${gameState.words[playerCoord[0]]} and ${gameState.words[playerCoord[1]]}). If your team guesses correctly, click "correct". If they guess incorrectly, click "miss".
-          </small></p>
+          <p>
+            <small>
+              Give a 1 word hint associated associated with the row and column
+              of your tile (${gameState.words[playerCoord[0]]} and
+              ${gameState.words[playerCoord[1]]}). If your team guesses
+              correctly, click "correct". If they guess incorrectly, click
+              "miss".
+            </small>
+          </p>
           <p>Did your team guess correctly?</p>
           <button
             @click=${() =>
