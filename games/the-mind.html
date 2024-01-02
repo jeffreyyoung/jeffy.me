@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
     <style>
+      @keyframes fadeInUp {
+        0% {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0%);
+          opacity: 1;
+        }
+      }
+
+      .fadeInUp-animation {
+        animation: 0.5s fadeInUp;
+      }
       .reset-button {
         appearance: none;
         display: inline-block;
@@ -41,7 +55,6 @@
       .grow:hover {
         transform: scale(1.02);
       }
-
     </style>
     <script type="module">
       import { html, escapeHtml } from "./utils/html.js";
@@ -156,15 +169,20 @@
                 state.actionLog.push(`👋 ${escapeHtml(action.actor)} joined`);
               }
 
-              if (state.status === 'next-level-wait-room' && action.type === 'ready') {
+              if (
+                state.status === "next-level-wait-room" &&
+                action.type === "ready"
+              ) {
                 state.players[action.actor] = true;
               }
 
-              if (state.status === 'next-level-wait-room') {
-                let allAreReady = Object.values(state.players).every(obj => obj === true);
+              if (state.status === "next-level-wait-room") {
+                let allAreReady = Object.values(state.players).every(
+                  (obj) => obj === true
+                );
                 // go to next level
                 if (allAreReady) {
-                  state.status = 'playing';
+                  state.status = "playing";
                   state.level++;
                   state.actionLog.push(`🎉 level ${state.level} started`);
                   Object.keys(state.players).forEach((player) => {
@@ -181,7 +199,6 @@
                     };
                   });
                 }
-                
               }
 
               if (action.type === "start") {
@@ -200,7 +217,7 @@
               }
 
               if (
-                state.status === 'playing' &&
+                state.status === "playing" &&
                 action.type === "send-number" &&
                 state.players[action.actor]?.unplayedCards?.length
               ) {
@@ -232,7 +249,7 @@
                 }
 
                 if (levelIsComplete) {
-                  state.status = 'next-level-wait-room';
+                  state.status = "next-level-wait-room";
                 }
               }
 
@@ -253,7 +270,8 @@
                   </h3>
 
                   ${iff(
-                    state.status === "playing" || state.status === 'next-level-wait-room',
+                    state.status === "playing" ||
+                      state.status === "next-level-wait-room",
                     `<p>🏆 level ${state.level} · 😳 ${state.errors} errors</p>`
                   )}
                   <h4>players</h4>
@@ -271,8 +289,11 @@
                               isHost && player === username,
                               ' <span style="background-color: lightgreen">host</span>'
                             )}
-                            ${iff(state.status === 'next-level-wait-room', 
-                              state.players[player] === true ? '[ready]' : '[not-ready]'
+                            ${iff(
+                              state.status === "next-level-wait-room",
+                              state.players[player] === true
+                                ? "[ready]"
+                                : "[not-ready]"
                             )}
                             ${iff(
                               state.status === "playing",
@@ -283,17 +304,21 @@
                       .join("")}
                   </ul>
 
-                  ${iff(state.status === 'next-level-wait-room', html`
-                    <h4>amazing!</h4>
-                    <p>you have completed level ${state.level}</p>
-                    ${iff(state.players[username] !== true, html`
-                      <p>are you ready for level ${state.level + 1}?</p>
-                      <button id="im-ready">i'm ready</button>
-                    `, html`
-                      <p>waiting for other players...</p>
-                    `)}
-                  `)}
-
+                  ${iff(
+                    state.status === "next-level-wait-room",
+                    html`
+                      <h4>amazing!</h4>
+                      <p>you have completed level ${state.level}</p>
+                      ${iff(
+                        state.players[username] !== true,
+                        html`
+                          <p>are you ready for level ${state.level + 1}?</p>
+                          <button id="im-ready">i'm ready</button>
+                        `,
+                        html` <p>waiting for other players...</p> `
+                      )}
+                    `
+                  )}
                   ${iff(
                     state.status === "playing",
                     html`<h4>your cards</h4>
@@ -304,9 +329,7 @@
                           ${state.players[username]?.playedCards
                             ?.map(
                               (card, i) =>
-                                html`<div
-                                  class="reset-button playable-card"
-                                >
+                                html`<div class="reset-button playable-card">
                                   <p style="padding: 0 24px;">${card}</p>
                                   <p>
                                     ${state.players[username]?.history?.[i]}
@@ -314,21 +337,29 @@
                                 </div>`
                             )
                             .join("")}
-                          ${state.players[username]?.unplayedCards?.[0] ? html`
-                            <button
-                              id="send-number"
-                              class="reset-button grow playable-card"
-                            >
-                              <p style="padding: 0 24px;">${state.players[username]?.unplayedCards?.[0]}</p>
-                              <p style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;">play</p>
-                            </button>
-                          ` : html``}
-                          ${state.players[username]?.unplayedCards?.slice(1)
+                          ${state.players[username]?.unplayedCards?.[0]
+                            ? html`
+                                <button
+                                  id="send-number"
+                                  class="reset-button grow playable-card"
+                                >
+                                  <p style="padding: 0 24px;">
+                                    ${state.players[username]
+                                      ?.unplayedCards?.[0]}
+                                  </p>
+                                  <p
+                                    style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;"
+                                  >
+                                    play
+                                  </p>
+                                </button>
+                              `
+                            : html``}
+                          ${state.players[username]?.unplayedCards
+                            ?.slice(1)
                             ?.map(
                               (card, idx) =>
-                                html`<div
-                                  class="reset-button playable-card"
-                                >
+                                html`<div class="reset-button playable-card">
                                   <p style="padding: 0 24px;">${card}</p>
                                   <p>⬜️</p>
                                 </div>`
@@ -382,11 +413,12 @@
                 </div>
               `;
 
-              document.querySelector('#im-ready')
-                ?.addEventListener('click', (e) => {
+              document
+                .querySelector("#im-ready")
+                ?.addEventListener("click", (e) => {
                   e.preventDefault();
-                  server.send({ type: 'ready', actor: username });
-                })
+                  server.send({ type: "ready", actor: username });
+                });
               document
                 .querySelector("#start")
                 ?.addEventListener("click", (e) => {
