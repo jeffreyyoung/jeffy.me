@@ -203,10 +203,10 @@ function ui() {
         class="needs-guess ${isGuessed}"
       >
         ${isMyTile
-          ? html` <div class="my-tile">this is your tile 🤫</div> `
+          ? html` <div class="my-tile fadeInUp-animation">this is your tile 🤫</div> `
           : html``}
         ${isGuessed === "correct"
-          ? html`<div class="correct">✅</div>`
+          ? html`<div class="correct fadeInUp-animation">✅</div>`
           : html``}
       </td>`;
     });

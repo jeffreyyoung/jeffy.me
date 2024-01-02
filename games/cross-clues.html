@@ -7,6 +7,20 @@
     <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
     <script src="cross-clues.js" type="module"></script>
     <style>
+      @keyframes fadeInUp {
+        0% {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0%);
+          opacity: 1;
+        }
+      }
+
+      .fadeInUp-animation {
+        animation: 0.5s fadeInUp;
+      }
       button {
         padding: 12px;
         padding-top: 8px !important;
@@ -71,10 +85,7 @@
       body {
         padding-bottom: 300px;
       }
-
-
     </style>
   </head>
-  <body>
-  </body>
+  <body></body>
 </html>
