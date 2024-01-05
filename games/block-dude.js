@@ -41,9 +41,9 @@ const levels = [
 ];
 
 /** @type {Coord & { dir: -1 | 1}} */
-let manCoords;
+let dudeCoords;
 /** @type Coord */
-let doorCoords;
+let exitCoords;
 /** @type {string[][]} */
 let rows;
 
@@ -60,36 +60,36 @@ window.addEventListener("resize", () => {
  * @param {"left" | "right" | "pickup"} action
  */
 function onInput(action) {
-  if (!manCoords) {
+  if (!dudeCoords) {
     return;
   }
 
   if (action === "left") {
-    if (manCoords.dir === 1) {
-      manCoords.dir = -1;
+    if (dudeCoords.dir === 1) {
+      dudeCoords.dir = -1;
       paint();
       return;
     }
-    moveMan(-1);
+    moveDude(-1);
   }
   if (action === "right") {
-    if (manCoords.dir === -1) {
-      manCoords.dir = 1;
+    if (dudeCoords.dir === -1) {
+      dudeCoords.dir = 1;
       paint();
       return;
     }
-    moveMan(1);
+    moveDude(1);
   }
   if (action === "pickup") {
     if (canPickUpBlock()) {
       const blockCoords = getPickUpBlockCoords();
       rows[blockCoords.y][blockCoords.x] = " ";
-      rows[manCoords.y - 1][manCoords.x] = "B";
+      rows[dudeCoords.y - 1][dudeCoords.x] = "B";
       paint();
     } else if (hasBlock()) {
       const blockCoords = getPlaceBlockCoords();
       rows[blockCoords.y][blockCoords.x] = "B";
-      rows[manCoords.y - 1][manCoords.x] = " ";
+      rows[dudeCoords.y - 1][dudeCoords.x] = " ";
       paint();
     }
   }
@@ -142,12 +142,12 @@ function getPickUpBlockCoords() {
   if (hasBlock()) {
     return null;
   }
-  if (!manCoords) {
+  if (!dudeCoords) {
     return null;
   }
-  let blockX = manCoords.x + manCoords.dir;
-  let blockY = manCoords.y - 1;
-  while (blockY <= manCoords.y + 1) {
+  let blockX = dudeCoords.x + dudeCoords.dir;
+  let blockY = dudeCoords.y - 1;
+  while (blockY <= dudeCoords.y + 1) {
     if (rows[blockY][blockX] === "B" && rows[blockY - 1][blockX] !== "B") {
       return { x: blockX, y: blockY };
     }
@@ -164,11 +164,11 @@ function getPlaceBlockCoords() {
   if (!hasBlock()) {
     return null;
   }
-  if (!manCoords) {
+  if (!dudeCoords) {
     return null;
   }
-  let blockX = manCoords.x + manCoords.dir;
-  let blockY = manCoords.y;
+  let blockX = dudeCoords.x + dudeCoords.dir;
+  let blockY = dudeCoords.y;
   while (blockY < rows.length) {
     if (rows[blockY][blockX] === " " && isSolidSpace(blockX, blockY + 1)) {
       return { x: blockX, y: blockY };
@@ -182,34 +182,34 @@ function canPickUpBlock() {
 }
 
 function hasBlock() {
-  if (!manCoords) {
+  if (!dudeCoords) {
     return false;
   }
 
-  return rows[manCoords.y - 1][manCoords.x] === "B";
+  return rows[dudeCoords.y - 1][dudeCoords.x] === "B";
 }
 
-function moveMan(dx) {
-  if (!manCoords) {
+function moveDude(dx) {
+  if (!dudeCoords) {
     return;
   }
 
-  const newX = manCoords.x + dx;
-  let y = manCoords.y - 1;
+  const newX = dudeCoords.x + dx;
+  let y = dudeCoords.y - 1;
   while (y < rows.length) {
     if (isOpenSpace(newX, y) && isSolidSpace(newX, y + 1)) {
       const holdingBlock = hasBlock();
 
       // remove block
       if (holdingBlock) {
-        rows[manCoords.y - 1][manCoords.x] = " ";
+        rows[dudeCoords.y - 1][dudeCoords.x] = " ";
       }
 
-      manCoords.y = y;
-      manCoords.x = newX;
+      dudeCoords.y = y;
+      dudeCoords.x = newX;
 
       if (holdingBlock) {
-        rows[manCoords.y - 1][manCoords.x] = "B";
+        rows[dudeCoords.y - 1][dudeCoords.x] = "B";
       }
       paint();
       return;
@@ -232,10 +232,10 @@ function resetTo(level = 0) {
   for (let y = 0; y < rows.length; y++) {
     for (let x = 0; x < rows[y].length; x++) {
       if (rows[y][x] === "M") {
-        manCoords = { x, y, dir: 1 };
+        dudeCoords = { x, y, dir: 1 };
       }
       if (rows[y][x] === "E") {
-        doorCoords = { x, y };
+        exitCoords = { x, y };
       }
     }
   }
@@ -264,8 +264,8 @@ function _paint() {
   let YBlocksInView = Math.ceil(window.innerHeight / blockSize);
   let dy = Math.round(YBlocksInView / 2);
   let dx = Math.round(xBlocksInView / 2);
-  let rootX = manCoords.x - dx;
-  let rootY = manCoords.y - dy;
+  let rootX = dudeCoords.x - dx;
+  let rootY = dudeCoords.y - dy;
 
   for (let _y = 0; _y < YBlocksInView; _y++) {
     for (let _x = 0; _x < xBlocksInView; _x++) {
@@ -292,7 +292,7 @@ function _paint() {
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
         ctx.globalAlpha = 1;
       }
-      if (doorCoords?.x === x && doorCoords?.y === y) {
+      if (exitCoords?.x === x && exitCoords?.y === y) {
         ctx.fillStyle = "red";
 
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
@@ -312,7 +312,7 @@ function _paint() {
       }
       ctx.globalAlpha = 1;
 
-      if (manCoords?.x === x && manCoords?.y === y) {
+      if (dudeCoords?.x === x && dudeCoords?.y === y) {
         ctx.fillStyle = "pink";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
         // add hair
@@ -355,7 +355,7 @@ function _paint() {
           ctx.fillStyle = "black";
           const eyeWidth = blockSize / 8;
           const eyeX =
-            manCoords.dir === -1
+            dudeCoords.dir === -1
               ? _x * blockSize
               : _x * blockSize + blockSize - eyeWidth;
           ctx.fillRect(
@@ -368,7 +368,7 @@ function _paint() {
           // add mouth
           const mouthWidth = blockSize / 2;
           const mouthX =
-            manCoords.dir === -1
+            dudeCoords.dir === -1
               ? _x * blockSize
               : _x * blockSize + blockSize - mouthWidth;
           ctx.fillRect(
