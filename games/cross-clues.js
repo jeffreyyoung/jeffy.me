@@ -279,12 +279,13 @@ function ui() {
   let playerCoord = gameState.players[username]?.coord;
   return html`
     <p>
-      <small
-        ><a href="/games/cross-clues.html?lobbyId=${lobbyId}"
-          >lobby: ${lobbyId}</a
-        >
-        - invite others with this link</small
-      >
+      <button
+        @click=${() => {
+          navigator.clipboard.writeText(
+            window.location.href
+          );
+        }}
+      >copy invite link</button>
     </p>
 
     <h4>board:</h4>
