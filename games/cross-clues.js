@@ -277,13 +277,20 @@ function ui() {
   const remainingTileCount = getUnguessedCoordCount(gameState);
   console.log("ishost", isHost);
   let playerCoord = gameState.players[username]?.coord;
+  let timeoutId = -1;
   return html`
     <p>
       <button
+        id="copy-link"
         @click=${() => {
           navigator.clipboard.writeText(
             window.location.href
           );
+          document.getElementById("copy-link").innerText = "copied!";
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            document.getElementById("copy-link").innerText = "copy invite link";
+          }, 1000);
         }}
       >copy invite link</button>
       <br />
