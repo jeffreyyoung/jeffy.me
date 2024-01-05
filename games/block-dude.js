@@ -7,20 +7,20 @@ console.log("canvas", canvas);
 let curLevel = 0;
 const levels = [
   `
-==============================
-=                            =
-=                            =
-=                            =
-=                            =
-=                            =
-=                            =
-=                            =
-=                            =
-=                            =
-=E                           =
-==       =                   =
-==       =       =    B  B  M=
-==============================
+===================
+=                 =
+=                 =
+=                 =
+=                 =
+=                 =
+=                 =
+=                 =
+=                 =
+=                 =
+=E                =
+==    =           =
+==    =    B  B  M=
+===================
 `,
   `
 ==============================
@@ -48,6 +48,10 @@ let doorCoords;
 let rows;
 
 function resetTo(level = 0) {
+    if (level >= levels.length) {
+        alert('You win!');
+        return;
+    }
   curLevel = level;
   rows = levels[curLevel]
     .split("\n")
@@ -257,10 +261,12 @@ function _paint() {
 
   for (let _y = 0; _y < YBlocksInView; _y++) {
     for (let _x = 0; _x < xBlocksInView; _x++) {
-        
       let x = rootX + _x;
       let y = rootY + _y;
       if (x < 0 || y < 0) {
+        continue;
+      }
+      if (y >= rows.length || x >= rows[y].length) {
         continue;
       }
       let actionCoords = getPickUpBlockCoords() || getPlaceBlockCoords();
@@ -270,8 +276,8 @@ function _paint() {
       if (isActionable) {
         ctx.globalAlpha = 0.6;
       }
-      console.log('isActionable!', isActionable, {doorCoords, x, y})
-      if (char === ' ' && isActionable) {
+      console.log("isActionable!", isActionable, { doorCoords, x, y });
+      if (char === " " && isActionable) {
         ctx.globalAlpha = 0.2;
         ctx.fillStyle = "purple";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
@@ -284,7 +290,7 @@ function _paint() {
       }
       if (char === "B") {
         if (isActionable) {
-            ctx.globalAlpha = 0.6;
+          ctx.globalAlpha = 0.6;
         }
         ctx.fillStyle = "purple";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
@@ -303,32 +309,67 @@ function _paint() {
         // add hair
         ctx.fillStyle = "brown";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize / 4);
-        // add eye
-        ctx.fillStyle = "black";
-        const eyeWidth = blockSize / 8;
-        const eyeX =
-          manCoords.dir === -1
-            ? _x * blockSize
-            : _x * blockSize + blockSize - eyeWidth;
-        ctx.fillRect(
-          eyeX,
-          _y * blockSize + blockSize * 0.4,
-          blockSize / 8,
-          blockSize / 8
-        );
+        if (char === "E") {
+          // we did it!
+          // draw a smiley face
+          ctx.fillStyle = "black";
+          const eyeWidth = blockSize / 8;
+          ctx.fillRect(
+            _x * blockSize + eyeWidth * 2,
+            _y * blockSize + blockSize * 0.4,
+            eyeWidth,
+            eyeWidth
+          );
+          ctx.fillRect(
+            _x * blockSize + blockSize - eyeWidth * 3,
+            _y * blockSize + blockSize * 0.4,
+            eyeWidth,
+            eyeWidth
+          );
 
-        // add mouth
-        const mouthWidth = blockSize / 2;
-        const mouthX =
-          manCoords.dir === -1
-            ? _x * blockSize
-            : _x * blockSize + blockSize - mouthWidth;
-        ctx.fillRect(
-          mouthX,
-          _y * blockSize + blockSize * 0.8,
-          mouthWidth,
-          blockSize / 16
-        );
+          // add mouth
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = blockSize / 16;
+          ctx.arc(
+            _x * blockSize + blockSize / 2,
+            _y * blockSize + blockSize / 2 + blockSize / 4,
+            blockSize / 6,
+            0,
+            Math.PI
+          );
+          ctx.stroke();
+          setTimeout(() => {
+            resetTo(curLevel + 1);
+            paint();
+          }, 1000);
+        } else {
+          // add eye
+          ctx.fillStyle = "black";
+          const eyeWidth = blockSize / 8;
+          const eyeX =
+            manCoords.dir === -1
+              ? _x * blockSize
+              : _x * blockSize + blockSize - eyeWidth;
+          ctx.fillRect(
+            eyeX,
+            _y * blockSize + blockSize * 0.4,
+            eyeWidth,
+            eyeWidth
+          );
+
+          // add mouth
+          const mouthWidth = blockSize / 2;
+          const mouthX =
+            manCoords.dir === -1
+              ? _x * blockSize
+              : _x * blockSize + blockSize - mouthWidth;
+          ctx.fillRect(
+            mouthX,
+            _y * blockSize + blockSize * 0.8,
+            mouthWidth,
+            blockSize / 16
+          );
+        }
       }
     }
   }
