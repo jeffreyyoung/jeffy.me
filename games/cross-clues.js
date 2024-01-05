@@ -286,9 +286,11 @@ function ui() {
           );
         }}
       >copy invite link</button>
+      <br />
+      <small>lobby code: ${lobbyId}</small>
     </p>
 
-    <h4>board:</h4>
+    <h4>board</h4>
     <table>
       <tr>
         <th></th>
@@ -421,7 +423,7 @@ function ui() {
           `
         : ""
     }
-    <h4>players:</h4>
+    <h4>players</h4>
     <ul>
       ${Object.values(gameState.players || {}).map(
         (player) =>
@@ -452,7 +454,7 @@ function ui() {
 function layout(children) {
   return html`
     <a href="/">home</a>
-    <h3>cross clues 🕵️ ${lobbyId ? html`<small style="color: dodgerblue; font-size: 0.8rem;">lobby code: ${lobbyId}</small>` : ''}</h3>
+    <h3>cross clues 🕵️</h3>
     ${children}
   `;
 }
