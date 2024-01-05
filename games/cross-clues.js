@@ -141,7 +141,7 @@ const server = getSingletonGameServer({
   },
 
   onAction(state, /** @type {Action} */ action) {
-    if (action.type === "join" && !state.players[action.actor]) {
+    if (action.type === "join" && action.actor && !state.players[action.actor]) {
       return {
         ...state,
         players: {
