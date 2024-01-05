@@ -68,7 +68,15 @@ function resetTo(level = 0) {
       }
     }
   }
+  paint();
 }
+
+var animationFrame = 0;
+function paint() {
+  cancelAnimationFrame(animationFrame);
+  animationFrame = requestAnimationFrame(_paint);
+}
+
 
 resetTo(0);
 
@@ -78,7 +86,7 @@ resetTo(0);
  */
 
 window.addEventListener("resize", () => {
-  requestAnimationFrame(paint);
+  paint();
 });
 
 /**
@@ -374,9 +382,3 @@ function _paint() {
     }
   }
 }
-let animationFrame = 0;
-function paint() {
-  cancelAnimationFrame(animationFrame);
-  animationFrame = requestAnimationFrame(_paint);
-}
-paint();
