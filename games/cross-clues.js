@@ -452,7 +452,7 @@ function ui() {
 function layout(children) {
   return html`
     <a href="/">home</a>
-    <h3>cross clues 🕵️</h3>
+    <h3>cross clues 🕵️ ${lobbyId ? html`<small style="color: dodgerblue; font-size: 0.8rem;">lobby code: ${lobbyId}</small>` : ''}</h3>
     ${children}
   `;
 }
