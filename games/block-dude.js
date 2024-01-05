@@ -162,20 +162,13 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("click", (event) => {
-  // click on top 2/3 of window
-  if (
-    event.clientY < (window.innerHeight * 2) / 3 &&
-    (getPickUpBlockCoords() || hasBlock())
-  ) {
-    onInput("pickup");
-    return;
-  }
 
-  // click on left side of window
-  if (event.clientX < window.innerWidth / 2) {
+  if (event.clientX < window.innerWidth * .25) {
     onInput("left");
-  } else {
+  } else if (event.clientX > window.innerWidth * .75) {
     onInput("right");
+  } else {
+    onInput("pickup");
   }
 });
 
