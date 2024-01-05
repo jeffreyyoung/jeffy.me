@@ -85,7 +85,7 @@ export interface KaboomCtx {
 	/**
 	 * Remove and re-add the game obj, without triggering add / destroy events.
 	 */
-	readd(obj: GameObj),
+	readd(obj: GameObj): void,
 	/**
 	 * Get a list of all game objs with certain tag.
 	 *

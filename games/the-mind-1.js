@@ -134,6 +134,7 @@ let server = () =>
           status: state.status === "before-start" ? "waiting" : "playing",
           cards: getHand(),
         };
+        state.history.unshift(`👋 ${action.actor} joined`);
       }
 
       if (
@@ -175,12 +176,12 @@ let server = () =>
         }
         let isCorrect = card.name === allCardsInHand[0].name;
         card.status = isCorrect ? "played-correct" : "played-incorrect";
-        state.history.push(
-          `${action.actor} played ${card.name} (${isCorrect ? "✅" : "❌"})`
+        state.history.unshift(
+          `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`
         );
         if (allCardsInHand.length <= 1) {
           state.status = "level-complete";
-          state.history.push(`level ${state.level} complete`);
+          state.history.unshift(`🎉 level ${state.level} complete`);
           Object.values(state.players).forEach((player) => {
             player.status = "waiting";
           });
@@ -213,9 +214,10 @@ function App() {
   return html`
     <a href="/">home</a>
     <h4>the mind 🧠</h4>
-    ${() => !appState.username && UserNameForm()}
-    ${() => appState.username && !appState.lobbyId && LobbyIdForm()}
-    ${() => appState.username && appState.lobbyId && Game()}
+    ${() => !appState.username && UserNameForm().key("user-form")}
+    ${() =>
+      appState.username && !appState.lobbyId && LobbyIdForm().key("lobby-form")}
+    ${() => appState.username && appState.lobbyId && Game().key("game")}
   `;
 }
 
@@ -238,7 +240,7 @@ function UserNameForm() {
             return;
           }
 
-          localStorage.setItem("username", appState.username);
+          localStorage.setItem("username", username);
           appState.username = username;
         }
       }"
@@ -305,14 +307,20 @@ function InviteLink() {
 }
 
 function Game() {
-  console.log("reanding game");
   return html`
     <div>
       ${() => InviteLink()} ${() => PlayersSection()}
-      ${() => appState.game.status === "before-start" && ReadySection()}
-      ${() => appState.game.status === "level-complete" && ReadySection()}
-      ${() => appState.game.status === "in-level" && CardsSection()}
-    </div>
+      ${() =>
+        ["before-start", "level-complete"].includes(appState.game.status) &&
+        ReadySection()}
+      ${() =>
+        appState.game.status === "in-level" &&
+        CardsSection()}
+       <h4>actions</h4>
+       <ul>
+            ${() => appState.game.history.map((action, i) => html`<li>${action}</li>`)}
+       </ul>
+    </div>  
   `;
 }
 
@@ -320,10 +328,11 @@ function ReadySection() {
   const notReadyPlayers = Object.values(appState.game.players).filter(
     (player) => player.status !== "ready"
   );
-  return html`
+  const me = () => appState.game.players[appState.username];
+  return html` <div>
     <h4>ready for level ${() => appState.game.level + 1}?</h4>
     ${() =>
-      appState.game.players?.[appState.username]?.status === "ready"
+      me()?.status === "ready"
         ? html`
             <p>
               waiting for
@@ -342,27 +351,29 @@ function ReadySection() {
               ready
             </button>
           `}
-  `;
+  </div>`;
 }
 
 function CardsSection() {
-  let cards = appState.game.players[appState.username].cards;
-  const lastAction = appState.game.history[appState.game.history.length - 1];
-
-  let playableCard = cards.find((card) => card.status === "in-hand");
+  let cards = () => appState.game.players[appState.username].cards;
+  let lastAction = () =>
+    appState.game.history[0];
+  let playableCard = cards().find((card) => card.status === "in-hand");
   return html`
-    <section style="position: sticky; top: 0; background-color: white;">
-      <h4>
-        level ${() => appState.game.level} ${lastAction ? " - " : ""}
-        ${lastAction}
-      </h4>
-    </section>
-    <h4>your cards</h4>
-    <div style="display: flex; flex-direction: row; flex-wrap: wrap;">
-      ${() =>
-        appState.game.players[appState.username].cards.map((card) =>
-          Card(card, card === playableCard)
-        )}
+    <div>
+      <section style="position: sticky; top: 0; background-color: white;">
+        <h4>
+          level ${() => appState.game.level}
+          ${lastAction() ? ` - ${lastAction()}` : ""}
+        </h4>
+      </section>
+      <h4>your cards</h4>
+      <div style="display: flex; flex-direction: row; flex-wrap: wrap;">
+        ${() =>
+          appState.game.players[appState.username].cards.map((card) =>
+            Card(card, card === playableCard)
+          )}
+      </div>
     </div>
   `;
 }
