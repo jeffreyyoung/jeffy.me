@@ -2,9 +2,8 @@
 // @ts-ignore
 const canvas = document.getElementById("canvas");
 
-console.log("canvas", canvas);
-
 let curLevel = 0;
+
 const levels = [
   `
 ===================
@@ -22,6 +21,7 @@ const levels = [
 ==    =    B  B  M=
 ===================
 `,
+
   `
 ==============================
 =                            =
@@ -47,44 +47,10 @@ let doorCoords;
 /** @type {string[][]} */
 let rows;
 
-function resetTo(level = 0) {
-    if (level >= levels.length) {
-        alert('You win!');
-
-        return;
-    }
-  curLevel = level;
-  rows = levels[curLevel]
-    .split("\n")
-    .filter((row) => row.length > 0)
-    .map((row) => row.split(""));
-  for (let y = 0; y < rows.length; y++) {
-    for (let x = 0; x < rows[y].length; x++) {
-      if (rows[y][x] === "M") {
-        manCoords = { x, y, dir: 1 };
-      }
-      if (rows[y][x] === "E") {
-        doorCoords = { x, y };
-      }
-    }
-  }
-  paint();
-}
-
-var animationFrame = 0;
-function paint() {
-  cancelAnimationFrame(animationFrame);
-  animationFrame = requestAnimationFrame(_paint);
-}
-
-
-resetTo(0);
-
 /**
  * @typedef Coord
  * @type {{x: number, y: number}}
  */
-
 window.addEventListener("resize", () => {
   paint();
 });
@@ -144,9 +110,9 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("click", (event) => {
-  // click on top half of window
+  // click on top 2/3 of window
   if (
-    event.clientY < window.innerHeight / 2 &&
+    event.clientY < (window.innerHeight * 2) / 3 &&
     (getPickUpBlockCoords() || hasBlock())
   ) {
     onInput("pickup");
@@ -164,6 +130,7 @@ window.addEventListener("click", (event) => {
 function isOpenSpace(x, y) {
   return rows[y][x] === " " || rows[y][x] === "M" || rows[y][x] === "E";
 }
+
 function isSolidSpace(x, y) {
   return rows[y][x] === "=" || rows[y][x] === "B";
 }
@@ -251,14 +218,46 @@ function moveMan(dx) {
   }
 }
 
+function resetTo(level = 0) {
+  if (level >= levels.length) {
+    alert("You win!");
+
+    return;
+  }
+  curLevel = level;
+  rows = levels[curLevel]
+    .split("\n")
+    .filter((row) => row.length > 0)
+    .map((row) => row.split(""));
+  for (let y = 0; y < rows.length; y++) {
+    for (let x = 0; x < rows[y].length; x++) {
+      if (rows[y][x] === "M") {
+        manCoords = { x, y, dir: 1 };
+      }
+      if (rows[y][x] === "E") {
+        doorCoords = { x, y };
+      }
+    }
+  }
+  paint();
+}
+
+var animationFrame = 0;
+function paint() {
+  cancelAnimationFrame(animationFrame);
+  animationFrame = requestAnimationFrame(_paint);
+}
+
+resetTo(0);
+
 function _paint() {
   const ctx = canvas.getContext("2d");
   const blockSize = Math.min(window.innerWidth, window.innerHeight) / 9;
-  console.log("blockSize", blockSize);
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  // paint background
   ctx.fillStyle = "skyblue";
-  console.log("manDir", manCoords?.dir);
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   let xBlocksInView = Math.ceil(window.innerWidth / blockSize);
@@ -280,12 +279,13 @@ function _paint() {
       }
       let actionCoords = getPickUpBlockCoords() || getPlaceBlockCoords();
       const char = rows[y][x];
-      console.log("char", { manCoords, x, y, char });
+      
       let isActionable = actionCoords?.x === x && actionCoords?.y === y;
       if (isActionable) {
         ctx.globalAlpha = 0.6;
       }
-      console.log("isActionable!", isActionable, { doorCoords, x, y });
+
+
       if (char === " " && isActionable) {
         ctx.globalAlpha = 0.2;
         ctx.fillStyle = "purple";
