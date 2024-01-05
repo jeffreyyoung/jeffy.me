@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Mind Game</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <style>
+        @keyframes fadeInUp {
+        0% {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0%);
+          opacity: 1;
+        }
+      }
+
+      .fadeInUp-animation {
+        animation: 0.5s fadeInUp;
+      }
+
+      .card {
+        border: 1px solid black;
+        border-radius: 4px;
+        padding: 8px;
+        margin: 8px;
+        display: inline-block;
+        font-family: serif;
+        font-size: 1rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="the-mind-1.js"></script>
+    <!-- Your content here -->
+  </body>
+</html>

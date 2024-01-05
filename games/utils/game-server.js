@@ -1,28 +1,39 @@
 // https://peerjs.com/docs/#peeron-error
 
-let servers = {};
 
+/** @type {any} */
+let _server = null;
 /**
- * Get singleton of a game server
- * @template T
+ * @template GameState
  * @template Action
- * @param {{ isHost: boolean, roomId: string, initialState: T, onAction: (action: Action, state: T) => any, onStateChange: (state: T) => any}} args - Is this the host server?
+ * @param {GameServerArgs<GameState, Action>} args
+ * @returns {ReturnType<typeof createGameServer<GameState, Action>>}
  */
-export function getGameServer(args) {
-  let key = `${args.roomId}-${args.isHost}`;
-  if (!servers[key]) {
-    servers[key] = createGameServer(args);
+export function getSingletonGameServer(args) {
+  if (!_server) {
+    _server = createGameServer(args);
   }
-
-  return servers[key];
+  return _server;
 }
 
+/**
+ * @template GameState
+ * @template Action
+ * @typedef GameServerArgs
+ * @type {{
+ *  isHost: boolean,
+ *  roomId: string,
+ *  initialState: GameState,
+ *  onAction: (state: GameState, action: Action) => GameState,
+ *  onStateChange: (state: GameState) => any 
+ * }}
+ */
 
 /**
  * Create a game server
- * @template T
+ * @template GameState
  * @template Action
- * @param {{ isHost: boolean, roomId: string, initialState: T, onAction: (action: Action, state: T) => any, onStateChange: (state: T) => any}} args - Is this the host server?
+ * @param {GameServerArgs<GameState, Action>} args
  */
 export function createGameServer({
   isHost,
@@ -31,7 +42,9 @@ export function createGameServer({
   onAction,
   onStateChange,
 }) {
+  console.log('createGameServer', isHost, roomId, initialState, onAction, onStateChange)
   let state = initialState;
+  /** @type {PeerJsConnection[]} */
   let connections = [];
   setTimeout(() => {
     onStateChange(state);
@@ -67,7 +80,12 @@ export function createGameServer({
       getLatestState() {
         return state;
       },
+      /**
+       * 
+       * @param {Action} action 
+       */
       send(action) {
+        console.log('action', action);
         state = onAction(state, action);
         connections.forEach((connection) => connection.send(state));
         console.log("sending action to connections");
@@ -75,10 +93,12 @@ export function createGameServer({
       },
     };
   }
+  /** @type {Action[]} */
   let queuedActions = [];
 
   console.log("connection to roomId", roomId);
-  let _host = null;
+  /** @type {PeerJsConnection} */
+  let _host;
   
   function connectToHost() {
     let peer = new Peer();
@@ -114,6 +134,7 @@ export function createGameServer({
     
         host.on('close', () => {
             console.log("host closed");
+            // @ts-ignore
             _host = null;
             peer.destroy();
             setTimeout(connectToHost, 1000);

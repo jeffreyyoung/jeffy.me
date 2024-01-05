@@ -2,9 +2,38 @@ import {
   html,
   render,
 } from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
-import { getGameServer } from "./utils/game-server.js";
+import { getSingletonGameServer } from "./utils/game-server.js";
 import { words } from "./cross-clues-words.js";
 
+/**
+ * @typedef Player
+ * @type {{
+ * name: string,
+ * isHost: boolean,
+ * coord: string
+ * }}
+ */
+/**
+ * @typedef GameState
+ * @type {{
+ * players: Record<string, Player>
+ * words: Record<string, string>
+ * guesses: Record<string, "correct" | "miss">
+ * }}
+ */
+
+/**
+ * @typedef Action
+ * @type {{
+ * actor: string,
+ * } & ({
+ *  type: "join"
+ * } | {
+ *  type: "guess",
+ * coord: string,
+ * result: "correct" | "miss"
+ * })}
+ */
 const urlSearchParams = new URLSearchParams(
   window.location.search.split("?")?.[1] || ""
 );
@@ -25,13 +54,17 @@ function wordGetter() {
       }
     }
     throw new Error("no more words");
-    return;
   };
 }
 
 const getWord = wordGetter();
 
-function getUsedCoordsSet(gameState = {}) {
+/**
+ *
+ * @param {GameState=} gameState
+ * @returns
+ */
+function getUsedCoordsSet(gameState = { players: {}, guesses: {}, words: {} }) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
     .filter(Boolean);
@@ -44,6 +77,10 @@ function getUsedCoordsSet(gameState = {}) {
   return coords;
 }
 
+/**
+ * @param {GameState} gameState
+ * @returns {number}
+ */
 function getUnguessedCoordCount(gameState) {
   const coords = getUsedCoordsSet(gameState);
   let playerCoords = 0;
@@ -55,6 +92,10 @@ function getUnguessedCoordCount(gameState) {
   return 25 - coords.size + playerCoords;
 }
 
+/**
+ * @param {GameState=} gameState
+ * @returns {string}
+ */
 function getUnusedCoord(gameState) {
   const coords = getUsedCoordsSet(gameState);
   while (coords.size < 25) {
@@ -68,16 +109,20 @@ function getUnusedCoord(gameState) {
   return "";
 }
 
-const server = getGameServer({
+/**
+ *
+ * @returns {ReturnType<typeof createGameServer<GameState, Action>>}
+ */
+const server = getSingletonGameServer({
   isHost,
   roomId: lobbyId,
-  enabled: username && lobbyId,
+  /** @type {GameState} */
   initialState: {
     players: {
       [username]: {
         name: username,
         isHost,
-        coord: getUnusedCoord({}),
+        coord: getUnusedCoord(),
       },
     },
     words: {
@@ -94,7 +139,8 @@ const server = getGameServer({
     },
     guesses: {},
   },
-  onAction(state, action) {
+
+  onAction(state, /** @type {Action} */ action) {
     if (action.type === "join" && !state.players[action.actor]) {
       return {
         ...state,
@@ -106,12 +152,6 @@ const server = getGameServer({
             coord: getUnusedCoord(state),
           },
         },
-      };
-    }
-    if (action.type === "update") {
-      return {
-        ...state,
-        board: action.board,
       };
     }
     console.log("action", action);
@@ -148,13 +188,16 @@ function ui() {
   if (!username) {
     return html`
       <form
-        @submit=${(e) => {
-          e.preventDefault();
-          const username = e.target.username.value;
-          localStorage.setItem("username", username.trim());
-          // refresh page
-          window.location = window.location;
-        }}
+        @submit=${
+          // @ts-ignore
+          (e) => {
+            e.preventDefault();
+            const username = e.target.username.value;
+            localStorage.setItem("username", username.trim());
+            // refresh page
+            window.location = window.location;
+          }
+        }
       >
         <input
           type="text"
@@ -169,19 +212,31 @@ function ui() {
 
   if (!lobbyId) {
     return html`
-      <form @submit=${(e) => {}}>
+      <form
+        @submit=${
+          // @ts-ignore
+          (e) => {
+            e.preventDefault();
+            const lobbyId = e.target.lobbyId.value;
+            window.location.href = `/games/cross-clues.html?lobbyId=${lobbyId}`;
+          }
+        }
+      >
         <p>join game with lobby code</p>
         <input type="text" name="lobbyId" placeholder="lobby code" />
         <button type="submit">join</button>
       </form>
       <hr />
       <form
-        @submit=${(e) => {
-          e.preventDefault();
-          const gameId = Math.random().toString(36).substring(4);
-          window.localStorage.setItem(`isHost-${gameId}`, true);
-          window.location.href = `/games/cross-clues.html?lobbyId=${gameId}`;
-        }}
+        @submit=${
+          // @ts-ignore
+          (e) => {
+            e.preventDefault();
+            const gameId = Math.random().toString(36).substring(4);
+            window.localStorage.setItem(`isHost-${gameId}`, "true");
+            window.location.href = `/games/cross-clues.html?lobbyId=${gameId}`;
+          }
+        }
       >
         <p>host a game</p>
         <button type="submit">create</button>
@@ -190,6 +245,12 @@ function ui() {
   }
   let gameState = server.getLatestState();
 
+  /**
+   *
+   * @param {GameState} gameState
+   * @param {string} rowLetter
+   * @returns
+   */
   function renderRows(gameState, rowLetter) {
     const actorState = gameState.players[username];
     return range(1, 5).map((number) => {
@@ -370,6 +431,11 @@ function ui() {
   `;
 }
 
+/**
+ *
+ * @param {any} children
+ * @returns
+ */
 function layout(children) {
   return html`
     <a href="/">home</a>
@@ -382,6 +448,12 @@ function update() {
   render(layout(ui()), document.body);
 }
 
+/**
+ *
+ * @param {number} start
+ * @param {number} end
+ * @returns
+ */
 function range(start, end) {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
