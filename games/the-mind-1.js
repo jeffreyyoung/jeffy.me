@@ -426,7 +426,7 @@ function PlayersSection() {
                 player.cards.length > 0
                   ? player.cards
                       .map(
-                        (card) =>
+                        (card) => 
                           ({
                             "played-correct": "✅",
                             "played-incorrect": "❌",
