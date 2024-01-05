@@ -19,7 +19,7 @@ const levels = [
 =                            =
 =E                           =
 ==       =                   =
-==       =       =   BB     M=
+==       =       =    B  B  M=
 ==============================
 `,
   `
@@ -257,27 +257,45 @@ function _paint() {
 
   for (let _y = 0; _y < YBlocksInView; _y++) {
     for (let _x = 0; _x < xBlocksInView; _x++) {
+        
       let x = rootX + _x;
       let y = rootY + _y;
       if (x < 0 || y < 0) {
         continue;
       }
+      let actionCoords = getPickUpBlockCoords() || getPlaceBlockCoords();
       const char = rows[y][x];
       console.log("char", { manCoords, x, y, char });
-
+      let isActionable = actionCoords?.x === x && actionCoords?.y === y;
+      if (isActionable) {
+        ctx.globalAlpha = 0.6;
+      }
+      console.log('isActionable!', isActionable, {doorCoords, x, y})
+      if (char === ' ' && isActionable) {
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = "purple";
+        ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
+        ctx.globalAlpha = 1;
+      }
       if (doorCoords?.x === x && doorCoords?.y === y) {
         ctx.fillStyle = "red";
+
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
       }
       if (char === "B") {
+        if (isActionable) {
+            ctx.globalAlpha = 0.6;
+        }
         ctx.fillStyle = "purple";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
+        ctx.globalAlpha = 1;
       }
 
       if (char === "=") {
         ctx.fillStyle = "green";
         ctx.fillRect(_x * blockSize, _y * blockSize, blockSize, blockSize);
       }
+      ctx.globalAlpha = 1;
 
       if (manCoords?.x === x && manCoords?.y === y) {
         ctx.fillStyle = "pink";
@@ -308,71 +326,6 @@ function _paint() {
         ctx.fillRect(
           mouthX,
           _y * blockSize + blockSize * 0.8,
-          mouthWidth,
-          blockSize / 16
-        );
-      }
-    }
-  }
-
-  return;
-  for (let y = 0; y < rows.length; y++) {
-    const row = rows[y];
-    for (let x = 0; x < row.length; x++) {
-      const char = row[x];
-
-      if (char === "M") {
-        row[x] = " ";
-        manCoords = { x, y, dir: manCoords?.dir ?? 1 };
-      }
-      if (char === "E") {
-        row[x] = " ";
-        doorCoords = { x, y };
-      }
-
-      if (doorCoords?.x === x && doorCoords?.y === y) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-      }
-      if (char === "B") {
-        ctx.fillStyle = "purple";
-        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-      }
-
-      if (char === "=") {
-        ctx.fillStyle = "green";
-        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-      }
-
-      if (manCoords?.x === x && manCoords?.y === y) {
-        ctx.fillStyle = "pink";
-        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-        // add hair
-        ctx.fillStyle = "brown";
-        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize / 4);
-        // add eye
-        ctx.fillStyle = "black";
-        const eyeWidth = blockSize / 8;
-        const eyeX =
-          manCoords.dir === -1
-            ? x * blockSize
-            : x * blockSize + blockSize - eyeWidth;
-        ctx.fillRect(
-          eyeX,
-          y * blockSize + blockSize * 0.4,
-          blockSize / 8,
-          blockSize / 8
-        );
-
-        // add mouth
-        const mouthWidth = blockSize / 2;
-        const mouthX =
-          manCoords.dir === -1
-            ? x * blockSize
-            : x * blockSize + blockSize - mouthWidth;
-        ctx.fillRect(
-          mouthX,
-          y * blockSize + blockSize * 0.8,
           mouthWidth,
           blockSize / 16
         );
