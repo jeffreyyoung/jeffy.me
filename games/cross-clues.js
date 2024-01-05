@@ -349,67 +349,77 @@ function ui() {
       </tr>
     </table>
 
-    ${playerCoord
-      ? html`
-          <h4>Your tile is <strong>${playerCoord}</strong></h4>
-          <p>
-            <small>
-              Give a 1 word hint associated associated with the row and column
-              of your tile (${gameState.words[playerCoord[0]]} and
-              ${gameState.words[playerCoord[1]]}). If your team guesses
-              correctly, click "correct". If they guess incorrectly, click
-              "miss".
-            </small>
-          </p>
-          <p>Did your team guess correctly?</p>
-          <button
-            @click=${() =>
-              server.send({
-                type: "guess",
-                actor: username,
-                coord: playerCoord,
-                result: "correct",
-              })}
-          >
-            correct
-          </button>
-          <button
-            @click=${() =>
-              server.send({
-                type: "guess",
-                actor: username,
-                coord: playerCoord,
-                result: "miss",
-              })}
-          >
-            miss
-          </button>
-        `
-      : html``}
+    ${
+      playerCoord
+        ? html`
+            <details style="margin-top: 15px;">
+              <summary>
+                <h4 style="display: inline;">
+                  Your tile is <strong>${playerCoord}</strong>
+                </h4>
+              </summary>
+              <p>
+                  Give a 1 word hint associated associated with the row and
+                  column of your tile (${gameState.words[playerCoord[0]]} and
+                  ${gameState.words[playerCoord[1]]}). If your team guesses
+                  correctly, click "correct". If they guess incorrectly, click
+                  "miss".
+              </p>
+            </details>
+            <p>Did your team guess correctly?</p>
+            <button
+              @click=${() =>
+                server.send({
+                  type: "guess",
+                  actor: username,
+                  coord: playerCoord,
+                  result: "correct",
+                })}
+            >
+              ✅ correct
+            </button>
+            <button
+              @click=${() =>
+                server.send({
+                  type: "guess",
+                  actor: username,
+                  coord: playerCoord,
+                  result: "miss",
+                })}
+            >
+              ❌ miss
+            </button>
+          `
+        : html``
+    }
     <hr />
     <p>${remainingTileCount} tiles remaining</p>
-    ${!playerCoord && remainingTileCount > 0
-      ? html`
-          <p>
-            Waiting for
-            ${Object.entries(gameState.players)
-              .filter(([name, player]) => player.coord)
-              .map(([name, player]) => name)
-              .join(", ")}
-            to give clues
-          </p>
-        `
-      : ""}
-    ${remainingTileCount === 0
-      ? html`
-          <p>
-            🎉🎉${Object.values(gameState.guesses).filter(
-              (result) => result === "correct"
-            ).length}/25
-            correct🎉🎉
-          </p>
-        `
-      : ""}
+    ${
+      !playerCoord && remainingTileCount > 0
+        ? html`
+            <p>
+              Waiting for
+              ${Object.entries(gameState.players)
+                .filter(([name, player]) => player.coord)
+                .map(([name, player]) => name)
+                .join(", ")}
+              to give clues
+            </p>
+          `
+        : ""
+    }
+    ${
+      remainingTileCount === 0
+        ? html`
+            <p>
+              🎉🎉${Object.values(gameState.guesses).filter(
+                (result) => result === "correct"
+              ).length}/25
+              correct🎉🎉
+            </p>
+          `
+        : ""
+    }
     <h4>players:</h4>
     <ul>
       ${Object.values(gameState.players || {}).map(
@@ -422,12 +432,14 @@ function ui() {
           `
       )}
     </ul>
-    <h4>how to play</h4>
-    <p>
-      announce a 1 word clue to your team that relates to the two words of your
-      tile. if your team guesses your tile correctly, click "correct". If they
-      guess incorrectly, click "miss".
-    </p>
+    <details>
+        <summary><h4 style="display: inline;">how to play</h4></summary>
+        <p>
+        announce a 1 word clue to your team that relates to the two words of your
+        tile. if your team guesses your tile correctly, click "correct". If they
+        guess incorrectly, click "miss".
+      </p>
+    </details
   `;
 }
 
