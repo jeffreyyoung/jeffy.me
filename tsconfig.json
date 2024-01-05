@@ -10,6 +10,6 @@
     "declarationDir": "types",
     "declaration": true
   },
-  "include": ["games/**/*.js", "./types.d.ts", "_types/**/*.ts"],
+  "include": ["games/**/*.js", "./types.d.ts", "_types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }
