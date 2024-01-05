@@ -130,17 +130,22 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-window.addEventListener('touchmove', (event) => {
-    onInput('pickup');
-})
-
 window.addEventListener("click", (event) => {
-    // click on left side of window
-    if (event.clientX < window.innerWidth / 2) {
-        onInput('left');
-    } else {
-        onInput('right');
-    }
+  // click on top half of window
+  if (
+    event.clientY < window.innerHeight / 2 &&
+    (getPickUpBlockCoords() || hasBlock())
+  ) {
+    onInput("pickup");
+    return;
+  }
+
+  // click on left side of window
+  if (event.clientX < window.innerWidth / 2) {
+    onInput("left");
+  } else {
+    onInput("right");
+  }
 });
 
 function isOpenSpace(x, y) {
