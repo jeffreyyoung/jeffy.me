@@ -1,27 +1,49 @@
 <html>
-    <head>
-        <title>block dude 🏃</title>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-    </head>
-    <body style="margin: 0">
-        <canvas id="canvas"></canvas>
+  <head>
+    <title>block dude 🏃</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="margin: 0">
+    <canvas id="canvas"></canvas>
+    <div
+      style="
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        padding: 12px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        gap: 12px;
+      "
+      onclick="event.stopPropagation();"
+    >
+      <a href="/">home</a>
+      <details style="flex: 1">
+        <summary>how to play</summary>
+        <ul>
+          <li>move left - left arrow / tap on left side of screen</li>
+          <li>move right - right arrow / tap on right side of screen</li>
+          <li>pickup/dropblock - up arrow/ tap on top half of screen</li>
+        </ul>
+      </details>
+      <div>
         <div
-            style="position: absolute; left: 0; top: 0; right: 0; padding: 12px; display: flex; flex-direction: row; justify-content: space-evenly; gap: 12px;"
-            onclick="event.stopPropagation();"
+          style="
+            display: flex;
+            flex-direction: row;
+            flex-shrink: 1;
+            align-items: center;
+            gap: 12px;
+          "
         >
-            <a href="/">home</a>
-            <details style="flex: 1;">
-                <summary>how to play</summary>
-                <ul>
-                    <li>move left - left arrow / tap on left side of screen</li>
-                    <li>move right - right arrow / tap on right side of screen</li>
-                    <li>pickup/dropblock - up arrow/ tap on top half of screen</li>
-                </ul>
-            </details>
-            <div>
-            <button onclick="window.location.reload()">reset</button></div>
+          <span id="level-indicator"></span>
+          <button onclick="window.location.reload()">reset</button>
         </div>
-        <script type="module" src="block-dude.js"></script>
-    </body>
+      </div>
+    </div>
+    <script type="module" src="block-dude.js"></script>
+  </body>
 </html>

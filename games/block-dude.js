@@ -37,8 +37,60 @@ const levels = [
 ==       =                   =
 ==   BB  =       =   BB     M=
 ==============================
+`,  `
+==============================
+=                            =
+=                            =
+=                            =
+=                            =
+=                            =
+=                            =
+=                            =
+=                            =
+=E                           =
+==       =       B           =
+==       =       B           =
+==       =       BBBB       M=
+==============================
 `,
 ];
+
+/**
+ * @param {number} start
+ * @param {number} end
+ * @returns {number[]}
+ * */
+function range(start, end) {
+  let nums = [];
+  for (let i = start; i < end; i++) {
+    nums.push(i);
+  }
+  return nums;
+}
+/**
+ * @param {number} seed
+ */
+function generateLevel(seed) {
+  const width = 25;
+  const height = 15;
+
+  let end = { x: width - 1, y: height - 5 };
+  let start = { x: 1, y: height - 5 };
+
+  let rows = [
+    range(0, width).map(() => "="),
+    ...range(0, height - 2).map(() => [
+        '=',
+        ...range(0, width - 2).map(() => ' '),
+        '='
+    ]),
+    range(0, width).map(() => "="),
+  ];
+
+  return rows;
+}
+
+console.log(generateLevel(10));
 
 /** @type {Coord & { dir: -1 | 1}} */
 let dudeCoords;
@@ -218,12 +270,13 @@ function moveDude(dx) {
   }
 }
 
-function resetTo(level = 0) {
+function setupLevel(level = 0) {
   if (level >= levels.length) {
     alert("You win!");
 
     return;
   }
+  document.getElementById("level-indicator").innerText = `Level ${level + 1}`;
   curLevel = level;
   rows = levels[curLevel]
     .split("\n")
@@ -232,7 +285,7 @@ function resetTo(level = 0) {
   for (let y = 0; y < rows.length; y++) {
     for (let x = 0; x < rows[y].length; x++) {
       if (rows[y][x] === "M") {
-        dudeCoords = { x, y, dir: 1 };
+        dudeCoords = { x, y, dir: -1 };
       }
       if (rows[y][x] === "E") {
         exitCoords = { x, y };
@@ -248,7 +301,7 @@ function paint() {
   animationFrame = requestAnimationFrame(_paint);
 }
 
-resetTo(0);
+setupLevel(0);
 
 function _paint() {
   const ctx = canvas.getContext("2d");
@@ -279,12 +332,11 @@ function _paint() {
       }
       let actionCoords = getPickUpBlockCoords() || getPlaceBlockCoords();
       const char = rows[y][x];
-      
+
       let isActionable = actionCoords?.x === x && actionCoords?.y === y;
       if (isActionable) {
         ctx.globalAlpha = 0.6;
       }
-
 
       if (char === " " && isActionable) {
         ctx.globalAlpha = 0.2;
@@ -348,7 +400,7 @@ function _paint() {
           );
           ctx.stroke();
           setTimeout(() => {
-            resetTo(curLevel + 1);
+            setupLevel(curLevel + 1);
           }, 1000);
         } else {
           // add eye
