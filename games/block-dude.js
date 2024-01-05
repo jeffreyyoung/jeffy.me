@@ -240,14 +240,13 @@ function moveMan(dx) {
 
 function _paint() {
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "skyblue";
-  console.log("manDir", manCoords?.dir);
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   const blockSize = Math.min(window.innerWidth, window.innerHeight) / 9;
   console.log("blockSize", blockSize);
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  ctx.fillStyle = "skyblue";
+  console.log("manDir", manCoords?.dir);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   let xBlocksInView = Math.ceil(window.innerWidth / blockSize);
   let YBlocksInView = Math.ceil(window.innerHeight / blockSize);
