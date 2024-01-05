@@ -50,6 +50,7 @@ let rows;
 function resetTo(level = 0) {
     if (level >= levels.length) {
         alert('You win!');
+
         return;
     }
   curLevel = level;
@@ -340,7 +341,6 @@ function _paint() {
           ctx.stroke();
           setTimeout(() => {
             resetTo(curLevel + 1);
-            paint();
           }, 1000);
         } else {
           // add eye
