@@ -248,14 +248,26 @@ function UserNameForm() {
       <label for="username">What is your name?</label>
       <br />
       <input type="text" name="username" />
-      <button type="submit">submit</button>
+      <button type="submit">join</button>
     </form>
   `;
 }
 
 function LobbyIdForm() {
   return html`
-    <h4>join game with lobby code</h4>
+    <p>create new game</p>
+    <button
+      @click="${() => {
+        let lobbyId = Math.random().toString(36).substring(4, 8).toLocaleUpperCase();
+        window.localStorage.setItem(`isHost-${lobbyId}`, "true");
+        window.location.href =
+          window.location.href.split("?")[0] + "?lobbyId=" + lobbyId;
+      }}"
+    >
+      create
+    </button>
+    <hr />
+    <p>join existing game</p>
     <form
       @submit="${
         // @ts-ignore
@@ -275,34 +287,34 @@ function LobbyIdForm() {
         }
       }"
     >
-      <input type="text" name="lobbyId" />
-      <button type="submit">submit</button>
+      <input type="text" name="lobbyId" placeholder="game code" />
+      <button type="submit">join</button>
     </form>
     <hr />
-    <h4>create new game</h4>
-    <button
-      @click="${() => {
-        let lobbyId = Math.random().toString(36).substring(4);
-        window.localStorage.setItem(`isHost-${lobbyId}`, "true");
-        window.location.href =
-          window.location.href.split("?")[0] + "?lobbyId=" + lobbyId;
-      }}"
-    >
-      create
-    </button>
   `;
 }
 
+let inviteLinkTimeoutId = 0;
 function InviteLink() {
+    
   return html`
-    <button
-      @click="${() => {
-        // copy to clipboard
-        navigator.clipboard.writeText(window.location.href);
-      }}"
-    >
-      ${appState.lobbyId} (copy invite link)
-    </button>
+    <div>
+      <button
+        @click="${(e) => {
+            clearTimeout(inviteLinkTimeoutId);
+          // copy to clipboard
+          navigator.clipboard.writeText(window.location.href);
+            e.target.innerText = 'copied!';
+            inviteLinkTimeoutId = setTimeout(() => {
+                e.target.innerText = 'copy invite link';
+            }, 1000);
+        }}"
+      >
+        copy invite link
+      </button>
+      <br />
+      <small>game code ${() => appState.lobbyId}</small>
+    </div>
   `;
 }
 
@@ -313,14 +325,13 @@ function Game() {
       ${() =>
         ["before-start", "level-complete"].includes(appState.game.status) &&
         ReadySection()}
-      ${() =>
-        appState.game.status === "in-level" &&
-        CardsSection()}
-       <h4>actions</h4>
-       <ul>
-            ${() => appState.game.history.map((action, i) => html`<li>${action}</li>`)}
-       </ul>
-    </div>  
+      ${() => appState.game.status === "in-level" && CardsSection()}
+      <h4>actions</h4>
+      <ul>
+        ${() =>
+          appState.game.history.map((action, i) => html`<li>${action}</li>`)}
+      </ul>
+    </div>
   `;
 }
 
@@ -356,8 +367,7 @@ function ReadySection() {
 
 function CardsSection() {
   let cards = () => appState.game.players[appState.username].cards;
-  let lastAction = () =>
-    appState.game.history[0];
+  let lastAction = () => appState.game.history[0];
   let playableCard = cards().find((card) => card.status === "in-hand");
   return html`
     <div>
@@ -426,7 +436,7 @@ function PlayersSection() {
                 player.cards.length > 0
                   ? player.cards
                       .map(
-                        (card) => 
+                        (card) =>
                           ({
                             "played-correct": "✅",
                             "played-incorrect": "❌",
