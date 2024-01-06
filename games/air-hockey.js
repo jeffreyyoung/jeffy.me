@@ -1,4 +1,7 @@
+/// <reference path="../node_modules/kaboom/dist/global.d.ts" />
+// @ts-ignore
 import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+
 import { addNotificationText } from "./utils/addNotificationText.js";
 // initialize context
 kaboom({
@@ -186,6 +189,7 @@ scene("game", () => {
 
   onTouchMove(handleTouch);
 
+  // @ts-ignore
   onHoverUpdate(() => handleTouch(mousePos()))
 
   onKeyDown('left', () => {

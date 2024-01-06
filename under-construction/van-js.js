@@ -1,0 +1,1 @@
+import van from "https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.7.min.js"

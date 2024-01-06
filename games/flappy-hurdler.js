@@ -1,3 +1,5 @@
+/// <reference path="../node_modules/kaboom/dist/global.d.ts" />
+// @ts-ignore
 import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 
 // initialize context
@@ -106,6 +108,7 @@ scene("game", () => {
 
   onCollide("barrier", "bean", (args) => {
     addKaboom(bean.pos, {
+      // @ts-ignore
       text: "Yummy!!!",
     });
     shake(8);
