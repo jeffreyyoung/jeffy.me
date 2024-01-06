@@ -1,3 +1,4 @@
+
 declare module "https://esm.sh/@arrow-js/core@1.0.0-alpha.9" {
     export function reactive<T>(obj: T): T;
     export const html: any;
@@ -25,4 +26,16 @@ declare class Peer {
 declare module "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js" {
     export const html: any;
     export const render: any;
+}
+
+// https://stackoverflow.com/questions/71342646/adding-import-statement-to-global-d-ts-destroys-type-and-module-declarations
+declare module "https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.7.min.js" {
+    type Van = import('./van.d.ts').Van;
+    export const van: Van;
+}
+
+declare module "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs" {
+    type Kaboom = typeof import('./kaboom.d.ts').default;
+    const kaboom: Kaboom;
+    export default kaboom;
 }

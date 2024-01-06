@@ -2,6 +2,7 @@
   "compilerOptions": {
     "lib": ["es2020", "DOM", "DOM.Iterable"],
     "target": "es2020",
+    "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowJs": true,
@@ -10,6 +11,5 @@
     "declarationDir": "types",
     "declaration": true
   },
-  "include": ["games/**/*.js", "./types.d.ts", "@types/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["**/*.js", "@types/**.d.ts"],
 }
