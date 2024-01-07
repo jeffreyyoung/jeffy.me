@@ -914,7 +914,22 @@ function Tests() {
       "(list 2 3 4)"
     ),
     EqualTest(`(print (isType 5 "number"))`, "1"),
-    EqualTest(`(print (isType "5" "number"))`, "0")
+    EqualTest(`(print (isType "5" "number"))`, "0"),
+    EqualTest(
+        `
+        (fn myMap (myList mapper)
+            (fold
+                myList
+                (list)
+                (fn (res cur)
+                    (append res (mapper cur)))    
+            )
+        )
+
+        (print (myMap (list 1 2 3) (fn (a) (add a 1))))
+        `,
+        '(list 2 3 4)'
+    )
   );
 }
 
