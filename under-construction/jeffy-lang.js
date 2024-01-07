@@ -93,7 +93,12 @@ function tokenize(str) {
       });
       i++;
       // string
-    } else if (isDigit(char)) {
+    } else if (isDigit(char) || (char === '-') && isDigit(str.at(i+1))) {
+        let sign = 1;
+        if (char === '-') {
+            i++;
+            sign = -1;
+        }
       let value = 0;
       while (isDigit(str[i])) {
         value = value * 10 + parseInt(str[i]);
@@ -101,7 +106,7 @@ function tokenize(str) {
       }
       tokens.push({
         type: "number",
-        value,
+        value: value * sign,
       });
     } else if (isWhiteSpace(char)) {
       i++;
@@ -314,7 +319,7 @@ const lib = `
     (eq (type thing) ofType)
 )
 (fn first (l) (get l 0))
-(fn last (l) (get l (sub 0 1)))
+(fn last (l) (get l -1))
 (fn map (myList mapper)
     (fold
         myList
@@ -894,6 +899,7 @@ function Tests() {
     EqualTest("(print (type 1))", "number"),
     EqualTest('(print (type "s"))', "string"),
     EqualTest("(print (type (list)))", "list"),
+    EqualTest("(print (add -10 15))", "5", "negatives work"),
     EqualTest(
       `(print 
           (fold
