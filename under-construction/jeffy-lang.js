@@ -19,6 +19,7 @@ const {
   input,
 } = van.tags;
 
+// todo: add start and end lines
 /**
  * @typedef Token
  * @type {{
@@ -251,7 +252,8 @@ export function interpret(ast, stack) {
   } else if (ast.type === "number") {
     return ast;
   } else if (ast.type === "identifier") {
-    return deref(ast.value);
+    let ref = deref(ast.value);
+    return ref;
   } else if (ast.type === "expression") {
     if (ast.body.length === 0) {
       return {
@@ -269,16 +271,18 @@ export function interpret(ast, stack) {
       }
       // validate args
       assertArgCountExpression(name, ast.body.length - 1, first.argCount);
-      return first.value(ast.body.slice(1), stack);
+      let res = first.value(ast.body.slice(1), stack);
+      return res;
     }
     if (ast.body.length === 1) {
       return first;
     }
 
-    return ast.body
+    let res = ast.body
       .slice(1)
       .map((item) => interpret(item, stack))
       .at(-1);
+    return res;
   } else if (ast.type === "program") {
     let results = ast.body.map((item) => interpret(item, stack));
     return results.at(-1);
@@ -290,13 +294,11 @@ export function interpret(ast, stack) {
 const lib = `
 (fn first (l) (get l 0))
 (fn last (l) (get l (sub 0 1)))
-(fn map (l mapper)
+(fn map (myList mapper)
     (fold
-        l
+        myList
         (list)
-        (fn (res cur)
-            (append res (mapper cur))
-        )
+        (fn (res cur) (append res (mapper cur)))
     )
 )
 `;
@@ -322,17 +324,17 @@ function run(ast, out) {
         },
       },
       type: {
-        type: 'func',
-        argCount: '=1',
+        type: "func",
+        argCount: "=1",
         value: ([n], stack) => {
-            let r = interpret(n, stack);
-            return {
-                type: 'string',
-                value: r.type
-            }
-        }
+          let r = interpret(n, stack);
+          return {
+            type: "string",
+            value: r.type,
+          };
+        },
       },
-      
+
       fn: {
         type: "func",
         argCount: ">=2",
@@ -369,16 +371,18 @@ function run(ast, out) {
             value: (args, stack) => {
               /** @type{StackFrame} */
               let frame = {};
+              let s = stack.concat(frame);
               for (let i = 0; i < argNames.body.length; i++) {
                 let name = argNames.body[i];
-
                 if (name.type !== "identifier") {
                   throw new Error("we should never get here");
                 }
-                frame[name.value] = interpret(args[i], stack);
+
+                frame[name.value] = interpret(args[i], s);
               }
               // pass variables into body
-              return interpret(body, stack.concat(frame));
+              let val = interpret(body, s);
+              return val;
             },
           };
 
@@ -419,10 +423,8 @@ function run(ast, out) {
         type: "func",
         argCount: "=2",
         value: ([_a, _b], stack) => {
-          console.log("sub!");
           let a = interpret(_a, stack),
             b = interpret(_b, stack);
-          console.log(`${a.value} - ${b.value}`);
           return {
             type: "number",
             // @ts-ignore
@@ -440,7 +442,7 @@ function run(ast, out) {
           }
           return {
             type: "list",
-            value: list.value.concat(i),
+            value: list.value.concat(i).map((a) => interpret(a, stack)),
           };
         },
       },
@@ -566,7 +568,6 @@ function run(ast, out) {
         type: "func",
         argCount: "=3",
         value: ([_list, initial, fn], stack) => {
-            console.log('fold', stack)
           let list = interpret(_list, stack);
           if (list.type !== "list") {
             throw new Error("fold - expected first arg to be of type list");
@@ -614,7 +615,6 @@ function run(ast, out) {
         value: (args, stack) => {
           let [condition, a, b] = args;
           let conditionResult = interpret(condition, stack);
-          console.log("if!", conditionResult);
           if (conditionResult.value) {
             return interpret(a, stack);
           } else {
@@ -752,124 +752,137 @@ function EqualTest(code, expected, description = "") {
 
 function Tests() {
   return div(
-    EqualTest("(print (add 1 1))", "2"),
-    EqualTest(
-      "(print (add 1 2 3))",
-      "error: add expects to be called with 2 arguments but was called with 3"
-    ),
-    EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
-    EqualTest('(print ((("hi"))) )', "hi"),
-    EqualTest("(print (1 2 3)", "3"),
-    EqualTest('(print ("a" "b"))', "b"),
-    EqualTest('(print (if (lessThan 4 5) "less" "more"))', "less"),
-    EqualTest(
-      `
-(fn lessThanFive (n)
-    (if (lessThan n 5) "less" "more")
-)
-(print (lessThanFive 4))`,
-      "less"
-    ),
-    EqualTest(
-      `
-(fn fib (n)
-    (if (lessThan n 2)
-        n
-        (add
-            (fib (sub n 1))
-            (fib (sub n 2))
+        EqualTest("(print (add 1 1))", "2"),
+        EqualTest(
+          "(print (add 1 2 3))",
+          "error: add expects to be called with 2 arguments but was called with 3"
+        ),
+        EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
+        EqualTest('(print ((("hi"))) )', "hi"),
+        EqualTest("(print (1 2 3)", "3"),
+        EqualTest('(print ("a" "b"))', "b"),
+        EqualTest('(print (if (lessThan 4 5) "less" "more"))', "less"),
+        EqualTest(
+          `
+    (fn lessThanFive (n)
+        (if (lessThan n 5) "less" "more")
+    )
+    (print (lessThanFive 4))`,
+          "less"
+        ),
+        EqualTest(
+          `
+    (fn fib (n)
+        (if (lessThan n 2)
+            n
+            (add
+                (fib (sub n 1))
+                (fib (sub n 2))
+            )
         )
     )
-)
 
-(print "(fib 0) =" (fib 0))
-(print "(fib 1) =" (fib 1))
-(print "(fib 2) =" (fib 2))
-(print "(fib 3) =" (fib 3))
-(print "(fib 4) =" (fib 4))
-(print "(fib 5) =" (fib 5))
-(print "(fib 14) =" (fib 13))
+    (print "(fib 0) =" (fib 0))
+    (print "(fib 1) =" (fib 1))
+    (print "(fib 2) =" (fib 2))
+    (print "(fib 3) =" (fib 3))
+    (print "(fib 4) =" (fib 4))
+    (print "(fib 5) =" (fib 5))
+    (print "(fib 14) =" (fib 13))
+            `,
+          `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
+        ),
+        EqualTest(
+          `
+        (print (fold
+              (list 1 2 3)
+              0
+              (fn (res cur) (add res cur))
+        ))
         `,
-      `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
-    ),
-    EqualTest(
-      `
-    (print (fold
-          (list 1 2 3)
-          0
-          (fn (res cur) (add res cur))
-    ))
-    `,
-      "6",
-      "fold works with anonymous function"
-    ),
-    EqualTest(
-      `
-      (print (fold
-            (list 1 2 3)
-            0
-            (fn sum (res cur) (add res cur))
-      ))
-      `,
-      "6",
-      "fold works with named function"
-    ),
-    EqualTest(
-      `
-    (print (list 1 2))
-    `,
-      "(list 1 2)"
-    ),
-    EqualTest(`(print (first (list 1 2)))`, `1`),
-    EqualTest(`(print (last (list 1 2)))`, `2`),
-    EqualTest(`(print (size (list "a" "b" "c")))`, `3`),
-    EqualTest(
-      `
-        (fn yay ()
-            1
+          "6",
+          "fold works with anonymous function"
+        ),
+        EqualTest(
+          `
+          (print (fold
+                (list 1 2 3)
+                0
+                (fn sum (res cur) (add res cur))
+          ))
+          `,
+          "6",
+          "fold works with named function"
+        ),
+        EqualTest(
+          `
+        (print (list 1 2))
+        `,
+          "(list 1 2)"
+        ),
+        EqualTest(`(print (first (list 1 2)))`, `1`),
+        EqualTest(`(print (last (list 1 2)))`, `2`),
+        EqualTest(`(print (size (list "a" "b" "c")))`, `3`),
+        EqualTest(
+          `
+            (fn yay ()
+                1
+                2
+                3
+            )
+
+            (print (yay))
+        `,
+          "3"
+        ),
+        EqualTest(
+          `
+        (fn yay (a)
+            a
             2
             3
         )
 
-        (print (yay))
+        (print (yay 4))
     `,
-      "3"
-    ),
-    EqualTest(
-      `
+          "3"
+        ),
+        EqualTest(
+          `
     (fn yay (a)
         a
         2
-        3
+        a
     )
 
     (print (yay 4))
-`,
-      "3"
+    `,
+          "4",
+          "function returns last statement"
+        ),
+        EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
+        EqualTest('(print (type 1))', 'number'),
+        EqualTest('(print (type "s"))', 'string'),
+        EqualTest('(print (type (list)))', 'list'),
+    EqualTest(
+      `(print 
+          (fold
+              (list 1 2)
+              (list)
+              (fn (myList cur) (append myList 1))
+          )
+      )`,
+      "(list 1 1)"
     ),
     EqualTest(
-      `
-(fn yay (a)
-    a
-    2
-    a
-)
-
-(print (yay 4))
-`,
-      "4",
-      "function returns last statement"
-    ),
-    EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
-    EqualTest('(print (type 1))', 'number'),
-    EqualTest('(print (type "s"))', 'string'),
-    EqualTest('(print (type (list)))', 'list'),
-    EqualTest(`(print 
+      `(print 
         (map
             (list 1 2 3)
             (fn (a) (add a 1))
         )
-    )`, '(list 2 3 4)')
+    )`,
+      "(list 2 3 4)"
+    )
   );
 }
 
