@@ -206,8 +206,9 @@ function assertArgCountExpression(name, actual, expression) {
  * @type {{
  *   type: 'func',
  *   name?: string | undefined,
- *   argCount: ArgCountExpression
- *   value: (args: AST[], stack: Stack) => InterpretResult
+ *   argCount: ArgCountExpression,
+ *   argNames: string[],
+ *   value: (args: (() => InterpretResult)[], stack: Stack, ast: AST[]) => InterpretResult
  * } | {
  *    type: 'number',
  *    value: number
@@ -216,7 +217,7 @@ function assertArgCountExpression(name, actual, expression) {
  *    value: string
  * } | {
  *   type: 'list',
- *   value: AST[]
+ *   value: InterpretResult[]
  * }}
  *
  * @typedef StackFrame
@@ -225,6 +226,17 @@ function assertArgCountExpression(name, actual, expression) {
  * @typedef Stack
  * @type {StackFrame[]}
  */
+
+/**
+ *
+ * @param {InterpretResult | (() => InterpretResult)} r
+ */
+function get(r) {
+  if (typeof r === "function") {
+    return r();
+  }
+  return r;
+}
 
 /**
  *
@@ -264,14 +276,20 @@ export function interpret(ast, stack) {
     let first = interpret(ast.body.at(0), stack);
 
     if (first.type === "func") {
-      let name = first.name;
+      let func = first;
+      let name = func.name;
       let node = ast.body.at(0);
       if (!name && node.type === "identifier") {
         name = node.value;
       }
+      // move this inside func def
       // validate args
       assertArgCountExpression(name, ast.body.length - 1, first.argCount);
-      let res = first.value(ast.body.slice(1), stack);
+      let res = first.value(
+        ast.body.slice(1).map((node) => () => interpret(node, stack)),
+        stack,
+        ast.body.slice(1)
+      );
       return res;
     }
     if (ast.body.length === 1) {
@@ -318,8 +336,9 @@ function run(ast, out) {
       throw: {
         type: "func",
         argCount: "=1",
+        argNames: ["msg"],
         value: ([m], stack) => {
-          let msg = interpret(m, stack);
+          let msg = get(m);
           if (msg.type !== "string") {
             throw new Error("throw should recieve string");
           }
@@ -329,59 +348,64 @@ function run(ast, out) {
       type: {
         type: "func",
         argCount: "=1",
-        value: ([n], stack) => {
-          let r = interpret(n, stack);
+        argNames: ["subject"],
+        value: ([r], stack) => {
           return {
             type: "string",
-            value: r.type,
+            value: get(r).type,
           };
         },
       },
 
       fn: {
         type: "func",
+        argNames: [],
         argCount: ">=2",
-        value: (nodes, stack) => {
+        value: (args, stack, asts) => {
           let i = 0;
-          let maybeName = nodes[i];
+          let maybeName = asts[i];
           let name = undefined;
           if (maybeName.type === "identifier") {
             name = maybeName.value;
             i++;
           }
-          const argNames = nodes[i];
-          if (argNames.type !== "expression") {
+
+          const argNamesExpression = asts[i];
+          if (argNamesExpression.type !== "expression") {
             throw new Error(`fn should receive named arguments`);
           }
-          if (!argNames.body.every((ast) => ast.type === "identifier")) {
+          let argNames = argNamesExpression.body.flatMap((name) =>
+            name.type === "identifier" ? [name.value] : []
+          );
+
+          if (argNamesExpression.body.length !== argNames.length) {
             throw new Error(
               `fn - only identifiers should be passed into fn args`
             );
           }
+
           i++;
           /**
            * @type {AST}
            */
           const body = {
             type: "expression",
-            body: nodes.slice(i),
+            body: asts.slice(i),
           };
 
           /** @type InterpretResult */
           let func = {
             type: "func",
-            argCount: `=${argNames.body.length}`,
+            argCount: `=${argNames.length}`,
+            argNames,
             value: (args, stack) => {
               /** @type{StackFrame} */
               let frame = {};
               let s = stack.concat(frame);
-              for (let i = 0; i < argNames.body.length; i++) {
-                let name = argNames.body[i];
-                if (name.type !== "identifier") {
-                  throw new Error("we should never get here");
-                }
+              for (let i = 0; i < argNames.length; i++) {
+                let name = argNames[i];
 
-                frame[name.value] = interpret(args[i], s);
+                frame[name] = get(args[i]);
               }
               // pass variables into body
               let val = interpret(body, s);
@@ -399,15 +423,12 @@ function run(ast, out) {
       print: {
         type: "func",
         argCount: ">=0",
+        argNames: [],
         value: (args, stack) => {
           for (let i = 0; i < args.length; i++) {
-            let res = interpret(args[i], stack);
+            let res = get(args[i]);
             if (res.type === "list") {
-              out(
-                `(list ${res.value
-                  .map((i) => interpret(i, stack).value)
-                  .join(" ")})`
-              );
+              out(`(list ${res.value.map((i) => i.value).join(" ")})`);
             } else {
               out(String(res.value));
             }
@@ -425,36 +446,37 @@ function run(ast, out) {
       sub: {
         type: "func",
         argCount: "=2",
-        value: ([_a, _b], stack) => {
-          let a = interpret(_a, stack),
-            b = interpret(_b, stack);
+        argNames: [],
+        value: ([a, b], stack) => {
           return {
             type: "number",
             // @ts-ignore
-            value: a.value - b.value,
+            value: get(a).value - get(b).value,
           };
         },
       },
       append: {
         type: "func",
         argCount: "=2",
-        value: ([l, i], stack) => {
-          let list = interpret(l, stack);
+        argNames: [],
+        value: ([l, item], stack) => {
+          let list = get(l);
           if (list.type !== "list") {
             throw new Error("append expected list as first arg");
           }
           return {
             type: "list",
-            value: list.value.concat(i).map((a) => interpret(a, stack)),
+            value: list.value.concat(get(item)),
           };
         },
       },
       add: {
         type: "func",
         argCount: "=2",
+        argNames: [],
         value: (args, stack) => {
           let [a, b] = args
-            .map((ast) => interpret(ast, stack))
+            .map(get)
             .map((res) =>
               res.type === "func" ? `<function ${res.name}>` : res.value
             );
@@ -468,8 +490,9 @@ function run(ast, out) {
       or: {
         type: "func",
         argCount: "=2",
+        argNames: [],
         value: ([a, b], stack) => {
-          if (interpret(a, stack).value || interpret(b, stack).value) {
+          if (get(a).value || get(b).value) {
             return {
               type: "number",
               value: 1,
@@ -484,8 +507,9 @@ function run(ast, out) {
       greaterThan: {
         type: "func",
         argCount: "=2",
+        argNames: [],
         value: ([_a, _b], stack) => {
-          const [a, b] = [interpret(_a, stack), interpret(_b, stack)];
+          const [a, b] = [get(_a), get(_b)];
           if (a.value > b.value) {
             return {
               type: "number",
@@ -501,8 +525,9 @@ function run(ast, out) {
       lessThan: {
         type: "func",
         argCount: "=2",
+        argNames: [],
         value: ([_a, _b], stack) => {
-          const [a, b] = [interpret(_a, stack), interpret(_b, stack)];
+          const [a, b] = [get(_a), get(_b)];
           if (a.value < b.value) {
             return {
               type: "number",
@@ -518,9 +543,10 @@ function run(ast, out) {
       eq: {
         type: "func",
         argCount: "=2",
+        argNames: [],
         value: (args, stack) => {
-          let a = interpret(args.at(0), stack);
-          let b = interpret(args.at(1), stack);
+          let a = get(args.at(0));
+          let b = get(args.at(1));
           return {
             type: "number",
             value: a.value === b.value ? 1 : 0,
@@ -530,6 +556,7 @@ function run(ast, out) {
       not: {
         type: "func",
         argCount: "=1",
+        argNames: [],
         value: (args, stack) => {
           if (args.length !== 1) {
             throw new Error(
@@ -538,46 +565,49 @@ function run(ast, out) {
           }
           return {
             type: "number",
-            value: !interpret(args.at(0), stack).value ? 1 : 0,
+            value: !get(args.at(0)).value ? 1 : 0,
           };
         },
       },
       list: {
         type: "func",
         argCount: ">=0",
+        argNames: [],
         value: (args, stack) => {
           return {
             type: "list",
-            value: args,
+            value: args.map(get),
           };
         },
       },
       get: {
         type: "func",
         argCount: "=2",
+        argNames: ["list", "n"],
         value: ([l, i], stack) => {
-          let list = interpret(l, stack);
+          let list = get(l);
           if (list.type !== "list") {
             throw new Error("first - expected first as first arg");
           }
-          let index = interpret(i, stack);
+          let index = get(i);
           if (index.type !== "number") {
             throw new Error("first - expected number as second arg");
           }
-          return interpret(list.value.at(index.value), stack);
+          return get(list.value.at(index.value));
         },
       },
       fold: {
         type: "func",
         argCount: "=3",
+        argNames: [],
         value: ([_list, initial, fn], stack) => {
-          let list = interpret(_list, stack);
+          let list = get(_list);
           if (list.type !== "list") {
             throw new Error("fold - expected first arg to be of type list");
           }
 
-          let res = interpret(initial, stack);
-          let func = interpret(fn, stack);
+          let res = get(initial);
+          let func = get(fn);
           if (func.type !== "func") {
             throw new Error("fold - expected third arg to be of type func");
           }
@@ -585,14 +615,9 @@ function run(ast, out) {
           for (const item of list.value) {
             i++;
             res = func.value(
-              [
-                { type: "identifier", value: "rrrresult" },
-                item,
-                { type: "number", value: i },
-              ],
-              stack.concat({
-                rrrresult: res,
-              })
+              [() => res, () => item, () => ({ type: "number", value: i })],
+              stack.concat(),
+              []
             );
           }
           return res;
@@ -601,8 +626,9 @@ function run(ast, out) {
       size: {
         type: "func",
         argCount: "=1",
+        argNames: ["subject"],
         value: ([subject], stack) => {
-          let l = interpret(subject, stack);
+          let l = get(subject);
           if (l.type !== "list") {
             throw new Error("size - expected list as first arg");
           }
@@ -615,13 +641,14 @@ function run(ast, out) {
       if: {
         type: "func",
         argCount: "=3",
+        argNames: ["condition", "ifTrue", "ifFalse"],
         value: (args, stack) => {
           let [condition, a, b] = args;
-          let conditionResult = interpret(condition, stack);
+          let conditionResult = get(condition);
           if (conditionResult.value) {
-            return interpret(a, stack);
+            return get(a);
           } else {
-            return interpret(b, stack);
+            return get(b);
           }
         },
       },
