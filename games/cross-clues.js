@@ -92,6 +92,14 @@ function getUnguessedCoordCount(gameState) {
 }
 
 /**
+ * @param {GameState} gameState
+ * @returns {number}
+ */
+function getMistakeCount(gameState) {
+  return Object.values(gameState.guesses).filter((kind) => kind === 'miss').length;
+}
+
+/**
  * @param {GameState=} gameState
  * @returns {string}
  */
@@ -140,7 +148,11 @@ const server = getSingletonGameServer({
   },
 
   onAction(state, /** @type {Action} */ action) {
-    if (action.type === "join" && action.actor && !state.players[action.actor]) {
+    if (
+      action.type === "join" &&
+      action.actor &&
+      !state.players[action.actor]
+    ) {
       return {
         ...state,
         players: {
@@ -274,6 +286,7 @@ function ui() {
     });
   }
   const remainingTileCount = getUnguessedCoordCount(gameState);
+  const mistakeCount = getMistakeCount(gameState);
   console.log("ishost", isHost);
   let playerCoord = gameState.players[username]?.coord;
   let timeoutId = -1;
@@ -282,21 +295,20 @@ function ui() {
       <button
         id="copy-link"
         @click=${() => {
-          navigator.clipboard.writeText(
-            window.location.href
-          );
+          navigator.clipboard.writeText(window.location.href);
           document.getElementById("copy-link").innerText = "copied!";
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
             document.getElementById("copy-link").innerText = "copy invite link";
           }, 1000);
         }}
-      >copy invite link</button>
+      >
+        copy invite link
+      </button>
       <br />
       <small>lobby code: ${lobbyId}</small>
     </p>
 
-    <h4>board</h4>
     <table>
       <tr>
         <th></th>
@@ -358,77 +370,60 @@ function ui() {
       </tr>
     </table>
 
-    ${
-      playerCoord
-        ? html`
-            <details style="margin-top: 15px;">
-              <summary>
-                <h4 style="display: inline;">
-                  Your tile is <strong>${playerCoord}</strong>
-                </h4>
-              </summary>
-              <p>
-                  Give a 1 word hint associated associated with the row and
-                  column of your tile (${gameState.words[playerCoord[0]]} and
-                  ${gameState.words[playerCoord[1]]}). If your team guesses
-                  correctly, click "correct". If they guess incorrectly, click
-                  "miss".
-              </p>
-            </details>
-            <p>Did your team guess correctly?</p>
-            <button
-              @click=${() =>
-                server.send({
-                  type: "guess",
-                  actor: username,
-                  coord: playerCoord,
-                  result: "correct",
-                })}
-            >
-              ✅ correct
-            </button>
-            <button
-              @click=${() =>
-                server.send({
-                  type: "guess",
-                  actor: username,
-                  coord: playerCoord,
-                  result: "miss",
-                })}
-            >
-              ❌ miss
-            </button>
-          `
-        : html``
-    }
+    ${playerCoord
+      ? html`
+          <p>
+            <strong>${playerCoord}</strong> is your tile
+          </p>
+          <p>Did your team guess correctly?</p>
+          <button
+            @click=${() =>
+              server.send({
+                type: "guess",
+                actor: username,
+                coord: playerCoord,
+                result: "correct",
+              })}
+          >
+            ✅ correct
+          </button>
+          <button
+            @click=${() =>
+              server.send({
+                type: "guess",
+                actor: username,
+                coord: playerCoord,
+                result: "miss",
+              })}
+          >
+            ❌ miss
+          </button>
+        `
+      : html``}
     <hr />
-    <p>${remainingTileCount} tiles remaining</p>
-    ${
-      !playerCoord && remainingTileCount > 0
-        ? html`
-            <p>
-              Waiting for
-              ${Object.entries(gameState.players)
-                .filter(([name, player]) => player.coord)
-                .map(([name, player]) => name)
-                .join(", ")}
-              to give clues
-            </p>
-          `
-        : ""
-    }
-    ${
-      remainingTileCount === 0
-        ? html`
-            <p>
-              🎉🎉${Object.values(gameState.guesses).filter(
-                (result) => result === "correct"
-              ).length}/25
-              correct🎉🎉
-            </p>
-          `
-        : ""
-    }
+    <p>${remainingTileCount} tiles remaining - ${mistakeCount} mistake${mistakeCount === 1 ? "" : "s"} so far</p>
+    ${!playerCoord && remainingTileCount > 0
+      ? html`
+          <p>
+            Waiting for
+            ${Object.entries(gameState.players)
+              .filter(([name, player]) => player.coord)
+              .map(([name, player]) => name)
+              .join(", ")}
+            to give clues
+          </p>
+        `
+      : ""}
+    ${remainingTileCount === 0
+      ? html`
+          <p>
+            🎉🎉${Object.values(gameState.guesses).filter(
+              (result) => result === "correct"
+            ).length}/25
+            correct🎉🎉
+          </p>
+        `
+      : ""}
     <h4>players</h4>
     <ul>
       ${Object.values(gameState.players || {}).map(
@@ -441,14 +436,6 @@ function ui() {
           `
       )}
     </ul>
-    <details>
-        <summary><h4 style="display: inline;">how to play</h4></summary>
-        <p>
-        announce a 1 word clue to your team that relates to the two words of your
-        tile. if your team guesses your tile correctly, click "correct". If they
-        guess incorrectly, click "miss".
-      </p>
-    </details
   `;
 }
 
@@ -458,15 +445,11 @@ function ui() {
  * @returns
  */
 function layout(children) {
-  return html`
-    <a href="/">home</a>
-    <h3>cross clues 🕵️</h3>
-    ${children}
-  `;
+  return html` ${children} `;
 }
 
 function update() {
-  render(layout(ui()), document.body);
+  render(layout(ui()), document.getElementById("game"));
 }
 
 /**
