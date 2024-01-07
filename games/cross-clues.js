@@ -4,7 +4,6 @@ import {
 } from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
 import { getSingletonGameServer } from "./utils/game-server.js";
 import { words } from "./cross-clues-words.js";
-
 /**
  * @typedef Player
  * @type {{

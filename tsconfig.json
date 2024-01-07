@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["es2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "target": "es2020",
     "module": "ESNext",
     "moduleResolution": "node",
@@ -11,5 +11,5 @@
     "declarationDir": "types",
     "declaration": true
   },
-  "include": ["**/*.js", "@types/**.d.ts"],
+  "include": ["**/*.js", "@types/types.d.ts"],
 }

@@ -28,10 +28,11 @@ declare module "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js" {
     export const render: any;
 }
 
-// https://stackoverflow.com/questions/71342646/adding-import-statement-to-global-d-ts-destroys-type-and-module-declarations
 declare module "https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.7.min.js" {
+    // https://stackoverflow.com/questions/71342646/adding-import-statement-to-global-d-ts-destroys-type-and-module-declarations
     type Van = import('./van.d.ts').Van;
-    export const van: Van;
+    const van: Van;
+    export default van;
 }
 
 declare module "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs" {
