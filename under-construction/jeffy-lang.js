@@ -124,10 +124,10 @@ function tokenize(str) {
 
 /**
  * @param {Token[]} tokens
- * @returns {AST}
+ * @returns {Extract<AST, {type: 'program'}>}
  */
 function toAST(tokens) {
-  /** @type {AST} */
+  /** @type {Extract<AST, {type: 'program'}>} */
   let program = {
     type: "program",
     body: [],
@@ -139,6 +139,7 @@ function toAST(tokens) {
   let stack = [program];
   while (i < tokens.length) {
     let token = tokens[i];
+
     if (token.type === "paren" && token.value === "(") {
       /** @type {Extract<AST, { type: 'expression' }>} */
       let expression = {
@@ -212,6 +213,9 @@ function assertArgCountExpression(name, actual, expression) {
  * } | {
  *    type: 'string',
  *    value: string
+ * } | {
+ *   type: 'list',
+ *   value: AST[]
  * }}
  *
  * @typedef StackFrame
@@ -258,11 +262,11 @@ export function interpret(ast, stack) {
     let first = interpret(ast.body.at(0), stack);
 
     if (first.type === "func") {
-        let name = first.name;
-        let node = ast.body.at(0);
-        if (!name && node.type === 'identifier') {
-            name = node.value;
-        }
+      let name = first.name;
+      let node = ast.body.at(0);
+      if (!name && node.type === "identifier") {
+        name = node.value;
+      }
       // validate args
       assertArgCountExpression(name, ast.body.length - 1, first.argCount);
       return first.value(ast.body.slice(1), stack);
@@ -283,15 +287,52 @@ export function interpret(ast, stack) {
   }
 }
 
+const lib = `
+(fn first (l) (get l 0))
+(fn last (l) (get l (sub 0 1)))
+(fn map (l mapper)
+    (fold
+        l
+        (list)
+        (fn (res cur)
+            (append res (mapper cur))
+        )
+    )
+)
+`;
+
 /**
  *
- * @param {AST} ast
+ * @param {Extract<AST, {type: 'program'}>} ast
  * @param {(out: string) => void} out
  */
 function run(ast, out) {
   /** @type {Stack} */
   let stack = [
     {
+      throw: {
+        type: "func",
+        argCount: "=1",
+        value: ([m], stack) => {
+          let msg = interpret(m, stack);
+          if (msg.type !== "string") {
+            throw new Error("throw should recieve string");
+          }
+          throw new Error(msg.value);
+        },
+      },
+      type: {
+        type: 'func',
+        argCount: '=1',
+        value: ([n], stack) => {
+            let r = interpret(n, stack);
+            return {
+                type: 'string',
+                value: r.type
+            }
+        }
+      },
+      
       fn: {
         type: "func",
         argCount: ">=2",
@@ -313,12 +354,13 @@ function run(ast, out) {
             );
           }
           i++;
-          let body = nodes[i];
-          if (body.type !== "expression") {
-            throw new Error(
-              "fn - body should be expression but was " + body.type
-            );
-          }
+          /**
+           * @type {AST}
+           */
+          const body = {
+            type: "expression",
+            body: nodes.slice(i),
+          };
 
           /** @type InterpretResult */
           let func = {
@@ -353,7 +395,15 @@ function run(ast, out) {
         value: (args, stack) => {
           for (let i = 0; i < args.length; i++) {
             let res = interpret(args[i], stack);
-            out(String(res.value));
+            if (res.type === "list") {
+              out(
+                `(list ${res.value
+                  .map((i) => interpret(i, stack).value)
+                  .join(" ")})`
+              );
+            } else {
+              out(String(res.value));
+            }
 
             if (i === args.length - 1) {
               out("\n");
@@ -377,6 +427,20 @@ function run(ast, out) {
             type: "number",
             // @ts-ignore
             value: a.value - b.value,
+          };
+        },
+      },
+      append: {
+        type: "func",
+        argCount: "=2",
+        value: ([l, i], stack) => {
+          let list = interpret(l, stack);
+          if (list.type !== "list") {
+            throw new Error("append expected list as first arg");
+          }
+          return {
+            type: "list",
+            value: list.value.concat(i),
           };
         },
       },
@@ -473,6 +537,77 @@ function run(ast, out) {
           };
         },
       },
+      list: {
+        type: "func",
+        argCount: ">=0",
+        value: (args, stack) => {
+          return {
+            type: "list",
+            value: args,
+          };
+        },
+      },
+      get: {
+        type: "func",
+        argCount: "=2",
+        value: ([l, i], stack) => {
+          let list = interpret(l, stack);
+          if (list.type !== "list") {
+            throw new Error("first - expected first as first arg");
+          }
+          let index = interpret(i, stack);
+          if (index.type !== "number") {
+            throw new Error("first - expected number as second arg");
+          }
+          return interpret(list.value.at(index.value), stack);
+        },
+      },
+      fold: {
+        type: "func",
+        argCount: "=3",
+        value: ([_list, initial, fn], stack) => {
+            console.log('fold', stack)
+          let list = interpret(_list, stack);
+          if (list.type !== "list") {
+            throw new Error("fold - expected first arg to be of type list");
+          }
+
+          let res = interpret(initial, stack);
+          let func = interpret(fn, stack);
+          if (func.type !== "func") {
+            throw new Error("fold - expected third arg to be of type func");
+          }
+          let i = 0;
+          for (const item of list.value) {
+            i++;
+            res = func.value(
+              [
+                { type: "identifier", value: "rrrresult" },
+                item,
+                { type: "number", value: i },
+              ],
+              stack.concat({
+                rrrresult: res,
+              })
+            );
+          }
+          return res;
+        },
+      },
+      size: {
+        type: "func",
+        argCount: "=1",
+        value: ([subject], stack) => {
+          let l = interpret(subject, stack);
+          if (l.type !== "list") {
+            throw new Error("size - expected list as first arg");
+          }
+          return {
+            type: "number",
+            value: l.value.length,
+          };
+        },
+      },
       if: {
         type: "func",
         argCount: "=3",
@@ -490,6 +625,7 @@ function run(ast, out) {
     },
   ];
   try {
+    interpret(toAST(tokenize(lib)), stack);
     interpret(ast, stack);
     return 0;
   } catch (e) {
@@ -584,12 +720,12 @@ function getResult(a) {
 }
 
 /**
- *
+ * @param {string=} description
  * @param {string} code
  * @param {string} expected
  * @returns string
  */
-function EqualTest(code, expected) {
+function EqualTest(code, expected, description = "") {
   let actual = getResult(code).trim();
   const preStyle = { style: "background-color: rgba(255, 255, 255, 0.7)" };
   const isPass = actual === expected;
@@ -599,13 +735,16 @@ function EqualTest(code, expected) {
         isPass ? "lightgreen" : "red"
       }`,
     },
-    isPass
-      ? p({ style: "background-color: lightgreen" }, "✅ pass")
-      : p({ style: "background-color: red" }, "❌ fail  "),
+    p(
+      { style: `background-color: ${isPass ? "lightgreen" : "red"}` },
+      isPass ? "✅ pass" : "❌ fail",
+      description ? " - " : "",
+      description
+    ),
     pre(preStyle, code),
-    span(isPass ? 'result' : "expected result: "),
+    span(isPass ? "result" : "expected result: "),
     pre(preStyle, expected),
-    
+
     isPass ? null : span("actual result: "),
     isPass ? null : pre(preStyle, actual)
   );
@@ -618,7 +757,7 @@ function Tests() {
       "(print (add 1 2 3))",
       "error: add expects to be called with 2 arguments but was called with 3"
     ),
-    EqualTest("(fn addOne (n) (add 1 n)) (print (addOne 1))", "2"),
+    EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
     EqualTest('(print ((("hi"))) )', "hi"),
     EqualTest("(print (1 2 3)", "3"),
     EqualTest('(print ("a" "b"))', "b"),
@@ -652,18 +791,85 @@ function Tests() {
 (print "(fib 14) =" (fib 13))
         `,
       `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
+    ),
+    EqualTest(
+      `
+    (print (fold
+          (list 1 2 3)
+          0
+          (fn (res cur) (add res cur))
+    ))
+    `,
+      "6",
+      "fold works with anonymous function"
+    ),
+    EqualTest(
+      `
+      (print (fold
+            (list 1 2 3)
+            0
+            (fn sum (res cur) (add res cur))
+      ))
+      `,
+      "6",
+      "fold works with named function"
+    ),
+    EqualTest(
+      `
+    (print (list 1 2))
+    `,
+      "(list 1 2)"
+    ),
+    EqualTest(`(print (first (list 1 2)))`, `1`),
+    EqualTest(`(print (last (list 1 2)))`, `2`),
+    EqualTest(`(print (size (list "a" "b" "c")))`, `3`),
+    EqualTest(
+      `
+        (fn yay ()
+            1
+            2
+            3
+        )
+
+        (print (yay))
+    `,
+      "3"
+    ),
+    EqualTest(
+      `
+    (fn yay (a)
+        a
+        2
+        3
     )
-    // EqualTest(`
-    // (fn fib (n)
-    //    (print n)
-    //    (if
-    //       (lessThan 2 n)
-    //        "yay"
-    //        "nay"
-    //     )
-    // )
-    // (print (fib 6))
-    // `, '6\n5\n4\n3\n2\n1\n0')
+
+    (print (yay 4))
+`,
+      "3"
+    ),
+    EqualTest(
+      `
+(fn yay (a)
+    a
+    2
+    a
+)
+
+(print (yay 4))
+`,
+      "4",
+      "function returns last statement"
+    ),
+    EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
+    EqualTest('(print (type 1))', 'number'),
+    EqualTest('(print (type "s"))', 'string'),
+    EqualTest('(print (type (list)))', 'list'),
+    EqualTest(`(print 
+        (map
+            (list 1 2 3)
+            (fn (a) (add a 1))
+        )
+    )`, '(list 2 3 4)')
   );
 }
 
