@@ -292,6 +292,9 @@ export function interpret(ast, stack) {
 }
 
 const lib = `
+(fn isType (thing ofType) 
+    (eq (type thing) ofType)
+)
 (fn first (l) (get l 0))
 (fn last (l) (get l (sub 0 1)))
 (fn map (myList mapper)
@@ -752,26 +755,26 @@ function EqualTest(code, expected, description = "") {
 
 function Tests() {
   return div(
-        EqualTest("(print (add 1 1))", "2"),
-        EqualTest(
-          "(print (add 1 2 3))",
-          "error: add expects to be called with 2 arguments but was called with 3"
-        ),
-        EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
-        EqualTest('(print ((("hi"))) )', "hi"),
-        EqualTest("(print (1 2 3)", "3"),
-        EqualTest('(print ("a" "b"))', "b"),
-        EqualTest('(print (if (lessThan 4 5) "less" "more"))', "less"),
-        EqualTest(
-          `
+    EqualTest("(print (add 1 1))", "2"),
+    EqualTest(
+      "(print (add 1 2 3))",
+      "error: add expects to be called with 2 arguments but was called with 3"
+    ),
+    EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
+    EqualTest('(print ((("hi"))) )', "hi"),
+    EqualTest("(print (1 2 3)", "3"),
+    EqualTest('(print ("a" "b"))', "b"),
+    EqualTest('(print (if (lessThan 4 5) "less" "more"))', "less"),
+    EqualTest(
+      `
     (fn lessThanFive (n)
         (if (lessThan n 5) "less" "more")
     )
     (print (lessThanFive 4))`,
-          "less"
-        ),
-        EqualTest(
-          `
+      "less"
+    ),
+    EqualTest(
+      `
     (fn fib (n)
         (if (lessThan n 2)
             n
@@ -790,41 +793,41 @@ function Tests() {
     (print "(fib 5) =" (fib 5))
     (print "(fib 14) =" (fib 13))
             `,
-          `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
-        ),
-        EqualTest(
-          `
+      `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
+    ),
+    EqualTest(
+      `
         (print (fold
               (list 1 2 3)
               0
               (fn (res cur) (add res cur))
         ))
         `,
-          "6",
-          "fold works with anonymous function"
-        ),
-        EqualTest(
-          `
+      "6",
+      "fold works with anonymous function"
+    ),
+    EqualTest(
+      `
           (print (fold
                 (list 1 2 3)
                 0
                 (fn sum (res cur) (add res cur))
           ))
           `,
-          "6",
-          "fold works with named function"
-        ),
-        EqualTest(
-          `
+      "6",
+      "fold works with named function"
+    ),
+    EqualTest(
+      `
         (print (list 1 2))
         `,
-          "(list 1 2)"
-        ),
-        EqualTest(`(print (first (list 1 2)))`, `1`),
-        EqualTest(`(print (last (list 1 2)))`, `2`),
-        EqualTest(`(print (size (list "a" "b" "c")))`, `3`),
-        EqualTest(
-          `
+      "(list 1 2)"
+    ),
+    EqualTest(`(print (first (list 1 2)))`, `1`),
+    EqualTest(`(print (last (list 1 2)))`, `2`),
+    EqualTest(`(print (size (list "a" "b" "c")))`, `3`),
+    EqualTest(
+      `
             (fn yay ()
                 1
                 2
@@ -833,10 +836,10 @@ function Tests() {
 
             (print (yay))
         `,
-          "3"
-        ),
-        EqualTest(
-          `
+      "3"
+    ),
+    EqualTest(
+      `
         (fn yay (a)
             a
             2
@@ -845,10 +848,10 @@ function Tests() {
 
         (print (yay 4))
     `,
-          "3"
-        ),
-        EqualTest(
-          `
+      "3"
+    ),
+    EqualTest(
+      `
     (fn yay (a)
         a
         2
@@ -857,13 +860,13 @@ function Tests() {
 
     (print (yay 4))
     `,
-          "4",
-          "function returns last statement"
-        ),
-        EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
-        EqualTest('(print (type 1))', 'number'),
-        EqualTest('(print (type "s"))', 'string'),
-        EqualTest('(print (type (list)))', 'list'),
+      "4",
+      "function returns last statement"
+    ),
+    EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
+    EqualTest("(print (type 1))", "number"),
+    EqualTest('(print (type "s"))', "string"),
+    EqualTest("(print (type (list)))", "list"),
     EqualTest(
       `(print 
           (fold
@@ -882,7 +885,9 @@ function Tests() {
         )
     )`,
       "(list 2 3 4)"
-    )
+    ),
+    EqualTest(`(print (isType 5 "number"))`, "1"),
+    EqualTest(`(print (isType "5" "number"))`, "0")
   );
 }
 
