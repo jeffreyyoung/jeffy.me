@@ -24,6 +24,7 @@ const {
   span,
   summary,
   details,
+  small,
   input,
   button,
 } = van.tags;
@@ -70,6 +71,8 @@ const fullState = van.state(
   })
 );
 
+const mistakeCount = van.state(0);
+
 const gameStatus = van.state(
   /** @type {GameState['status']} */
   ("before-start")
@@ -86,6 +89,7 @@ let s = van.derive(() => {
     isHost: isHost.val,
     lobbyId: lobbyId.val,
     onStateChange(state) {
+      mistakeCount.val = state.mistakeCount;
       if (state.status !== gameStatus.val) {
         gameStatus.val = state.status;
       }
@@ -153,12 +157,15 @@ function PlayerState() {
         .join("");
     });
   });
-  return div(h4("players"), () =>
-    ul(
-      ...players.val.map((p) => {
-        return li(p);
-      })
-    )
+  return div(
+    h4("players"),
+    () =>
+      ul(
+        ...players.val.map((p) => {
+          return li(p);
+        })
+      ),
+    p(small(mistakeCount, " mistakes so far"))
   );
 }
 
@@ -263,7 +270,7 @@ function Game() {
       )
     ),
     button(
-      { onclick: () => s.val.send({ actor, type: "play-card" })},
+      { onclick: () => s.val.send({ actor, type: "play-card" }) },
       "play ",
       nextNumber
     )
@@ -276,19 +283,25 @@ van.add(document.getElementById("invite-link"), () =>
   lobbyId.val && username.val
     ? div(
         button(
-            { 
-                style: 'padding: 3px 6px; font-size: 0.8em;',
-                
-                onclick: (e) => {
-            e.preventDefault();
-            navigator.clipboard.writeText(window.location.href);
-            e.target.innerText = "copied!";
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-              e.target.innerText = "copy invite link";
-            }, 1000);
-        } }, "copy invite link"),
-        h6({ style: "margin-top: 10px; margin-bottom: 0px; text-align: end;", }, `lobby id: ${lobbyId.val}`)
+          {
+            style: "padding: 3px 6px; font-size: 0.8em;",
+
+            onclick: (e) => {
+              e.preventDefault();
+              navigator.clipboard.writeText(window.location.href);
+              e.target.innerText = "copied!";
+              clearTimeout(timeoutId);
+              timeoutId = setTimeout(() => {
+                e.target.innerText = "copy invite link";
+              }, 1000);
+            },
+          },
+          "copy invite link"
+        ),
+        h6(
+          { style: "margin-top: 10px; margin-bottom: 0px; text-align: end;" },
+          `lobby id: ${lobbyId.val}`
+        )
       )
     : span()
 );

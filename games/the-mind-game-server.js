@@ -20,6 +20,7 @@ import {
  *  level: number,
  *  history: string[],
  *  status: "before-start" | "in-level" | "level-complete",
+ *  mistakeCount: number,
  *  mostRecentCard: { playerName: string, name: number, status: "played-correct" | "played-incorrect" } | null,
  * }}
  */
@@ -67,6 +68,8 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
       players: {},
       level: 0,
       history: [],
+      mistakeCount: 0,
+      mostRecentCard: null,
       status: "before-start",
     }),
     onAction(state, action) {
@@ -157,6 +160,9 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
         state.history.unshift(
           `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`
         );
+        if (!isCorrect) {
+          state.mistakeCount++;
+        }
 
         if (allCardsInHand.length <= 1) {
           state.status = "level-complete";
