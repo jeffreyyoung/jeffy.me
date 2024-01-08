@@ -1,6 +1,14 @@
 import van from "../deps/van.js";
 import { server } from "./the-mind-game-server.js";
-import { needsLobbyId, needsUserName, username, lobbyId, isHost, LobbySelection, SetUserName } from "./utils/pre-game.js";
+import {
+  needsLobbyId,
+  needsUserName,
+  username,
+  lobbyId,
+  isHost,
+  LobbySelection,
+  SetUserName,
+} from "./utils/pre-game.js";
 const {
   form,
   ul,
@@ -27,31 +35,29 @@ const {
  * @typedef {import('./the-mind-game-server.js').GameState} GameState
  */
 
-
 let actor = username.val;
 van.derive(() => {
   actor = username.val;
 });
 
-
 const mostRecentCard = van.state(
-    /** @type {GameState['mostRecentCard']} */
-    (null)
+  /** @type {GameState['mostRecentCard']} */
+  (null)
 );
 
 const cardIndicator = van.derive(() => {
-    if (mostRecentCard.val === null) {
-        return {
-            color: "black",
-            text: "nothing played",
-            name: 0,
-        };
-    }
+  if (mostRecentCard.val === null) {
     return {
-        color: mostRecentCard.val.status === "played-correct" ? "green" : "red",
-        text: mostRecentCard.val.playerName,
-        name: mostRecentCard.val.name,
-    }
+      color: "black",
+      text: "nothing played",
+      name: 0,
+    };
+  }
+  return {
+    color: mostRecentCard.val.status === "played-correct" ? "green" : "red",
+    text: mostRecentCard.val.playerName,
+    name: mostRecentCard.val.name,
+  };
 });
 
 const fullState = van.state(
@@ -70,61 +76,65 @@ const gameStatus = van.state(
 );
 
 let s = van.derive(() => {
-    if (!lobbyId.val) {
-      return null;
-    }
-    if (!username.val) {
-      return null;
-    }
-    const _server = server({
-        isHost: isHost.val,
-        lobbyId: lobbyId.val,
-        onStateChange(state) {
-          if (state.status !== gameStatus.val) {
-            gameStatus.val = state.status;
-          }
-          if (state.status !== "in-level") {
-            mostRecentCard.val = null;
-          } else {
-            mostRecentCard.val = state.mostRecentCard || null;
-          }
-          fullState.val = { ...state };
-        },
-        actor,
-      });
-    _server.send({
-        type: 'join-game',
-        actor: username.val,
-    })
-    return _server;
-})
+  if (!lobbyId.val) {
+    return null;
+  }
+  if (!username.val) {
+    return null;
+  }
+  const _server = server({
+    isHost: isHost.val,
+    lobbyId: lobbyId.val,
+    onStateChange(state) {
+      if (state.status !== gameStatus.val) {
+        gameStatus.val = state.status;
+      }
+      if (state.status !== "in-level") {
+        mostRecentCard.val = null;
+      } else {
+        mostRecentCard.val = state.mostRecentCard || null;
+      }
+      fullState.val = { ...state };
+    },
+    actor,
+  });
+  _server.send({
+    type: "join-game",
+    actor: username.val,
+  });
+  return _server;
+});
 
 const amReady = van.derive(() => {
-    return fullState.val.players[actor]?.status === 'waiting';
+  return fullState.val.players[actor]?.status === "waiting";
 });
 
 const waitingOnText = van.derive(() => {
-    return 'Waiting on ' +
-        Object.values(fullState.val.players).filter(p => p.status === 'waiting').map(p => p.username === actor ? 'you' : p.username).join(', ');
-})
+  return (
+    "Waiting on " +
+    Object.values(fullState.val.players)
+      .filter((p) => p.status === "waiting")
+      .map((p) => (p.username === actor ? "you" : p.username))
+      .join(", ")
+  );
+});
 
 function App() {
-    let allSetup = van.derive(() => {
-        return lobbyId.val && username.val;
-    })
+  let allSetup = van.derive(() => {
+    return lobbyId.val && username.val;
+  });
 
   return div(
     () => (username.val && !lobbyId.val ? LobbySelection() : span()),
     () => (!username.val ? SetUserName() : span()),
     () => (allSetup.val && gameStatus.val === "in-level" ? Game() : span()),
-    () => (allSetup.val && gameStatus.val === "before-start" ? Waiting() : span()),
-    () => (allSetup.val && gameStatus.val === "level-complete" ? LevelComplete() : span()),
-    () => allSetup.val ? PlayerState() : span(),
-    () => (allSetup.val) ? div(
-        { style: 'margin-top: 30px;'},
-        button({ onclick: () => ''}, 'copy invite link'),
-        h6({ style: 'margin-top: 15px;'}, `lobby id: ${lobbyId.val}`),
-    ) : span(),
+    () =>
+      allSetup.val && gameStatus.val === "before-start" ? Waiting() : span(),
+    () =>
+      allSetup.val && gameStatus.val === "level-complete"
+        ? LevelComplete()
+        : span(),
+    () => (allSetup.val ? PlayerState() : span())
   );
 }
 
@@ -156,7 +166,13 @@ function Waiting() {
   return MainLayout(
     h1({ style: "text-align: center", class: "fadeInUp-animation" }, "Welcome"),
     p(waitingOnText),
-    () => amReady.val ? button({ onclick: () => s.val?.send({ actor, type: "ready" }) }, "ready") : p()
+    () =>
+      amReady.val
+        ? button(
+            { onclick: () => s.val?.send({ actor, type: "ready" }) },
+            "ready"
+          )
+        : p()
   );
 }
 
@@ -171,7 +187,13 @@ function LevelComplete() {
       " complete!"
     ),
     p(waitingOnText),
-    () => amReady.val ? button({ onclick: () => s.val?.send({ actor, type: "ready" }) }, "ready") : p()
+    () =>
+      amReady.val
+        ? button(
+            { onclick: () => s.val?.send({ actor, type: "ready" }) },
+            "ready"
+          )
+        : p()
   );
 }
 
@@ -249,6 +271,27 @@ function Game() {
 }
 
 van.add(document.getElementById("game"), App());
+let timeoutId = 0;
+van.add(document.getElementById("invite-link"), () =>
+  lobbyId.val && username.val
+    ? div(
+        button(
+            { 
+                style: 'padding: 3px 6px; font-size: 0.8em;',
+                
+                onclick: (e) => {
+            e.preventDefault();
+            navigator.clipboard.writeText(window.location.href);
+            e.target.innerText = "copied!";
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              e.target.innerText = "copy invite link";
+            }, 1000);
+        } }, "copy invite link"),
+        h6({ style: "margin-top: 10px; margin-bottom: 0px; text-align: end;", }, `lobby id: ${lobbyId.val}`)
+      )
+    : span()
+);
 var statusToEmoji = {
   "played-correct": "✅",
   "played-incorrect": "❌",

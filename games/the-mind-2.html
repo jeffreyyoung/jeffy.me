@@ -23,7 +23,7 @@
       }
       button {
         padding: 12px;
-        padding-top: 8px !important;
+        padding-top: 8px;
         padding-bottom: 8px;
         border: 1px solid gray;
         border-width: 1px;
@@ -93,15 +93,28 @@
       input {
         font-size: 1rem;
       }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: top;
+      }
     </style>
   </head>
   <body>
-    <a href="/">home</a>
-    <h3>the mind 🧠</h3>
+    <nav>
+      <div>
+        <a href="/">home</a>
+        <h3>the mind 🧠</h3>
+      </div>
+      <div id="invite-link"></div>
+    </nav>
     <div id="game"></div>
-    <details open style="margin-top: 16px;">
+    <details open style="margin-top: 16px">
       <summary><h4 style="display: inline">how to play</h4></summary>
-      <p>the mind is a cooperative card game where players try to play cards in ascending order without communicating.</p>
+      <p>
+        the mind is a cooperative card game where players try to play cards in
+        ascending order without communicating.
+      </p>
     </details>
   </body>
 </html>
