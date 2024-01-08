@@ -1,20 +1,9 @@
 import van from "../../deps/van.js";
 const {
   form,
-  ul,
-  li,
   p,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
   div,
   hr,
-  span,
-  summary,
-  details,
   input,
   button,
 } = van.tags;

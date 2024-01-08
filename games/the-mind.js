@@ -277,7 +277,7 @@ function Game() {
 
 van.add(document.getElementById("game"), App());
 let timeoutId = 0;
-van.add(document.getElementById("invite-link"), () =>
+van.add(document.getElementById("invite-slot"), () =>
   lobbyId.val && username.val
     ? div(
         button(
