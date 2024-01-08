@@ -263,7 +263,7 @@ function Game() {
       )
     ),
     button(
-      { onclick: () => s.val.send({ actor, type: "play-card" }) },
+      { onclick: () => s.val.send({ actor, type: "play-card" })},
       "play ",
       nextNumber
     )

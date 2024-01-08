@@ -45,7 +45,7 @@ export const needsLobbyId = van.derive(() => {
 
 export function SetUserName() {
   return div(
-    { style: "margin: 50px 0px;"},
+    { style: "margin-bottom: 30px" },
     p("What is your name?"),
     form(
       {
@@ -64,14 +64,14 @@ export function SetUserName() {
         },
       },
       input({ name: "username", placeholder: "your name" }),
-      button("submit")
+      button("join")
     )
   );
 }
 
 export function LobbySelection() {
   return div(
-    { style: "margin: 50px 0px;"},
+    { style: "margin-bottom: 30px" },
     p("create new game"),
     form(
       {
@@ -88,6 +88,7 @@ export function LobbySelection() {
     p("join existing game"),
     form(
       {
+        style: "display: flex; gap: 12px; flex-wrap: wrap; align-items: center",
         onsubmit: (e) => {
           e.preventDefault();
           let form = new FormData(e.target);
@@ -102,7 +103,7 @@ export function LobbySelection() {
           window.location.href = `?lobbyId=${trimmed}`;
         },
       },
-      input({ name: "lobbyId", placeholder: "lobby id" }),
+      input({ name: "lobbyId", placeholder: "lobby id", style: 'padding: 6px' }),
       button("submit")
     )
   );

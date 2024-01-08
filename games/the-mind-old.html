@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Mind Game</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <style>
+      @keyframes fadeInUp {
+        0% {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0%);
+          opacity: 1;
+        }
+      }
+
+      .fadeInUp-animation {
+        animation: 0.5s fadeInUp;
+      }
+      .reset-button {
+        appearance: none;
+        display: inline-block;
+        padding: 3px;
+      }
+      .playable-card {
+        font-family: serif;
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 3px;
+        margin: 3px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
+      * {
+        word-break: break-word;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      body {
+        margin: 40px auto;
+        max-width: 650px;
+        padding: 0 10px;
+      }
+
+      .grow {
+        transition: all 0.2s ease-in-out;
+      }
+
+      .grow:hover {
+        transform: scale(1.02);
+      }
+    </style>
+    <script type="module">
+      import { html, escapeHtml } from "./utils/html.js";
+      import { createGameServer } from "./utils/game-server.js";
+
+      function render() {
+        const urlSearchParams = new URLSearchParams(
+          window.location.search.split("?")?.[1] || ""
+        );
+        const params = Object.fromEntries(urlSearchParams.entries());
+        const username = localStorage.getItem("username") || "";
+        const lobbyId = params.lobbyId || "";
+        console.log(lobbyId, params);
+        if (!username) {
+          document.body.innerHTML = html`
+            <div>
+              <h3>The Mind</h3>
+              <p>Enter your name to join the game</p>
+              <form>
+                <input id="name" type="text" value="${username}" />
+                <button>Join</button>
+              </form>
+            </div>
+          `;
+
+          document.querySelector("form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            localStorage.setItem(
+              "username",
+              document.querySelector("#name").value
+            );
+            render();
+          });
+        } else if (!lobbyId) {
+          document.body.innerHTML = html`
+            <div>
+              <a href="/index.html">home</a>
+              <h3>the mind. 🧠</h3>
+              <p>host a new game</p>
+              <button id="create">create game</button>
+              <hr />
+              <p>join game with lobby code</p>
+              <form>
+                <input id="lobbyId" type="text" value="${lobbyId}" />
+                <button>join</button>
+              </form>
+              <hr />
+              <h4>how to play</h4>
+              <p>
+                All players form a single team. In the first round (level 1)
+                each player receives 1 card, in the second round (level 2) they
+                receive 2 cards, and so on.
+              </p>
+              <p>
+                At each level the team members must put down all their cards in
+                increasing order in the center of the table on an open stack,
+                one after the other. For example (4 players, level 1):
+                18-34-41-73. The players do not take turns in any particular
+                order.
+              </p>
+              <p>
+                Whoever wants to put down a card, simply does so. Watch out,
+                here's where it gets interesting: the players must not disclose
+                anything about their own cards - no sharing of information, no
+                secret signals.
+              </p>
+            </div>
+          `;
+          document.querySelector("#create").addEventListener("click", (e) => {
+            console.log("click");
+            const gameId = Math.floor(Math.random() * 10000);
+            window.localStorage.setItem(`isHost-${gameId}`, true);
+            window.location.href = `/games/the-mind.html?lobbyId=${gameId}`;
+          });
+          document.querySelector("form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            window.location.href = `/games/the-mind.html?lobbyId=${
+              document.querySelector("#lobbyId").value
+            }`;
+          });
+        } else if (lobbyId) {
+          let isHost = !!window.localStorage.getItem(`isHost-${lobbyId}`);
+
+          let server = createGameServer({
+            isHost,
+            roomId: `jeffy-the-mind-${lobbyId}`,
+            initialState: {
+              status: "waiting",
+              actionLog: [],
+              level: 0,
+              errors: 0,
+              players: {},
+            },
+            onAction: (state, action, send) => {
+              let seen = new Set();
+              function getNumber() {
+                while (true) {
+                  let n = Math.floor(Math.random() * (100 - 0) + 0);
+                  if (!seen.has(n)) {
+                    seen.add(n);
+                    return n;
+                  }
+                }
+              }
+
+              if (action.type === "join" && !state.players[action.actor]) {
+                state.players[action.actor] = {
+                  playedCards: [],
+                  unplayedCards: [],
+                  history: [],
+                };
+                state.actionLog.push(`👋 ${escapeHtml(action.actor)} joined`);
+              }
+
+              if (
+                state.status === "next-level-wait-room" &&
+                action.type === "ready"
+              ) {
+                state.players[action.actor] = true;
+              }
+
+              if (state.status === "next-level-wait-room") {
+                let allAreReady = Object.values(state.players).every(
+                  (obj) => obj === true
+                );
+                // go to next level
+                if (allAreReady) {
+                  state.status = "playing";
+                  state.level++;
+                  state.actionLog.push(`🎉 level ${state.level} started`);
+                  Object.keys(state.players).forEach((player) => {
+                    let numbers = Array.from({ length: state.level }, () =>
+                      getNumber()
+                    );
+                    numbers = numbers.sort(function (a, b) {
+                      return a - b;
+                    });
+                    state.players[player] = {
+                      playedCards: [],
+                      history: numbers.map(() => "⬜️"),
+                      unplayedCards: numbers,
+                    };
+                  });
+                }
+              }
+
+              if (action.type === "start") {
+                state.level = 1;
+                state.status = "playing";
+                Object.keys(state.players).forEach((player) => {
+                  state.players[player] = {
+                    playedCards: [],
+                    unplayedCards: [getNumber()],
+                    history: ["⬜️"],
+                  };
+                });
+                state.actionLog.push(
+                  `🔔 ${escapeHtml(action.actor)} started the game`
+                );
+              }
+
+              if (
+                state.status === "playing" &&
+                action.type === "send-number" &&
+                state.players[action.actor]?.unplayedCards?.length
+              ) {
+                let n = state.players[action.actor].unplayedCards.shift();
+                state.players[action.actor].playedCards.push(n);
+                let isError = false;
+                let levelIsComplete = true;
+                for (let player of Object.keys(state.players)) {
+                  if (state.players[player].unplayedCards.length > 0) {
+                    levelIsComplete = false;
+                    if (state.players[player].unplayedCards[0] < n) {
+                      isError = true;
+                    }
+                  }
+                }
+
+                let playerState = state.players[action.actor];
+                if (isError) {
+                  state.errors++;
+                  playerState.history[playerState.playedCards.length - 1] =
+                    "❌";
+                  state.actionLog.push(
+                    `❌ ${action.actor} played ${n} but it was wrong!`
+                  );
+                } else {
+                  playerState.history[playerState.playedCards.length - 1] =
+                    "✅";
+                  state.actionLog.push(`✅ ${action.actor} played ${n}`);
+                }
+
+                if (levelIsComplete) {
+                  state.status = "next-level-wait-room";
+                }
+              }
+
+              return state;
+            },
+            onStateChange: (state) => {
+              function iff(condition = false, then = "", otherwise = "") {
+                return condition ? then : otherwise;
+              }
+              document.body.innerHTML = html`
+                <div>
+                  <a href="/games/the-mind.html">back</a>
+                  <h3>
+                    the mind. 🧠
+                    <span style="color: dodgerblue; font-size: .75em;"
+                      >lobby ${lobbyId}</span
+                    >
+                  </h3>
+
+                  ${iff(
+                    state.status === "playing" ||
+                      state.status === "next-level-wait-room",
+                    `<p>🏆 level ${state.level} · 😳 ${state.errors} errors</p>`
+                  )}
+                  <h4>players</h4>
+                  <ul>
+                    ${Object.keys(state.players)
+                      .map(
+                        (player) =>
+                          html`<li>
+                            ${escapeHtml(player)}${iff(
+                              player === username,
+                              " (you)",
+                              iff()
+                            )}
+                            ${iff(
+                              isHost && player === username,
+                              ' <span style="background-color: lightgreen">host</span>'
+                            )}
+                            ${iff(
+                              state.status === "next-level-wait-room",
+                              state.players[player] === true
+                                ? "[ready]"
+                                : "[not-ready]"
+                            )}
+                            ${iff(
+                              state.status === "playing",
+                              `[${state.players[player]?.history?.join?.("")}]`
+                            )}
+                          </li>`
+                      )
+                      .join("")}
+                  </ul>
+
+                  ${iff(
+                    state.status === "next-level-wait-room",
+                    html`
+                      <h4>amazing!</h4>
+                      <p>you have completed level ${state.level}</p>
+                      ${iff(
+                        state.players[username] !== true,
+                        html`
+                          <p>are you ready for level ${state.level + 1}?</p>
+                          <button id="im-ready">i'm ready</button>
+                        `,
+                        html` <p>waiting for other players...</p> `
+                      )}
+                    `
+                  )}
+                  ${iff(
+                    state.status === "playing",
+                    html`<h4>your cards</h4>
+                      <div>
+                        <div
+                          style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px;"
+                        >
+                          ${state.players[username]?.playedCards
+                            ?.map(
+                              (card, i) =>
+                                html`<div class="reset-button playable-card">
+                                  <p style="padding: 0 24px;">${card}</p>
+                                  <p>
+                                    ${state.players[username]?.history?.[i]}
+                                  </p>
+                                </div>`
+                            )
+                            .join("")}
+                          ${state.players[username]?.unplayedCards?.[0]
+                            ? html`
+                                <button
+                                  id="send-number"
+                                  class="reset-button grow playable-card"
+                                >
+                                  <p style="padding: 0 24px;">
+                                    ${state.players[username]
+                                      ?.unplayedCards?.[0]}
+                                  </p>
+                                  <p
+                                    style="text-align: center; padding: 0 10px; border-radius: 5px; justify-self: center; background-color: #ddd;"
+                                  >
+                                    play
+                                  </p>
+                                </button>
+                              `
+                            : html``}
+                          ${state.players[username]?.unplayedCards
+                            ?.slice(1)
+                            ?.map(
+                              (card, idx) =>
+                                html`<div class="reset-button playable-card">
+                                  <p style="padding: 0 24px;">${card}</p>
+                                  <p>⬜️</p>
+                                </div>`
+                            )
+                            .join("")}
+                        </div>
+                      </div> `
+                  )}
+                  ${iff(
+                    isHost && state.status === "waiting",
+                    html`<button id="start">Start</button>`
+                  )}
+                  ${iff(
+                    !isHost && state.status === "waiting",
+                    html`<p>waiting for host to start...</p>`
+                  )}
+                  <h4>activity</h4>
+                  <ul>
+                    ${[...state.actionLog]
+                      .reverse()
+                      .map((action) => html`<li>${action}</li>`)
+                      .join("")}
+                  </ul>
+                  <h4>invite with</h4>
+                  <p>lobby code: ${escapeHtml(lobbyId)}</p>
+                  <p>
+                    lobby link:
+                    <a href="${window.location.href}"
+                      >${window.location.href}</a
+                    >
+                  </p>
+                  <h4>how to play</h4>
+                  <p>
+                    All players form a single team. In the first round (level 1)
+                    each player receives 1 card, in the second round (level 2)
+                    they receive 2 cards, and so on.
+                  </p>
+                  <p>
+                    At each level the team members must put down all their cards
+                    in increasing order in the center of the table on an open
+                    stack, one after the other. For example (4 players, level
+                    1): 18-34-41-73. The players do not take turns in any
+                    particular order.
+                  </p>
+                  <p>
+                    Whoever wants to put down a card, simply does so. Watch out,
+                    here's where it gets interesting: the players must not
+                    disclose anything about their own cards - no sharing of
+                    information, no secret signals.
+                  </p>
+                </div>
+              `;
+
+              document
+                .querySelector("#im-ready")
+                ?.addEventListener("click", (e) => {
+                  e.preventDefault();
+                  server.send({ type: "ready", actor: username });
+                });
+              document
+                .querySelector("#start")
+                ?.addEventListener("click", (e) => {
+                  e.preventDefault();
+                  server.send({ type: "start", actor: username });
+                });
+
+              document
+                .querySelector("#send-number")
+                ?.addEventListener?.("click", (e) => {
+                  server.send({ type: "send-number", actor: username });
+                });
+            },
+          });
+          server.send({ type: "join", actor: username });
+        }
+      }
+
+      render();
+    </script>
+  </head>
+  <body>
+    <p>loading...</p>
+    <!-- Your content here -->
+  </body>
+</html>
