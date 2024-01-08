@@ -96,7 +96,8 @@ function getUnguessedCoordCount(gameState) {
  * @returns {number}
  */
 function getMistakeCount(gameState) {
-  return Object.values(gameState.guesses).filter((kind) => kind === 'miss').length;
+  return Object.values(gameState.guesses).filter((kind) => kind === "miss")
+    .length;
 }
 
 /**
@@ -165,7 +166,6 @@ const server = getSingletonGameServer({
         },
       };
     }
-    console.log("action", action);
     if (action.type === "guess") {
       return {
         ...state,
@@ -186,7 +186,6 @@ const server = getSingletonGameServer({
     return state;
   },
   onStateChange(state) {
-    console.log("on state change", state);
     update();
   },
 });
@@ -285,29 +284,12 @@ function ui() {
       </td>`;
     });
   }
+
   const remainingTileCount = getUnguessedCoordCount(gameState);
   const mistakeCount = getMistakeCount(gameState);
   let playerCoord = gameState.players[username]?.coord;
   let timeoutId = -1;
   return html`
-    <p>
-      <button
-        id="copy-link"
-        @click=${() => {
-          navigator.clipboard.writeText(window.location.href);
-          document.getElementById("copy-link").innerText = "copied!";
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            document.getElementById("copy-link").innerText = "copy invite link";
-          }, 1000);
-        }}
-      >
-        copy invite link
-      </button>
-      <br />
-      <small>lobby code: ${lobbyId}</small>
-    </p>
-
     <table>
       <tr>
         <th></th>
@@ -371,9 +353,7 @@ function ui() {
 
     ${playerCoord
       ? html`
-          <p>
-            <strong>${playerCoord}</strong> is your tile
-          </p>
+          <p><strong>${playerCoord}</strong> is your tile</p>
           <p>Did your team guess correctly?</p>
           <button
             @click=${() =>
@@ -400,7 +380,10 @@ function ui() {
         `
       : html``}
     <hr />
-    <p>${remainingTileCount} tiles remaining - ${mistakeCount} mistake${mistakeCount === 1 ? "" : "s"} so far</p>
+    <p>
+      ${remainingTileCount} tiles remaining - ${mistakeCount}
+      mistake${mistakeCount === 1 ? "" : "s"} so far
+    </p>
     ${!playerCoord && remainingTileCount > 0
       ? html`
           <p>
@@ -448,7 +431,35 @@ function layout(children) {
 }
 
 function update() {
+  let lobbySlot = document.getElementById("lobby-slot");
+  if (lobbyId) {
+    render(lobbyInfo(), lobbySlot);
+  } else {
+    render(html``, lobbySlot);
+  }
   render(layout(ui()), document.getElementById("game"));
+}
+let timeoutId = 0;
+function lobbyInfo() {
+  return html`
+    <div style="">
+      <button
+        id="copy-link"
+        @click=${() => {
+          navigator.clipboard.writeText(window.location.href);
+          document.getElementById("copy-link").innerText = "copied!";
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            document.getElementById("copy-link").innerText = "copy invite link";
+          }, 1000);
+        }}
+      >
+        copy invite link
+      </button>
+      <br />
+      <small style="text-align: end">lobby code: ${lobbyId}</small>
+    </div>
+  `;
 }
 
 /**

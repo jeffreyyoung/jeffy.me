@@ -1,8 +1,6 @@
 import van from "../deps/van.js";
-import { server } from "./the-mind-game-server.js";
+import { server as getServer } from "./the-mind-game-server.js";
 import {
-  needsLobbyId,
-  needsUserName,
   username,
   lobbyId,
   isHost,
@@ -31,10 +29,10 @@ const {
 
 // generics
 // https://github.com/microsoft/TypeScript/issues/27387#issuecomment-659671940
-
 /**
  * @typedef {import('./the-mind-game-server.js').GameState} GameState
  */
+
 
 let actor = username.val;
 van.derive(() => {
@@ -61,7 +59,7 @@ const cardIndicator = van.derive(() => {
   };
 });
 
-const fullState = van.state(
+const gameState = van.state(
   /** @type {GameState} */
   ({
     history: [],
@@ -78,14 +76,14 @@ const gameStatus = van.state(
   ("before-start")
 );
 
-let s = van.derive(() => {
+let server = van.derive(() => {
   if (!lobbyId.val) {
     return null;
   }
   if (!username.val) {
     return null;
   }
-  const _server = server({
+  const _server = getServer({
     isHost: isHost.val,
     lobbyId: lobbyId.val,
     onStateChange(state) {
@@ -98,7 +96,7 @@ let s = van.derive(() => {
       } else {
         mostRecentCard.val = state.mostRecentCard || null;
       }
-      fullState.val = { ...state };
+      gameState.val = { ...state };
     },
     actor,
   });
@@ -109,14 +107,14 @@ let s = van.derive(() => {
   return _server;
 });
 
-const amReady = van.derive(() => {
-  return fullState.val.players[actor]?.status === "waiting";
+const iAmReady = van.derive(() => {
+  return gameState.val.players[actor]?.status === "waiting";
 });
 
 const waitingOnText = van.derive(() => {
   return (
     "Waiting on " +
-    Object.values(fullState.val.players)
+    Object.values(gameState.val.players)
       .filter((p) => p.status === "waiting")
       .map((p) => (p.username === actor ? "you" : p.username))
       .join(", ")
@@ -138,13 +136,13 @@ function App() {
       allSetup.val && gameStatus.val === "level-complete"
         ? LevelComplete()
         : span(),
-    () => (allSetup.val ? PlayerState() : span())
+    () => (allSetup.val ? PlayerList() : span())
   );
 }
 
-function PlayerState() {
+function PlayerList() {
   const players = van.derive(() => {
-    let res = Object.values(fullState.val.players);
+    let res = Object.values(gameState.val.players);
     return res.map((p) => {
       return [
         p.username,
@@ -174,9 +172,9 @@ function Waiting() {
     h1({ style: "text-align: center", class: "fadeInUp-animation" }, "Welcome"),
     p(waitingOnText),
     () =>
-      amReady.val
+      iAmReady.val
         ? button(
-            { onclick: () => s.val?.send({ actor, type: "ready" }) },
+            { onclick: () => server.val?.send({ actor, type: "ready" }) },
             "ready"
           )
         : p()
@@ -185,7 +183,7 @@ function Waiting() {
 
 function LevelComplete() {
   const level = van.derive(() => {
-    return fullState.val.level;
+    return gameState.val.level;
   });
   return MainLayout(
     h1(
@@ -195,9 +193,9 @@ function LevelComplete() {
     ),
     p(waitingOnText),
     () =>
-      amReady.val
+      iAmReady.val
         ? button(
-            { onclick: () => s.val?.send({ actor, type: "ready" }) },
+            { onclick: () => server.val?.send({ actor, type: "ready" }) },
             "ready"
           )
         : p()
@@ -227,7 +225,7 @@ function MainLayout(middle, bottom, button) {
 
 function Game() {
   const myCards = van.derive(() => {
-    let me = fullState.val.players[actor];
+    let me = gameState.val.players[actor];
     if (!me) {
       return [];
     }
@@ -270,7 +268,7 @@ function Game() {
       )
     ),
     button(
-      { onclick: () => s.val.send({ actor, type: "play-card" }) },
+      { onclick: () => server.val.send({ actor, type: "play-card" }) },
       "play ",
       nextNumber
     )

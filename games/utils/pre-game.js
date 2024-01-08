@@ -104,7 +104,7 @@ export function LobbySelection() {
         },
       },
       input({ name: "lobbyId", placeholder: "lobby id", style: 'padding: 6px' }),
-      button("submit")
+      button("join")
     )
   );
 }

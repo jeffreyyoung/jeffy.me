@@ -93,13 +93,25 @@
       input {
         font-size: 1rem;
       }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
     </style>
   </head>
   <body>
     <a href="/">home</a>
-    <h3>cross clues 🕵️</h3>
+    <header>
+      <div>
+        <h3>cross clues 🕵️</h3>
+      </div>
+      <div id="lobby-slot">
+
+      </div>
+    </header>
     <div id="game"></div>
-    <details open style="margin-top: 16px;">
+    <details open style="margin-top: 16px">
       <summary><h4 style="display: inline">how to play</h4></summary>
       <p>
         announce a 1 word clue to your team that relates to the two words of
