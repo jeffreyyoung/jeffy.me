@@ -20,6 +20,7 @@ import {
  *  level: number,
  *  history: string[],
  *  status: "before-start" | "in-level" | "level-complete",
+ *  mostRecentCard: { playerName: string, name: number, status: "played-correct" | "played-incorrect" } | null,
  * }}
  */
 
@@ -160,12 +161,20 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
         state.history.unshift(
           `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`
         );
+
         if (allCardsInHand.length <= 1) {
           state.status = "level-complete";
           state.history.unshift(`🎉 level ${state.level} complete`);
           Object.values(state.players).forEach((player) => {
             player.status = "waiting";
           });
+          state.mostRecentCard = null;
+        } else {
+            state.mostRecentCard = {
+                playerName: action.actor,
+                name: card.name,
+                status: card.status,
+            };
         }
       }
       console.log("action", action);

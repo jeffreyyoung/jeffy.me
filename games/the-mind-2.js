@@ -1,5 +1,6 @@
 import van from "../deps/van.js";
 import { server } from "./the-mind-game-server.js";
+import { needsLobbyId, needsUserName, username, lobbyId, isHost, LobbySelection, SetUserName } from "./utils/pre-game.js";
 const {
   form,
   ul,
@@ -26,15 +27,32 @@ const {
  * @typedef {import('./the-mind-game-server.js').GameState} GameState
  */
 
-const lobbyId = van.state("123");
-const actor = van.state("456").val;
 
-const defaultHighestNumber = {
-  number: 0,
-  color: "black",
-  text: "nothing played",
-};
-const highestNumber = van.state(defaultHighestNumber);
+let actor = username.val;
+van.derive(() => {
+  actor = username.val;
+});
+
+
+const mostRecentCard = van.state(
+    /** @type {GameState['mostRecentCard']} */
+    (null)
+);
+
+const cardIndicator = van.derive(() => {
+    if (mostRecentCard.val === null) {
+        return {
+            color: "black",
+            text: "nothing played",
+            name: 0,
+        };
+    }
+    return {
+        color: mostRecentCard.val.status === "played-correct" ? "green" : "red",
+        text: mostRecentCard.val.playerName,
+        name: mostRecentCard.val.name,
+    }
+});
 
 const fullState = van.state(
   /** @type {GameState} */
@@ -51,50 +69,62 @@ const gameStatus = van.state(
   ("before-start")
 );
 
-let s = server({
-  isHost: true,
-  lobbyId: "123",
-  onStateChange(state) {
-    if (state.status !== gameStatus.val) {
-      gameStatus.val = state.status;
+let s = van.derive(() => {
+    if (!lobbyId.val) {
+      return null;
     }
-    if (state.status !== "in-level") {
-      highestNumber.val = defaultHighestNumber;
-    } else {
-      let allCards = Object.values(state.players).flatMap((player) =>
-        player.cards
-          .filter((c) => c.status !== "in-hand")
-          .map((c) => ({ ...c, playerName: player.username }))
-      );
+    if (!username.val) {
+      return null;
+    }
+    const _server = server({
+        isHost: isHost.val,
+        lobbyId: lobbyId.val,
+        onStateChange(state) {
+          if (state.status !== gameStatus.val) {
+            gameStatus.val = state.status;
+          }
+          if (state.status !== "in-level") {
+            mostRecentCard.val = null;
+          } else {
+            mostRecentCard.val = state.mostRecentCard || null;
+          }
+          fullState.val = { ...state };
+        },
+        actor,
+      });
+    _server.send({
+        type: 'join-game',
+        actor: username.val,
+    })
+    return _server;
+})
 
-      allCards = allCards.sort((a, b) => a.name - b.name);
-      if (allCards.at(-1)) {
-        const c = allCards.at(-1);
-        highestNumber.val = {
-          text: `${c.playerName}`,
-          number: c.name,
-          color: c.status === "played-correct" ? "green" : "red",
-        };
-      } else {
-        highestNumber.val = defaultHighestNumber;
-      }
-    }
-    fullState.val = { ...state };
-  },
-  actor,
+const amReady = van.derive(() => {
+    return fullState.val.players[actor]?.status === 'waiting';
 });
 
-s.send({
-  type: "join-game",
-  actor,
-});
+const waitingOnText = van.derive(() => {
+    return 'Waiting on ' +
+        Object.values(fullState.val.players).filter(p => p.status === 'waiting').map(p => p.username === actor ? 'you' : p.username).join(', ');
+})
 
 function App() {
+    let allSetup = van.derive(() => {
+        return lobbyId.val && username.val;
+    })
+
   return div(
-    () => (gameStatus.val === "in-level" ? Game() : span()),
-    () => (gameStatus.val === "before-start" ? Waiting() : span()),
-    () => (gameStatus.val === "level-complete" ? LevelComplete() : span()),
-    PlayerState()
+    () => (username.val && !lobbyId.val ? LobbySelection() : span()),
+    () => (!username.val ? SetUserName() : span()),
+    () => (allSetup.val && gameStatus.val === "in-level" ? Game() : span()),
+    () => (allSetup.val && gameStatus.val === "before-start" ? Waiting() : span()),
+    () => (allSetup.val && gameStatus.val === "level-complete" ? LevelComplete() : span()),
+    () => allSetup.val ? PlayerState() : span(),
+    () => (allSetup.val) ? div(
+        { style: 'margin-top: 30px;'},
+        button({ onclick: () => ''}, 'copy invite link'),
+        h6({ style: 'margin-top: 15px;'}, `lobby id: ${lobbyId.val}`),
+    ) : span(),
   );
 }
 
@@ -125,8 +155,8 @@ function PlayerState() {
 function Waiting() {
   return MainLayout(
     h1({ style: "text-align: center", class: "fadeInUp-animation" }, "Welcome"),
-    div(),
-    button({ onclick: () => s.send({ actor, type: "ready" }) }, "ready")
+    p(waitingOnText),
+    () => amReady.val ? button({ onclick: () => s.val?.send({ actor, type: "ready" }) }, "ready") : p()
   );
 }
 
@@ -140,11 +170,8 @@ function LevelComplete() {
       level,
       " complete!"
     ),
-    div(),
-    button(
-      { onclick: () => s.send({ actor, type: "ready" }) },
-      "ready for next level"
-    )
+    p(waitingOnText),
+    () => amReady.val ? button({ onclick: () => s.val?.send({ actor, type: "ready" }) }, "ready") : p()
   );
 }
 
@@ -184,20 +211,20 @@ function Game() {
 
   return MainLayout(
     () =>
-      highestNumber.val !== null
+      cardIndicator.val !== null
         ? div(
             {
               class: "fadeInUp-animation",
             },
             h1(
               { style: "text-align: center; margin-bottom: 0;" },
-              highestNumber.val.number
+              cardIndicator.val.name
             ),
             h6(
               {
-                style: `text-align: center; margin-top: 0; margin-bottom: 12px; color: ${highestNumber.val.color}`,
+                style: `text-align: center; margin-top: 0; margin-bottom: 12px; color: ${cardIndicator.val.color}`,
               },
-              highestNumber.val.text
+              cardIndicator.val.text
             )
           )
         : span(),
@@ -214,7 +241,7 @@ function Game() {
       )
     ),
     button(
-      { onclick: () => s.send({ actor, type: "play-card" }) },
+      { onclick: () => s.val.send({ actor, type: "play-card" }) },
       "play ",
       nextNumber
     )
