@@ -113,9 +113,8 @@ function PlayerState() {
         .join("");
     });
   });
-  return div(
-    h4("players"),
-    () => ul(
+  return div(h4("players"), () =>
+    ul(
       ...players.val.map((p) => {
         return li(p);
       })
@@ -124,12 +123,9 @@ function PlayerState() {
 }
 
 function Waiting() {
-  return div(
-    {
-      style:
-        "display: flex; flex-direction: column; align-items: center; justify-content: center;",
-    },
+  return MainLayout(
     h1({ style: "text-align: center", class: "fadeInUp-animation" }, "Welcome"),
+    div(),
     button({ onclick: () => s.send({ actor, type: "ready" }) }, "ready")
   );
 }
@@ -138,16 +134,13 @@ function LevelComplete() {
   const level = van.derive(() => {
     return fullState.val.level;
   });
-  return div(
-    {
-      style:
-        "display: flex; flex-direction: column; align-items: center; justify-content: center;",
-    },
+  return MainLayout(
     h1(
       { style: "text-align: center", class: "fadeInUp-animation" },
       level,
       " complete!"
     ),
+    div(),
     button(
       { onclick: () => s.send({ actor, type: "ready" }) },
       "ready for next level"
@@ -156,18 +149,24 @@ function LevelComplete() {
 }
 
 function MainLayout(middle, bottom, button) {
-    return div(
-        div(
-        { style: 'display: flex; min-height: 400px; display: flex; flex-direction: column; align-items: space-between; justify-content: center'},
-        div(),
-        middle,
-        bottom,
-        ),
-        div(
-            { style: 'margin: 15 0; display: flex; flex-direction: column; align-items: space-between; justify-content: center'},
-            button
-        )
+  return div(
+    div(
+      {
+        style:
+          "display: flex; min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between",
+      },
+      div(),
+      middle,
+      bottom
+    ),
+    div(
+      {
+        style:
+          "margin: 15 0; display: flex; flex-direction: column; align-items: space-between; justify-content: center",
+      },
+      button
     )
+  );
 }
 
 function Game() {
@@ -182,11 +181,8 @@ function Game() {
   const nextNumber = van.derive(() => {
     return myCards.val.find((card) => card.status === "in-hand")?.name;
   });
-  return div(
-    {
-      style:
-        "display: flex; flex-direction: column; align-items: center; justify-content: center;",
-    },
+
+  return MainLayout(
     () =>
       highestNumber.val !== null
         ? div(
@@ -205,12 +201,17 @@ function Game() {
             )
           )
         : span(),
-    h6({ style: "text-align: center; margin: 0; margin-top: 15px;" }, "your cards"),
-    p(
-        { style: 'margin-top: 0'},
-      ...myCards.val
-        .map((c) => `${c.name}(${statusToEmoji[c.status]})`)
-        .join(", ")
+    div(
+      h6(
+        { style: "text-align: center; margin: 0; margin-top: 15px;" },
+        "your cards"
+      ),
+      p(
+        { style: "text-align: center; margin-top: 0" },
+        ...myCards.val
+          .map((c) => `${c.name}(${statusToEmoji[c.status]})`)
+          .join(", ")
+      )
     ),
     button(
       { onclick: () => s.send({ actor, type: "play-card" }) },
