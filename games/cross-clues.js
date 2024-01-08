@@ -287,7 +287,6 @@ function ui() {
   }
   const remainingTileCount = getUnguessedCoordCount(gameState);
   const mistakeCount = getMistakeCount(gameState);
-  console.log("ishost", isHost);
   let playerCoord = gameState.players[username]?.coord;
   let timeoutId = -1;
   return html`
