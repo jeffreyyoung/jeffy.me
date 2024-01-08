@@ -50,9 +50,6 @@ import {
  */
 
 
-
-
-
 /**
  * @param {{
  *  isHost: boolean,
@@ -73,7 +70,6 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
       status: "before-start",
     }),
     onAction(state, action) {
-      console.log("onAction", state, action);
       let usedNums = new Set(
         Object.values(state.players).flatMap((player) =>
           player.cards.map((card) => card.name)
@@ -84,6 +80,7 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
         while (usedNums.size < 100) {
           let num = Math.floor(Math.random() * 100) + 1;
           if (!usedNums.has(num)) {
+            usedNums.add(num);
             return num;
           }
         }
@@ -109,7 +106,6 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
         action.actor &&
         !state.players[action.actor]
       ) {
-        console.log("player joined", action.actor);
         state.players[action.actor] = {
           username: action.actor,
           isHost: action.actor === actor && isHost,
@@ -177,8 +173,6 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
             };
         }
       }
-      console.log("action", action);
-      console.log("state", state);
       return state;
     },
     onStateChange(state) {
