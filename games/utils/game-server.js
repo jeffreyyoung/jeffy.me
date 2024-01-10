@@ -1,5 +1,10 @@
-// https://peerjs.com/docs/#peeron-error
+import { Peer } from "https://esm.sh/peerjs@1.5.2?bundle-deps";
 
+// https://peerjs.com/docs/#peeron-error
+/**
+ * @typedef PeerJsConnection
+ * @type {import("https://esm.sh/peerjs@1.5.2?bundle-deps").PeerJsConnection}
+ */
 
 /** @type {any} */
 let _server = null;
@@ -169,3 +174,5 @@ export function createGameServer({
     },
   };
 }
+
+
