@@ -11,6 +11,8 @@ import { Peer } from "https://esm.sh/peerjs@1.5.2?bundle-deps";
  *
  */
 
+const roomPrefix = '55555jeffy-me';
+
 /**
  * @template ActionMap
  * @template State
@@ -94,26 +96,26 @@ export class P2pState {
     this._emit("change:state", this.state);
   }
 
+
   /**
    *
    */
   connectToHost() {
-    console.log("connecting to: ", this.args.roomId);
-    let conn = this.peer.connect(this.args.roomId);
+    let conn = this.peer.connect(roomPrefix + this.args.roomId);
     conn.on("error", (e) => {
-      console.log("connection error", e);
+      console.log("host connection error", e);
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("close", () => {
-      console.log("connection closed");
+      console.log("host connection closed");
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("open", () => {
-      console.log("connection open");
+      console.log("host connection open");
       this.connections.push(conn);
       this.setConnected(true);
       conn.on("data", (data) => {
@@ -146,13 +148,12 @@ export class P2pState {
    *
    * */
   setupPeer() {
-    this.peer = new Peer(this.args.isHost ? this.args.roomId : undefined);
+    this.peer = new Peer(this.args.isHost ? roomPrefix + this.args.roomId : undefined, { debug: 3 });
 
     this.peer.on("open", () => {
-      this.setConnected(true);
-
+      
       if (this.args.isHost) {
-        this._emit("change:connected", this.connected);
+        this.setConnected(true);
       }
 
       // if we're not the host, we connect to the host
@@ -162,9 +163,11 @@ export class P2pState {
         this.listenForPeerConnections();
       }
     });
-
+    this.peer.on('error', (e) => {
+      console.error('peer error', e);
+    })
     this.peer.on("close", (err) => {
-      console.error("peer error", err);
+      console.error("peer closed", err);
       this.setConnected(false);
       this.peer.destroy();
       setTimeout(() => {

@@ -33,11 +33,12 @@ declare module "https://esm.sh/peerjs@1.5.2?bundle-deps" {
     open: boolean;
   };
   class Peer {
-    constructor(myPeerId?: string);
+    constructor(myPeerId?: string, ops?: { debug: number});
 
     connect(peerId: string): PeerJsConnection;
     destroy(): void;
     on(event: "open", callback: (id: string) => void): void;
+    on(event: "error", callback: (err: any) => void): void;
     on(
       event: "connection",
       callback: (connection: PeerJsConnection) => void
