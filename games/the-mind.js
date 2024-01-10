@@ -100,10 +100,12 @@ let server = van.derive(() => {
     },
     actor,
   });
-  _server.send({
-    type: "join-game",
-    actor: username.val,
+  _server.on('change:connected', (connected) => {
+    if (connected) {
+      _server.send('join', {});
+    }
   });
+  _server.send('join', {});
   return _server;
 });
 
@@ -174,7 +176,7 @@ function Waiting() {
     () =>
       iAmReady.val
         ? button(
-            { onclick: () => server.val?.send({ actor, type: "ready" }) },
+            { onclick: () => server.val?.send('ready', {}) },
             "ready"
           )
         : p()
@@ -195,7 +197,7 @@ function LevelComplete() {
     () =>
       iAmReady.val
         ? button(
-            { onclick: () => server.val?.send({ actor, type: "ready" }) },
+            { onclick: () => server.val?.send('ready', {}) },
             "ready"
           )
         : p()
@@ -268,10 +270,13 @@ function Game() {
       )
     ),
     button(
-      { onclick: () => server.val.send({ actor, type: "play-card" }) },
+      {
+        style: () => `display: ${typeof nextNumber.val === 'number' ? "block" : "none"}`,
+        onclick: () => server.val.send('play-card', {})
+      },
       "play ",
       nextNumber
-    )
+    ),
   );
 }
 

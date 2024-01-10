@@ -1,7 +1,17 @@
-import {
-  createGameServer,
-  getSingletonGameServer,
-} from "./utils/game-server.js";
+import { P2pState } from "./utils/p2p-state.js";
+import { singleton } from "./utils/singleton.js";
+/**
+ * @param {number} start
+ * @param {number} end
+ * @returns {number[]}
+ * */
+function range(start, end) {
+  let nums = [];
+  for (let i = start; i < end; i++) {
+    nums.push(i);
+  }
+  return nums;
+}
 
 /**
  * @typedef Player
@@ -34,154 +44,153 @@ import {
  * }}
  */
 
+
+const createDeck = (deck = range(1, 100)) => {
+  const allCards = range(1, 100);
+
+  return {
+    drawCard: () => {
+      const index = Math.floor(Math.random() * allCards.length);
+      const card = allCards[index];
+      allCards.splice(index, 1);
+      return card;
+    },
+    hasMoreCards: () => {
+      return allCards.length > 0;
+    }
+  }
+}
+
 /**
- * @typedef Action
+ * @typedef ActionMap
  * @type {{
- *   actor: string,
- * } & ({
- *  type: "join-game",
- * } | {
- *  type: "play-card"
- * } | {
- *  type: "ready"
- * } | {
- *  type: "kick-player",
- * player: string,
- * })}
+ *   "join": {},
+ *   "play-card": {},
+ *   "ready": {},
+ * }}
  */
 
-
-/**
- * @param {{
- *  isHost: boolean,
- *  lobbyId: string,
- *  actor: string,
- *  onStateChange: (state: GameState) => void
- * }} args
- * @returns {ReturnType<typeof createGameServer<GameState, Action>>}
- */
 export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
-  getSingletonGameServer({
-    isHost,
-    roomId: lobbyId,
-    initialState: /** @type {GameState} */ ({
-      players: {},
-      level: 0,
-      history: [],
-      mistakeCount: 0,
-      mostRecentCard: null,
-      status: "before-start",
-    }),
-    onAction(state, action) {
-      let usedNums = new Set(
-        Object.values(state.players).flatMap((player) =>
-          player.cards.map((card) => card.name)
-        )
-      );
+  singleton(
+    "the-mind",
+    () =>
+      new P2pState(
+        /** @type {ActionMap} */
+        ({}),
+        /** @type {GameState} */
+        ({
+          players: {},
+          level: 0,
+          history: [],
+          mistakeCount: 0,
+          mostRecentCard: null,
+          status: "before-start",
+        }),
+        {
+          isHost,
+          roomId: lobbyId,
+          actorUsername: actor,
+          onStateChange,
+          actions: {
+            join: (state, _, actor) => {
+              if (state.players[actor]) {
+                return state;
+              }
+              state.players[actor] = {
+                username: actor,
+                isHost: actor === actor && isHost,
+                status: state.status === "in-level" ? "playing" : "waiting",
+                cards: [],
+              };
+              if (state.status === 'in-level') {
+                let dealer = createDeck(
+                  Object.values(state.players).flatMap((player) => player.cards).map((card) => card.name)
+                );
+                for (let i = 0; i < state.level; i++) {
+                  if (!dealer.hasMoreCards()) {
+                    break;
+                  }
+                  state.players[actor].cards.push({
+                    name: dealer.drawCard(),
+                    status: "in-hand",
+                  });
+                }
+              }
+              state.history.unshift(`👋 ${actor} joined`);
+              return state;
+            },
+            ready: (state, _, actor) => {
+              if (!state.players[actor]) {
+                return state;
+              }
 
-      function getUnusedNumber() {
-        while (usedNums.size < 100) {
-          let num = Math.floor(Math.random() * 100) + 1;
-          if (!usedNums.has(num)) {
-            usedNums.add(num);
-            return num;
-          }
+              state.players[actor].status = "ready";
+
+              if (
+                Object.values(state.players).every(
+                  (player) => player.status === "ready"
+                )
+              ) {
+                const dealer = createDeck();
+                state.status = "in-level";
+                state.level++;
+                Object.values(state.players).forEach((player) => {
+                  player.status = "playing";
+                  player.cards = [];
+                  for (let i = 0; i < state.level; i++) {
+                    if (!dealer.hasMoreCards()) {
+                      break;
+                    }
+                    player.cards.push({
+                      name: dealer.drawCard(),
+                      status: "in-hand",
+                    });
+                  }
+                  player.cards.sort((a, b) => a.name - b.name);
+                });
+              }
+              return state;
+            },
+            "play-card": (state, _, actor) => {
+              if (state.status !== "in-level" || !state.players[actor]) {
+                return state;
+              }
+              let player = state.players[actor];
+              let card = player.cards.find((card) => card.status === "in-hand");
+              if (!card) {
+                return state;
+              }
+              let allCardsInHand = Object.values(state.players)
+                .flatMap((player) => player.cards)
+                .filter((card) => card.status === "in-hand")
+                .sort((a, b) => a.name - b.name);
+              let isCorrect = card.name <= allCardsInHand[0].name;
+
+              card.status = isCorrect ? "played-correct" : "played-incorrect";
+              state.history.unshift(
+                `${isCorrect ? "✅" : "❌"} ${actor} played ${card.name}`
+              );
+              if (!isCorrect) {
+                state.mistakeCount++;
+              }
+
+              if (allCardsInHand.length <= 1) {
+                state.status = "level-complete";
+                state.history.unshift(`🎉 level ${state.level} complete`);
+                Object.values(state.players).forEach((player) => {
+                  player.status = "waiting";
+                });
+                state.mostRecentCard = null;
+              } else {
+                state.mostRecentCard = {
+                  playerName: actor,
+                  name: card.name,
+                  status: card.status,
+                };
+              }
+              return state;
+            },
+          },
         }
-        return null;
-      }
-      function getHand() {
-        /** @type {Player['cards']} */
-        let hand = [];
-        for (let i = 0; i < state.level; i++) {
-          let num = getUnusedNumber();
-          if (num === null) {
-            return hand;
-          }
-          hand.push({ name: num, status: "in-hand" });
-          hand.sort((a, b) => a.name - b.name);
-        }
-
-        return hand;
-      }
-
-      if (
-        action.type === "join-game" &&
-        action.actor &&
-        !state.players[action.actor]
-      ) {
-        state.players[action.actor] = {
-          username: action.actor,
-          isHost: action.actor === actor && isHost,
-          status: state.status === "before-start" ? "waiting" : "playing",
-          cards: getHand(),
-        };
-        state.history.unshift(`👋 ${action.actor} joined`);
-      }
-
-      if (
-        action.type === "ready" &&
-        state.players[action.actor] &&
-        ["before-start", "level-complete"].includes(state.status)
-      ) {
-        state.players[action.actor].status = "ready";
-      }
-
-      if (state.status !== "in-level") {
-        if (
-          Object.values(state.players).every(
-            (player) => player.status === "ready"
-          )
-        ) {
-          state.status = "in-level";
-          state.level++;
-          Object.values(state.players).forEach((player) => {
-            player.status = "playing";
-            player.cards = getHand();
-          });
-        }
-      }
-      let allCardsInHand = Object.values(state.players)
-        .flatMap((player) => player.cards)
-        .filter((card) => card.status === "in-hand")
-        .sort((a, b) => a.name - b.name);
-      if (
-        action.type === "play-card" &&
-        state.status === "in-level" &&
-        state.players[action.actor]
-      ) {
-        let player = state.players[action.actor];
-
-        let card = player.cards.find((card) => card.status === "in-hand");
-        if (!card) {
-          return state;
-        }
-        let isCorrect = card.name === allCardsInHand[0].name;
-        card.status = isCorrect ? "played-correct" : "played-incorrect";
-        state.history.unshift(
-          `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`
-        );
-        if (!isCorrect) {
-          state.mistakeCount++;
-        }
-
-        if (allCardsInHand.length <= 1) {
-          state.status = "level-complete";
-          state.history.unshift(`🎉 level ${state.level} complete`);
-          Object.values(state.players).forEach((player) => {
-            player.status = "waiting";
-          });
-          state.mostRecentCard = null;
-        } else {
-            state.mostRecentCard = {
-                playerName: action.actor,
-                name: card.name,
-                status: card.status,
-            };
-        }
-      }
-      return state;
-    },
-    onStateChange(state) {
-        onStateChange(state);
-    },
-  });
+      )
+  );
