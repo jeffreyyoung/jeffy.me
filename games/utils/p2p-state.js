@@ -59,63 +59,63 @@ export class P2pState {
   peer;
 
   /**
-    * @param {ActionMap} actionMap
-    * @param {State} initialState
-    * @param {P2pStateArgs} args
+   * @param {ActionMap} actionMap
+   * @param {State} initialState
+   * @param {P2pStateArgs} args
    */
   constructor(actionMap, initialState, args) {
-    console.log('setup server', args);
+    console.log("setup server", args);
     this.args = args;
     this.state = initialState;
     this.peer = this.setupPeer();
     if (args.onStateChange) {
       this.on("change:state", args.onStateChange);
-      this._emit("change:state", this.state);
+      this.setState(initialState);
     }
     if (args.onConnectionChange) {
       this.on("change:connected", args.onConnectionChange);
-      this._emit("change:connected", this.connected);
+      this.setConnected(false);
     }
   }
 
-  onNewConnection(conn, { onFail = () => {} } = {}) {
-    this.connections.push(conn);
-    conn.on("data", (data) => {
-      this.onPeerData(data);
-    });
-    conn.on("close", () => {
-      this.connections = this.connections.filter((c) => c !== conn);
-      onFail();
-    });
-    conn.on('error', (err) => {
-      console.error('connection error', err);
-      this.connections = this.connections.filter((c) => c !== conn);
-      onFail();
-    })
+  /**
+   * @param {boolean} val
+   * */
+  setConnected(val) {
+    this.connected = val;
+    this._emit("change:connected", this.connected);
   }
 
   /**
-   * 
+   * @param {State} val
+   * */
+  setState(val) {
+    this.state = val;
+    this._emit("change:state", this.state);
+  }
+
+  /**
+   *
    */
   connectToHost() {
-    console.log('connecting to: ', this.args.roomId)
+    console.log("connecting to: ", this.args.roomId);
     let conn = this.peer.connect(this.args.roomId);
-    conn.on('error', (e) => {
-      console.log('connection error', e);
-      conn.destroy();
-      this.peer.destroy();
-      setTimeout(this.setupPeer, 1000);
+    conn.on("error", (e) => {
+      console.log("connection error", e);
+      this.connections = this.connections.filter((c) => c !== conn);
+      this.setConnected(false);
+      setTimeout(() => this.connectToHost(), 1000);
     });
-    conn.on('close', () => {
-      console.log('connection closed');
-      this.peer.destroy();
-      setTimeout(this.setupPeer, 1000);
+    conn.on("close", () => {
+      console.log("connection closed");
+      this.connections = this.connections.filter((c) => c !== conn);
+      this.setConnected(false);
+      setTimeout(() => this.connectToHost(), 1000);
     });
-    conn.on('open', () => {
-      console.log('connection open');
+    conn.on("open", () => {
+      console.log("connection open");
       this.connections.push(conn);
-      this.connected = true;
-      this._emit("change:connected", this.connected);
+      this.setConnected(true);
       conn.on("data", (data) => {
         this.onPeerData(data);
       });
@@ -127,15 +127,15 @@ export class P2pState {
       this.connections.push(conn);
       conn.send({
         resultState: this.state,
-      })
+      });
       conn.on("data", (data) => {
         this.onPeerData(data);
       });
       conn.on("close", () => {
         this.connections = this.connections.filter((c) => c !== conn);
       });
-      conn.on('error', (err) => {
-        console.error('connection error', err);
+      conn.on("error", (err) => {
+        console.error("connection error", err);
         this.connections = this.connections.filter((c) => c !== conn);
       });
     });
@@ -149,7 +149,7 @@ export class P2pState {
     this.peer = new Peer(this.args.isHost ? this.args.roomId : undefined);
 
     this.peer.on("open", () => {
-      this.connected = true;
+      this.setConnected(true);
 
       if (this.args.isHost) {
         this._emit("change:connected", this.connected);
@@ -165,12 +165,11 @@ export class P2pState {
 
     this.peer.on("close", (err) => {
       console.error("peer error", err);
-      this.connected = false;
-      this._emit("change:connected", this.connected);
+      this.setConnected(false);
       this.peer.destroy();
       setTimeout(() => {
         this.setupPeer();
-      }, 1000);
+      }, 5000);
     });
 
     return this.peer;
@@ -181,7 +180,7 @@ export class P2pState {
    * @param {PeerJSPayload} data
    */
   onPeerData(data) {
-    console.log('onPeerData', data);
+    console.log("onPeerData", data);
     if (this.args.isHost && data.action) {
       // we're the host, so we need to process the action
       let nextState = this.produceNextState(data.action);
@@ -189,8 +188,7 @@ export class P2pState {
         console.error(`action ${String(nextState)} not found`);
         return;
       }
-      this.state = nextState;
-      this._emit("change:state", this.state);
+      this.setState(nextState);
       this.connections.forEach((conn) => {
         conn.send({
           action: data.action,
@@ -200,7 +198,7 @@ export class P2pState {
     } else if (!this.args.isHost) {
       // we're a client, so we just set the state
       let { resultState } = data;
-      this.state = resultState;
+      this.setState(resultState);
       this._emit("change:state", this.state);
     }
   }
@@ -219,7 +217,7 @@ export class P2pState {
   }
 
   /**
-   * 
+   *
    * @template {keyof ActionMap} ActionType
    * @param {ActionType} actionType
    * @param {ActionMap[ActionType]} params
@@ -238,12 +236,10 @@ export class P2pState {
       resultState,
     };
 
-
     this._sendToConnections(toSend);
 
     if (this.args.isHost) {
-      this.state = resultState;
-      this._emit("change:state", this.state);
+      this.setState(resultState);
     }
   }
 
@@ -279,7 +275,7 @@ export class P2pState {
    * @param {EventMap[EventType]} payload
    */
   _emit(event, payload) {
-    console.log('emit', event, payload);
+    console.log("emit", event, payload);
     this.listeners[event]?.forEach((cb) => {
       cb(payload);
     });

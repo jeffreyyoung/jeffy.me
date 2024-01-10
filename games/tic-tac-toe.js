@@ -139,13 +139,11 @@ const Game = () => {
       roomId: lobbyId.val,
       isHost: isHost.val,
       onStateChange: (incoming) => {
-        console.log("onStateChange", incoming);
         state.val = { ...incoming };
       },
       onConnectionChange: (connected) => {
         isConnected.val = connected;
         if (connected) {
-          console.log("sending join!");
           server.send("join", { username: username.val });
         }
       },
@@ -192,16 +190,13 @@ const Game = () => {
       "your emoji: ",
       () => state.val.players.find((p) => p.name === username.val)?.emoji
     ),
-    () =>
-      isConnected.val
-        ? null
-        : div(
-            {
-              style:
-                "position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;",
-            },
-            h1("connecting...")
-          ),
+    div(
+      {
+        style: () =>
+          `display: ${isConnected.val ? 'none' : 'flex'}; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.5); align-items: center; justify-content: center;`,
+      },
+      h1("connecting...")
+    ),
     h4("other player turn: ", () => state.val.turn),
     h4("players"),
     () => ul(...state.val.players.map((p) => li(`${p.emoji} ${p.name}`)))
