@@ -127,9 +127,13 @@ export class P2pState {
   listenForPeerConnections() {
     this.peer.on("connection", (conn) => {
       this.connections.push(conn);
-      conn.send({
-        resultState: this.state,
-      });
+      conn.on('open', () => {
+        console.log('peer connection open');
+        conn.send({
+          resultState: this.state,
+        });
+      })
+      
       conn.on("data", (data) => {
         this.onPeerData(data);
       });
@@ -148,7 +152,7 @@ export class P2pState {
    *
    * */
   setupPeer() {
-    this.peer = new Peer(this.args.isHost ? roomPrefix + this.args.roomId : undefined, { debug: 3 });
+    this.peer = new Peer(this.args.isHost ? roomPrefix + this.args.roomId : undefined, { debug: 1 });
 
     this.peer.on("open", () => {
       

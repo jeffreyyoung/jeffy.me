@@ -2,7 +2,7 @@ import {
   html,
   render,
 } from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
-import { getSingletonGameServer } from "./utils/game-server.js";
+import { P2pState } from "./utils/p2p-state.js";
 import { words } from "./cross-clues-words.js";
 /**
  * @typedef Player
@@ -22,16 +22,11 @@ import { words } from "./cross-clues-words.js";
  */
 
 /**
- * @typedef Action
+ * @typedef ActionMap
  * @type {{
- * actor: string,
- * } & ({
- *  type: "join"
- * } | {
- *  type: "guess",
- * coord: string,
- * result: "correct" | "miss"
- * })}
+ *      join: { actor: string },
+ *      guess: { actor: string, coord: string, result: "correct" | "miss" }
+ * }}
  */
 const urlSearchParams = new URLSearchParams(
   window.location.search.split("?")?.[1] || ""
@@ -117,15 +112,11 @@ function getUnusedCoord(gameState) {
   return "";
 }
 
-/**
- *
- * @returns {ReturnType<typeof createGameServer<GameState, Action>>}
- */
-const server = getSingletonGameServer({
-  isHost,
-  roomId: lobbyId,
+var server = new P2pState(
+  /** @type {ActionMap} */
+  ({}),
   /** @type {GameState} */
-  initialState: {
+  {
     players: {
       [username]: {
         name: username,
@@ -147,52 +138,56 @@ const server = getSingletonGameServer({
     },
     guesses: {},
   },
-
-  onAction(state, /** @type {Action} */ action) {
-    if (
-      action.type === "join" &&
-      action.actor &&
-      !state.players[action.actor]
-    ) {
-      return {
-        ...state,
-        players: {
-          ...state.players,
-          [action.actor]: {
-            name: action.actor,
-            isHost: action.actor === username && isHost,
-            coord: getUnusedCoord(state),
+  {
+    isHost,
+    roomId: lobbyId,
+    actorUsername: username,
+    actions: {
+      guess: (state, { coord, result }, actor) => {
+        return {
+          ...state,
+          guesses: {
+            ...state.guesses,
+            [coord]: result,
           },
-        },
-      };
-    }
-    if (action.type === "guess") {
-      return {
-        ...state,
-        guesses: {
-          ...state.guesses,
-          [action.coord]: action.result,
-        },
-        players: {
-          ...state.players,
-          [action.actor]: {
-            ...state.players[action.actor],
-            coord: getUnusedCoord(state),
+          players: {
+            ...state.players,
+            [actor]: {
+              ...state.players[actor],
+              coord: getUnusedCoord(state),
+            },
           },
-        },
-      };
-    }
+        };
+      },
+      join: (state, payload, actor) => {
+        if (state.players[actor]) {
+          return state;
+        }
+        return {
+          ...state,
+          players: {
+            ...state.players,
+            [actor]: {
+              name: actor,
+              isHost: actor === username && isHost,
+              coord: getUnusedCoord(state),
+            },
+          },
+        };
+      },
+    },
+  }
+);
+server.on('change:state', (state) => {
+  console.log('state change', state)
+  update();
+})
 
-    return state;
-  },
-  onStateChange(state) {
-    update();
-  },
-});
-server.send({
-  type: "join",
-  actor: username,
-});
+server.on('change:connected', (connected) => {
+  if (connected) {
+    server.send("join", { actor: username });
+  }
+})
 
 function ui() {
   if (!username) {
@@ -253,7 +248,7 @@ function ui() {
       </form>
     `;
   }
-  let gameState = server.getLatestState();
+  let gameState = server.state;
 
   /**
    *
@@ -353,34 +348,34 @@ function ui() {
 
     ${playerCoord
       ? html`
-          <p><strong>${playerCoord}</strong> is your tile</p>
-          <p>Did your team guess correctly?</p>
-          <button
-            @click=${() =>
-              server.send({
-                type: "guess",
-                actor: username,
-                coord: playerCoord,
-                result: "correct",
-              })}
-          >
-            ✅ correct
-          </button>
-          <button
-            @click=${() =>
-              server.send({
-                type: "guess",
-                actor: username,
-                coord: playerCoord,
-                result: "miss",
-              })}
-          >
-            ❌ miss
-          </button>
+          <p style="text-align: center;"><strong>${playerCoord}</strong> is your tile</p>
+          <p style="text-align: center;">Did your team guess correctly?</p>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
+            <button
+              @click=${() =>
+                server.send("guess", {
+                  actor: username,
+                  coord: playerCoord,
+                  result: "correct",
+                })}
+            >
+              ✅ correct
+            </button>
+            <button
+              @click=${() =>
+                server.send("guess", {
+                  actor: username,
+                  coord: playerCoord,
+                  result: "miss",
+                })}
+            >
+              ❌ miss
+            </button>
+          </div>
         `
       : html``}
     <hr />
-    <p>
+    <p style="text-align: center;">
       ${remainingTileCount} tiles remaining - ${mistakeCount}
       mistake${mistakeCount === 1 ? "" : "s"} so far
     </p>
