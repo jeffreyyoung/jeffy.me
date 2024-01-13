@@ -35,7 +35,6 @@ css`
  *      board: {
  *        type: 'bomb' | 'safe',
  *        neighboringBombCount: number,
- *        i: number,
  *        status: 'correct' | 'incorrect' | 'neutral' | 'hidden'
  *        revealedBy: string,
  *      }[],
@@ -95,7 +94,6 @@ function getNeighbors(index, { rowCount, columnCount } = { rowCount: 9, columnCo
 function createBoard(rowCount, columnCount, bombCount) {
   /** @type {GameState['board']} */
   const board = range(0, rowCount * columnCount).map((i) => ({
-    i,
     type: "safe",
     neighboringBombCount: 0,
     status: "hidden",
@@ -316,11 +314,11 @@ const Game = div(
           ...args
         ),
       state.board,
-      (cell, remove, i) => {
+      (cell, remove, index) => {
         let fields = stateFields(
           /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
           // @ts-ignore
-          (state.board[i])
+          (state.board[index])
         );
 
         let text = van.derive(() => {
@@ -339,7 +337,7 @@ const Game = div(
           }
           return str;
         });
-
+        let longPressTimeout = 0;
         return button(
           {
             style: () =>
@@ -357,22 +355,29 @@ const Game = div(
               }
               `,
             disabled: () => !!cell.val.revealedBy,
+            onmousedown: (e) => {
+              longPressTimeout = setTimeout(() => {
+                server().send("move", {
+                  index: index,
+                  action: "flag",
+                });
+              }, 500);
+            },
+            onmouseup: (e) => {
+              clearTimeout(longPressTimeout);
+            },
+            onmouseout: (e) => {
+              clearTimeout(longPressTimeout);
+            },
             onclick: () =>
               server().send("move", {
-                index: cell.val.i,
+                index: index,
                 action: "reveal",
               }),
             oncontextmenu: (e) => {
               e.preventDefault();
               server().send("move", {
-                index: cell.val.i,
-                action: "flag",
-              });
-            },
-            ondblclick: (e) => {
-              e.preventDefault();
-              server().send("move", {
-                index: cell.val.i,
+                index: index,
                 action: "flag",
               });
             },

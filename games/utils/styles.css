@@ -1,0 +1,85 @@
+@keyframes fadeInUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.fadeInUp-animation {
+  animation: 0.5s fadeInUp;
+}
+button {
+  font-size: 0.75rem;
+  padding: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border: 1px solid gray;
+  border-width: 1px;
+  background-color: #f0f0f0;
+  display: inline-block;
+  touch-action: manipulation;
+  appearance: none;
+  color: black;
+}
+* {
+  word-break: break-word;
+}
+ul {
+  padding-left: 20px;
+}
+body {
+  margin: 40px auto;
+  max-width: 650px;
+  padding: 0 10px;
+}
+
+.grow {
+  transition: all 0.2s ease-in-out;
+}
+
+.grow:hover {
+  transform: scale(1.02);
+}
+* {
+  text-transform: lowercase;
+}
+table {
+  width: 100%;
+  max-width: 800px;
+}
+th {
+  width: 15%;
+}
+th:has(small) {
+  background-color: aliceblue;
+  border-radius: 5px;
+  padding: 12px 2px;
+}
+th {
+  font-size: 0.75rem;
+}
+th small {
+  opacity: 1;
+  font-size: 1rem;
+  font-style: normal;
+  word-break: break-all;
+  hyphens: auto;
+}
+td {
+  border-radius: 5px;
+}
+body {
+  padding-bottom: 300px;
+}
+input {
+  font-size: 1rem;
+}
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: top;
+}
