@@ -1,4 +1,3 @@
-import { css } from "./utils/css.js";
 import { P2pState } from "./utils/p2p-state.js";
 import {
   InviteSlot,
@@ -23,14 +22,10 @@ import { nUniqueRandomNumbers } from "./utils/random.js";
 function range(start, end) {
   return Array.from({ length: end - start }, (_, i) => i + start);
 }
-css`
-  h1 {
-    text-align: center;
-  }
-`;
 
 /**
- * @typedef {{
+ * @typedef GameState
+ * @type {{
  *      version: string,
  *      board: {
  *        type: 'bomb' | 'safe',
@@ -49,16 +44,19 @@ css`
  *         score: number,
  *         hasTouchedBomb: boolean,
  *       }>
- * }} GameState
+ * }}
  */
 
 /**
- * 
- * @param {number} index 
- * @param {*} param1 
- * @returns number[]
+ * Get the neighboring tiles of a given index
+ * @param {number} index
+ * @param {{ rowCount: number, columnCount: number}=} dimensions
+ * @returns {number[]} neighbors - indexes of neighboring tiles
  */
-function getNeighbors(index, { rowCount, columnCount } = { rowCount: 9, columnCount: 9}) {
+function getNeighbors(
+  index,
+  { rowCount, columnCount } = { rowCount: 9, columnCount: 9 }
+) {
   const [x, y] = indexToCoord(index, columnCount);
   const neighbors = [];
   for (const [dx, dy] of [
@@ -107,7 +105,7 @@ function createBoard(rowCount, columnCount, bombCount) {
       columnCount,
     })) {
       const neighbor = board[neighbors];
-      if (neighbor.type !== 'bomb') {
+      if (neighbor.type !== "bomb") {
         neighbor.neighboringBombCount++;
       }
     }
@@ -115,6 +113,7 @@ function createBoard(rowCount, columnCount, bombCount) {
 
   return board;
 }
+
 
 const state = reactive(
   /** @type {GameState} */
@@ -130,24 +129,24 @@ const state = reactive(
   })
 );
 
-
 // @ts-ignore
 window.state = state;
 
 /**
- * 
- * @param {number} index 
- * @param {number} rowSize 
+ *
+ * @param {number} index
+ * @param {number} rowSize
  * @returns {[number, number]}
  */
 function indexToCoord(index, rowSize = 9) {
   return [index % rowSize, Math.floor(index / rowSize)];
 }
+
 /**
- * 
- * @param {number} x 
- * @param {number} y 
- * @param {number} rowSize 
+ *
+ * @param {number} x
+ * @param {number} y
+ * @param {number} rowSize
  * @returns {number}
  */
 function coordToIndex(x, y, rowSize = 9) {
@@ -278,9 +277,6 @@ const server = () =>
       )
   );
 
-van.derive(() => {
-  console.log("board", state.board);
-});
 
 const remainingNonBombTiles = van.derive(() => {
   return state.board.filter((t) => t.type === "safe" && t.status === "hidden")
@@ -397,7 +393,8 @@ const Game = div(
   ),
   h1(
     {
-      style: () => `text-align: center; display: ${isGameOver.val ? "block" : "none"};`,
+      style: () =>
+        `text-align: center; display: ${isGameOver.val ? "block" : "none"};`,
     },
     () => (victor.val ? `${victor.val} wins!` : "draw!")
   ),
