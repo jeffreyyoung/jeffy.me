@@ -184,7 +184,7 @@ export function confetti() {
         floaties.push(confetto);
         container.appendChild(confetto.outer);
         timer = setTimeout(addConfetto, spread * random());
-      })(0);
+      })();
 
       // Start the loop
       var prev = undefined;

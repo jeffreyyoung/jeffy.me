@@ -12,6 +12,7 @@ import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
 import { reactive, list, stateFields, calc } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { confetti } from "./utils/confetti.js";
+import { nUniqueRandomNumbers } from "./utils/random.js";
 
 /**
  *
@@ -100,17 +101,8 @@ function createBoard(rowCount, columnCount, bombCount) {
     status: "hidden",
     revealedBy: "",
   }));
-  let bombIndexes = new Set();
-  
-  while (bombIndexes.size < bombCount) {
-    let index = Math.floor(Math.random() * board.length);
-    if (bombIndexes.has(index)) {
-      continue;
-    }
-    bombIndexes.add(index);
-  }
 
-  for (let index of bombIndexes) {
+  for (let index of nUniqueRandomNumbers(bombCount, 0, board.length - 1)) {
     board[index].type = "bomb";
     for (const neighbors of getNeighbors(index, {
       rowCount,

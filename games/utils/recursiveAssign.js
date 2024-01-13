@@ -1,7 +1,7 @@
 /**
  * @template T
  * @param {T} target 
- * @param {T} source
+ * @param {Partial<T>} source
  * @returns {T}
  */
 export function recursiveAssign(target, source) {
