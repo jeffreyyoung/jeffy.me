@@ -307,6 +307,13 @@ const Game = div(
                 action: "flag",
               });
             },
+            ondblclick: (e) => {
+              e.preventDefault();
+              server().send("move", {
+                index: cell.val.i,
+                action: "flag",
+              });
+            }
           },
           () => text.val,
         );
