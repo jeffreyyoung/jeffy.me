@@ -9,7 +9,7 @@ import {
 } from "./utils/pre-game.js";
 import { singleton } from "./utils/singleton.js";
 import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
-import { reactive, list, stateFields } from "./../deps/van-x.js";
+import { reactive, list, stateFields, calc } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 
 /**
@@ -31,7 +31,7 @@ css`
  * @typedef {{
  *      version: string,
  *      board: {
- *        type: 'bomb' | 'blank',
+ *        type: 'bomb' | 'safe',
  *        neighboringBombCount: number,
  *        i: number,
  *        status: 'correct' | 'incorrect' | 'neutral' | 'hidden'
@@ -39,6 +39,7 @@ css`
  *      }[],
  *      columnCount: number,
  *      rowCount: number,
+ *      bombCount: 9,
  *      winner: string,
  *      players: Record<string, {
  *         name: string,
@@ -50,7 +51,7 @@ css`
  * }} GameState
  */
 
-function getNeighbors(index, { rowCount, columnCount, board }) {
+function getNeighbors(index, { rowCount, columnCount }) {
   const [x, y] = indexToCoord(index, columnCount);
   const neighbors = [];
   for (const [dx, dy] of [
@@ -80,25 +81,25 @@ function getNeighbors(index, { rowCount, columnCount, board }) {
  *
  * @param {number} rowCount
  * @param {number} columnCount
+ * @param {number} bombCount
  * @returns {GameState['board']}
  */
-function createBoard(rowCount, columnCount) {
+function createBoard(rowCount, columnCount, bombCount) {
   /** @type {GameState['board']} */
   const board = range(0, rowCount * columnCount).map((i) => ({
     i,
-    type: "blank",
+    type: "safe",
     neighboringBombCount: 0,
     status: "hidden",
     revealedBy: "",
   }));
-  const bombCount = Math.floor(board.length / 10);
+
   for (let i = 0; i < bombCount; i++) {
     const index = Math.floor(Math.random() * board.length);
     board[index].type = "bomb";
     for (const neighbors of getNeighbors(index, {
       rowCount,
       columnCount,
-      board,
     })) {
       const neighbor = board[neighbors];
       neighbor.neighboringBombCount++;
@@ -111,7 +112,9 @@ const state = reactive(
   /** @type {GameState} */
   ({
     version: "0",
-    board: createBoard(9, 9),
+    board: createBoard(9, 9, 9),
+    bombCount: 9,
+    revealedTileCount: 0,
     columnCount: 9,
     rowCount: 9,
     winner: "",
@@ -119,6 +122,8 @@ const state = reactive(
   })
 );
 
+
+// @ts-ignore
 window.state = state;
 
 function indexToCoord(index, rowSize) {
@@ -166,7 +171,7 @@ const server = () =>
             },
             move: (state, { index, action: _action }, actor) => {
               const action = _action;
-              if (state.board[index].status !== 'hidden') {
+              if (state.board[index].status !== "hidden") {
                 return state;
               }
               if (index < 0 || index >= state.board.length) {
@@ -183,10 +188,11 @@ const server = () =>
                 return state;
               }
               const tile = state.board[index];
+
               tile.revealedBy = actor;
               tile.status =
                 (action === "flag" && tile.type === "bomb") ||
-                (action === "reveal" && tile.type === "blank")
+                (action === "reveal" && tile.type === "safe")
                   ? "correct"
                   : "incorrect";
               if (tile.status === "incorrect") {
@@ -195,7 +201,7 @@ const server = () =>
                 player.score++;
               }
               // reveal neighbors if bomb count is zero
-              if (tile.type === "blank" && tile.neighboringBombCount === 0) {
+              if (tile.type === "safe" && tile.neighboringBombCount === 0) {
                 const visited = new Set();
                 const queue = [index];
                 while (queue.length > 0) {
@@ -205,7 +211,7 @@ const server = () =>
                   }
                   visited.add(index);
                   const tile = state.board[index];
-                  if (tile.type === "blank") {
+                  if (tile.type === "safe") {
                     tile.status = "neutral";
                     if (tile.neighboringBombCount === 0) {
                       queue.push(...getNeighbors(index, state));
@@ -239,7 +245,7 @@ const server = () =>
           onStateChange: (incoming) => {
             if (incoming.version !== state.version) {
               recursiveAssign(state, incoming);
-              console.log('new state!!!!!!!!!', incoming);
+              console.log("new state!!!!!!!!!", incoming);
               // Object.assign(state, incoming);
             }
           },
@@ -255,19 +261,43 @@ const server = () =>
   );
 
 van.derive(() => {
-  console.log('board', state.board);
-})
+  console.log("board", state.board);
+});
+
+const remainingNonBombTiles = van.derive(() => {
+  return state.board.filter((t) => t.type === "safe" && t.status === "hidden")
+    .length;
+});
+
+const isGameOver = van.derive(() => {
+  return remainingNonBombTiles.val === 0;
+});
+
+const victor = van.derive(() => {
+  // helps to calc victor
+  remainingNonBombTiles.val;
+  isGameOver.val;
+  return Object.values(state.players).sort((a, b) => b.score - a.score)[0]
+    ?.name;
+});
+
+van.derive(() => {
+  console.log("victor!", victor.val);
+});
 
 const Game = div(
   { style: "position: relative;" },
-  () => list(
+  () =>
+    list(
       (...args) =>
-        div({
-          style: `display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
-        }, ...args),
+        div(
+          {
+            style: `display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
+          },
+          ...args
+        ),
       state.board,
       (cell, remove, i) => {
-
         let fields = stateFields(
           /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
           // @ts-ignore
@@ -276,13 +306,16 @@ const Game = div(
 
         let text = van.derive(() => {
           let str = "";
-          if (fields.status.val === 'hidden') {
-            return '';
+          if (fields.status.val === "hidden") {
+            return "";
           }
 
           if (cell.val.type === "bomb") {
-            str += cell.val.status === 'correct' ? "⛳️" : '💥';
-          } else if (cell.val.type === "blank" && cell.val.neighboringBombCount > 0) {
+            str += cell.val.status === "correct" ? "⛳️" : "💥";
+          } else if (
+            cell.val.type === "safe" &&
+            cell.val.neighboringBombCount > 0
+          ) {
             str += cell.val.neighboringBombCount;
           }
           return str;
@@ -290,10 +323,20 @@ const Game = div(
 
         return button(
           {
-            style: () => `--player-color: ${
-              state.players[cell.val.revealedBy]?.color
-            }`,
-            class: () => `tile ${cell.val.status !== 'hidden' ? `revealed-tile flash-player-color-animation tile-${cell.val.status}` : ''}`,
+            style: () =>
+              `--player-color: ${state.players[cell.val.revealedBy]?.color}`,
+            class: () =>
+              `tile ${
+                cell.val.status !== "hidden"
+                  ? `revealed-tile flash-player-color-animation tile-${cell.val.status}`
+                  : ""
+              }
+              ${
+                cell.val.type === "safe"
+                  ? "tile-neighbors-" + cell.val.neighboringBombCount
+                  : ""
+              }
+              `,
             disabled: () => !!cell.val.revealedBy,
             onclick: () =>
               server().send("move", {
@@ -313,9 +356,9 @@ const Game = div(
                 index: cell.val.i,
                 action: "flag",
               });
-            }
+            },
           },
-          () => text.val,
+          () => text.val
         );
       }
     ),
@@ -328,19 +371,25 @@ const Game = div(
     },
     h1("connecting...")
   ),
+  h1(
+    {
+      style: () => `text-align: center; display: ${isGameOver.val ? "block" : "none"};`,
+    },
+    () => (victor.val ? `${victor.val} wins!` : "draw!")
+  ),
+  h4("remaining safe tiles ", remainingNonBombTiles),
   h4("players"),
-  () =>
-    list(ul, state.players, (player) =>
-      li(
-        span({
-          style: () =>
-            `background-color: ${player.val.color}; width: 1em; height: 1em; display: inline-block; margin-right: 0.5em;`,
-        }),
-        player.val.name,
-        ", score ",
-        player.val.score
-      )
+  list(ul, state.players, (player) =>
+    li(
+      span({
+        style: () =>
+          `background-color: ${player.val.color}; width: 1em; height: 1em; display: inline-block; margin-right: 0.5em;`,
+      }),
+      player.val.name,
+      ", score ",
+      player.val.score
     )
+  )
 );
 
 van.add(

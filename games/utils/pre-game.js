@@ -44,6 +44,8 @@ export function SetUserName() {
             return;
           }
           username.val = trimmed;
+          // refresh the page
+          window.location.href = window.location.href;
         },
       },
       input({ name: "username", placeholder: "your name" }),
