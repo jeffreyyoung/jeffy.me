@@ -35,6 +35,36 @@
         background-color: rgba(221, 221, 221, 0.1);
       }
 
+      @keyframes point-animation {
+        0% {
+          transform: translateY(0%);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+      }
+      .tile {
+        position: relative;
+      }
+      .tile::before {
+        position: absolute;
+        text-wrap: none;
+        font-size: 2em;
+        animation: 1.5s point-animation;
+        animation-fill-mode: both;
+      }
+      .tile-correct::before {
+        content: "+1";
+        color: "green" !important;
+      }
+
+      .tile-incorrect::before {
+        content: "-5";
+        color: "red" !important;
+      }
+
       .revealed-tile {
         text-align: center;
         display: flex;

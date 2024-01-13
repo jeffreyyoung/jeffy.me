@@ -8,8 +8,8 @@ import {
   username,
 } from "./utils/pre-game.js";
 import { singleton } from "./utils/singleton.js";
-import { van, div, button, h1, span, noop, h4, ul, li } from "./utils/tags.js";
-import { reactive, replace, list, calc, stateFields } from "./../deps/van-x.js";
+import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
+import { reactive, list, stateFields } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 
 /**
@@ -118,16 +118,6 @@ const state = reactive(
     players: {},
   })
 );
-
-console.log('setting first el');
-// setInterval(() => {
-//   Object.assign(state.board[0], {
-//     type: 'blank',
-//     status: 'correct',
-//     revealedBy: 'asdf',
-//     neighboringBombCount: num++,
-//   })
-// }, 1000)
 
 window.state = state;
 
@@ -303,7 +293,7 @@ const Game = div(
             style: () => `--player-color: ${
               state.players[cell.val.revealedBy]?.color
             }`,
-            class: () => cell.val.status !== 'hidden' ? `revealed-tile flash-player-color-animation` : '',
+            class: () => `tile ${cell.val.status !== 'hidden' ? `revealed-tile flash-player-color-animation tile-${cell.val.status}` : ''}`,
             disabled: () => !!cell.val.revealedBy,
             onclick: () =>
               server().send("move", {
