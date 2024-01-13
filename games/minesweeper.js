@@ -11,6 +11,7 @@ import { singleton } from "./utils/singleton.js";
 import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
 import { reactive, list, stateFields, calc } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
+import { confetti } from "./utils/confetti.js";
 
 /**
  *
@@ -297,6 +298,9 @@ const remainingNonBombTiles = van.derive(() => {
 });
 
 const isGameOver = van.derive(() => {
+  if (remainingNonBombTiles.val === 0) {
+    confetti();
+  }
   return remainingNonBombTiles.val === 0;
 });
 
