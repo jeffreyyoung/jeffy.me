@@ -18,6 +18,7 @@ css`
 
 /**
  * @typedef {{
+ *      version: string,
  *      board: string[][],
  *      turn: string,
  *      winner: string,
@@ -31,6 +32,7 @@ css`
 
 /** @type GameState */
 const initialState = {
+  version: '0',
   board: [
     ["", "", ""],
     ["", "", ""],
@@ -158,7 +160,9 @@ const Game = () => {
       )
   );
 
-  server.send("join", { username: username.val });
+  if (!state.val.players.find((p) => p.name === username.val)) {
+    server.send("join", { username: username.val });
+  }
 
   return div(
     { style: "position: relative;" },

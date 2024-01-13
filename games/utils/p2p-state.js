@@ -15,7 +15,7 @@ const roomPrefix = '55555jeffy-me';
 
 /**
  * @template ActionMap
- * @template State
+ * @template {{ version: string }} State
  * @template {{
  *    isHost: boolean,
  *    roomId: string,
@@ -32,7 +32,10 @@ export class P2pState {
    * @typedef {ActionObject<ActionMap>} Action
    *
    * @typedef {{
-   *  action?: ActionObject<ActionMap>,
+   *   action?: ActionObject<ActionMap> & {
+   *       resultStateVersion: string,
+   *       appliedOnStateVersion: string,
+   *   },
    *   resultState: State,
    * }} PeerJSPayload
    *
@@ -129,9 +132,12 @@ export class P2pState {
       this.connections.push(conn);
       conn.on('open', () => {
         console.log('peer connection open');
-        conn.send({
-          resultState: this.state,
-        });
+        conn.send(
+          /** @type {PeerJSPayload} */
+          ({
+            resultState: this.state,
+          })
+        );
       })
       
       conn.on("data", (data) => {
@@ -187,39 +193,63 @@ export class P2pState {
    * @param {PeerJSPayload} data
    */
   onPeerData(data) {
-    console.log("onPeerData", data);
-    if (this.args.isHost && data.action) {
-      // we're the host, so we need to process the action
-      let nextState = this.produceNextState(data.action);
-      if (!nextState) {
-        console.error(`action ${String(nextState)} not found`);
-        return;
-      }
-      this.setState(nextState);
-      this.connections.forEach((conn) => {
-        conn.send({
-          action: data.action,
-          resultState: nextState,
-        });
-      });
-    } else if (!this.args.isHost) {
-      // we're a client, so we just set the state
-      let { resultState } = data;
+    console.log('on peer data', data)
+    const { action, resultState } = data;
+
+    // check if we already have this state
+    if (resultState.version === this.state.version) {
+      return;
+    }
+    if (!action) {
+      // just accept the state
       this.setState(resultState);
-      this._emit("change:state", this.state);
+      return;
+    }
+
+    if (action && action.appliedOnStateVersion === this.state.version) {
+      this.state = this.produceNextState(action, action.resultStateVersion);
+      this.setState(this.state);
+      if (this.args.isHost) {
+        // forward this to connections
+        this._sendToConnections({
+          action,
+          resultState
+        })
+      }
+      return;
+    }
+
+    if (action && action.appliedOnStateVersion !== this.state.version) {
+      if (!this.args.isHost) {
+        // just accept the state
+        this.setState(resultState);
+      } else {
+        // apply the action
+        let prevVersion = this.state.version;
+        this.state = this.produceNextState(action);
+        this.setState(this.state);
+        this._sendToConnections({
+          action: {
+            ...action,
+            resultStateVersion: this.state.version,
+            appliedOnStateVersion: prevVersion,
+          },
+          resultState: this.state,
+        })
+      }
     }
   }
 
   /**
    * @param {Action} action;
    */
-  produceNextState(action) {
+  produceNextState(action, version = Math.floor(Math.random() * 100000) + "") {
     let newState = this.args.actions[action.type]?.(
-      { ...this.state },
+      this.state,
       action.payload,
       action.actor
     );
-
+    newState.version = version;
     return newState;
   }
 
@@ -230,24 +260,26 @@ export class P2pState {
    * @param {ActionMap[ActionType]} params
    */
   send(actionType, params) {
+    console.log('send action', actionType, params)
     /** @type {Action} */
     let action = {
       type: actionType,
       payload: params,
       actor: this.args.actorUsername,
     };
-    let resultState = this.produceNextState(action);
+    let currentStateVersion = this.state.version;
+    this.state = this.produceNextState(action);
 
-    let toSend = {
-      action,
-      resultState,
-    };
+    this._sendToConnections({
+      action: {
+        ...action,
+        resultStateVersion: this.state.version,
+        appliedOnStateVersion: currentStateVersion,
+      },
+      resultState: this.state,
+    });
 
-    this._sendToConnections(toSend);
-
-    if (this.args.isHost) {
-      this.setState(resultState);
-    }
+    this.setState(this.state);
   }
 
   /**

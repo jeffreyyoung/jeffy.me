@@ -12,9 +12,11 @@ import { words } from "./cross-clues-words.js";
  * coord: string
  * }}
  */
+
 /**
  * @typedef GameState
  * @type {{
+ * version: string,
  * players: Record<string, Player>
  * words: Record<string, string>
  * guesses: Record<string, "correct" | "miss">
@@ -58,7 +60,7 @@ const getWord = wordGetter();
  * @param {GameState=} gameState
  * @returns
  */
-function getUsedCoordsSet(gameState = { players: {}, guesses: {}, words: {} }) {
+function getUsedCoordsSet(gameState = { version: '0', players: {}, guesses: {}, words: {} }) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
     .filter(Boolean);
@@ -116,7 +118,8 @@ var server = new P2pState(
   /** @type {ActionMap} */
   ({}),
   /** @type {GameState} */
-  {
+  ({
+    version: '0',
     players: {
       [username]: {
         name: username,
@@ -137,7 +140,7 @@ var server = new P2pState(
       5: getWord(),
     },
     guesses: {},
-  },
+  }),
   {
     isHost,
     roomId: lobbyId,

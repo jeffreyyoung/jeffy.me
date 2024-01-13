@@ -122,8 +122,8 @@ export const InviteSlot = () => {
 
 export function PreGameGate(children) {
   return div(
-    needsUserName.val ? SetUserName() : span(),
-    !needsUserName.val && needsLobbyId.val ? LobbySelection() : span(),
+    () => needsUserName.val ? SetUserName() : span(),
+    () => !needsUserName.val && needsLobbyId.val ? LobbySelection() : span(),
     !needsUserName.val && !needsLobbyId.val ? children : span()
   );
 }

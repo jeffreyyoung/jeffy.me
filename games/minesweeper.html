@@ -20,6 +20,30 @@
       .fadeInUp-animation {
         animation: 0.5s fadeInUp;
       }
+
+      @keyframes flash-player-color-key-frames {
+        0% {
+          background-color: var(--player-color);
+        }
+        100% {
+          background-color: rgba(221, 221, 221, 0.1);
+        }
+      }
+
+      .flash-player-color-animation {
+        animation: 0.5s flash-player-color-key-frames;
+        background-color: rgba(221, 221, 221, 0.1);
+      }
+
+      .revealed-tile {
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: heavy;
+        border: 1px solid white; 
+      }
+
       button {
         padding: 12px;
         padding-top: 8px !important;
@@ -102,7 +126,7 @@
     <nav>
       <div>
         <a href="/">home</a>
-        <h3>tic tac toe</h3>
+        <h3>minesweeper race</h3>
       </div>
       <div id="invite-slot">
 
