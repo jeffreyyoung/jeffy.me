@@ -337,7 +337,7 @@ const Game = div(
             `background-color: ${player.val.color}; width: 1em; height: 1em; display: inline-block; margin-right: 0.5em;`,
         }),
         player.val.name,
-        ", score",
+        ", score ",
         player.val.score
       )
     )
