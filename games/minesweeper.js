@@ -51,7 +51,13 @@ css`
  * }} GameState
  */
 
-function getNeighbors(index, { rowCount, columnCount }) {
+/**
+ * 
+ * @param {number} index 
+ * @param {*} param1 
+ * @returns number[]
+ */
+function getNeighbors(index, { rowCount, columnCount } = { rowCount: 9, columnCount: 9}) {
   const [x, y] = indexToCoord(index, columnCount);
   const neighbors = [];
   for (const [dx, dy] of [
@@ -93,18 +99,29 @@ function createBoard(rowCount, columnCount, bombCount) {
     status: "hidden",
     revealedBy: "",
   }));
+  let bombIndexes = new Set();
+  
+  while (bombIndexes.size < bombCount) {
+    let index = Math.floor(Math.random() * board.length);
+    if (bombIndexes.has(index)) {
+      continue;
+    }
+    bombIndexes.add(index);
+  }
 
-  for (let i = 0; i < bombCount; i++) {
-    const index = Math.floor(Math.random() * board.length);
+  for (let index of bombIndexes) {
     board[index].type = "bomb";
     for (const neighbors of getNeighbors(index, {
       rowCount,
       columnCount,
     })) {
       const neighbor = board[neighbors];
-      neighbor.neighboringBombCount++;
+      if (neighbor.type !== 'bomb') {
+        neighbor.neighboringBombCount++;
+      }
     }
   }
+
   return board;
 }
 
@@ -126,10 +143,23 @@ const state = reactive(
 // @ts-ignore
 window.state = state;
 
-function indexToCoord(index, rowSize) {
+/**
+ * 
+ * @param {number} index 
+ * @param {number} rowSize 
+ * @returns {[number, number]}
+ */
+function indexToCoord(index, rowSize = 9) {
   return [index % rowSize, Math.floor(index / rowSize)];
 }
-function coordToIndex(x, y, rowSize) {
+/**
+ * 
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} rowSize 
+ * @returns {number}
+ */
+function coordToIndex(x, y, rowSize = 9) {
   return y * rowSize + x;
 }
 
@@ -245,14 +275,11 @@ const server = () =>
           onStateChange: (incoming) => {
             if (incoming.version !== state.version) {
               recursiveAssign(state, incoming);
-              console.log("new state!!!!!!!!!", incoming);
-              // Object.assign(state, incoming);
             }
           },
           onConnectionChange: (connected) => {
             isConnected.val = connected;
             if (connected) {
-              console.log("send join");
               server().send("join", { username: username.val });
             }
           },
@@ -279,10 +306,6 @@ const victor = van.derive(() => {
   isGameOver.val;
   return Object.values(state.players).sort((a, b) => b.score - a.score)[0]
     ?.name;
-});
-
-van.derive(() => {
-  console.log("victor!", victor.val);
 });
 
 const Game = div(
