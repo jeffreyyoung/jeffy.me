@@ -303,7 +303,7 @@ const victor = van.derive(() => {
 });
 
 const Game = div(
-  { style: "position: relative;" },
+  { style: "position: relative; user-select: none;" },
   () =>
     list(
       (...args) =>
