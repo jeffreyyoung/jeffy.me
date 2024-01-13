@@ -114,7 +114,6 @@ function createBoard(rowCount, columnCount, bombCount) {
   return board;
 }
 
-
 const state = reactive(
   /** @type {GameState} */
   ({
@@ -277,7 +276,6 @@ const server = () =>
       )
   );
 
-
 const remainingNonBombTiles = van.derive(() => {
   return state.board.filter((t) => t.type === "safe" && t.status === "hidden")
     .length;
@@ -300,88 +298,88 @@ const victor = van.derive(() => {
 
 const Game = div(
   { style: "position: relative; user-select: none;" },
-  () =>
-    list(
-      (...args) =>
-        div(
-          {
-            style: `display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
-          },
-          ...args
-        ),
-      state.board,
-      (cell, remove, index) => {
-        let fields = stateFields(
-          /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
-          // @ts-ignore
-          (state.board[index])
-        );
+  list(
+    (...args) =>
+      div(
+        {
+          style: `user-select: none; display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
+        },
+        ...args
+      ),
+    state.board,
+    (cell, remove, index) => {
+      let fields = stateFields(
+        /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
+        // @ts-ignore
+        (state.board[index])
+      );
 
-        let text = van.derive(() => {
-          let str = "";
-          if (fields.status.val === "hidden") {
-            return "";
-          }
+      let text = van.derive(() => {
+        let str = "";
+        if (fields.status.val === "hidden") {
+          return "";
+        }
 
-          if (cell.val.type === "bomb") {
-            str += cell.val.status === "correct" ? "⛳️" : "💥";
-          } else if (
-            cell.val.type === "safe" &&
-            cell.val.neighboringBombCount > 0
-          ) {
-            str += cell.val.neighboringBombCount;
-          }
-          return str;
-        });
-        let longPressTimeout = 0;
-        return button(
-          {
-            style: () =>
-              `--player-color: ${state.players[cell.val.revealedBy]?.color}`,
-            class: () =>
-              `tile ${
-                cell.val.status !== "hidden"
-                  ? `revealed-tile flash-player-color-animation tile-${cell.val.status}`
-                  : ""
-              }
+        if (cell.val.type === "bomb") {
+          str += cell.val.status === "correct" ? "⛳️" : "💥";
+        } else if (
+          cell.val.type === "safe" &&
+          cell.val.neighboringBombCount > 0
+        ) {
+          str += cell.val.neighboringBombCount;
+        }
+        return str;
+      });
+      let longPressTimeout = 0;
+      return button(
+        {
+          "data-index": index,
+          style: () =>
+            `--player-color: ${state.players[cell.val.revealedBy]?.color}`,
+          class: () =>
+            `tile ${
+              cell.val.status !== "hidden"
+                ? `revealed-tile flash-player-color-animation tile-${cell.val.status}`
+                : ""
+            }
               ${
                 cell.val.type === "safe"
                   ? "tile-neighbors-" + cell.val.neighboringBombCount
                   : ""
               }
               `,
-            disabled: () => !!cell.val.revealedBy,
-            onmousedown: (e) => {
-              longPressTimeout = setTimeout(() => {
-                server().send("move", {
-                  index: index,
-                  action: "flag",
-                });
-              }, 500);
-            },
-            onmouseup: (e) => {
-              clearTimeout(longPressTimeout);
-            },
-            onmouseout: (e) => {
-              clearTimeout(longPressTimeout);
-            },
-            onclick: () =>
-              server().send("move", {
-                index: index,
-                action: "reveal",
-              }),
-            oncontextmenu: (e) => {
-              e.preventDefault();
+          disabled: () => !!cell.val.revealedBy,
+          onmousedown: (e) => {
+            longPressTimeout = setTimeout(() => {
               server().send("move", {
                 index: index,
                 action: "flag",
               });
-            },
+            }, 500);
           },
-          () => text.val
-        );
-      }
-    ),
+          onmouseup: (e) => {
+            clearTimeout(longPressTimeout);
+          },
+          onmouseout: (e) => {
+            clearTimeout(longPressTimeout);
+          },
+          onclick: () =>
+            server().send("move", {
+              index: index,
+              action: "reveal",
+            }),
+          oncontextmenu: (e) => {
+            e.preventDefault();
+            server().send("move", {
+              index: index,
+              action: "flag",
+            });
+          },
+        },
+        () => text.val
+      );
+    }
+  ),
   div(
     {
       style: () =>
@@ -398,7 +396,13 @@ const Game = div(
     },
     () => (victor.val ? `${victor.val} wins!` : "draw!")
   ),
-  h4("remaining safe tiles ", remainingNonBombTiles),
+  h4(
+    "remaining safe tiles ",
+    remainingNonBombTiles,
+    " - ",
+    state.bombCount,
+    " bombs"
+  ),
   h4("players"),
   list(ul, state.players, (player) =>
     li(
