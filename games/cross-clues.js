@@ -74,6 +74,7 @@ function getUsedCoordsSet(
 ) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
+    .filter(Boolean)
 
   const coords = new Set([
     ...playerCoords,
@@ -216,7 +217,7 @@ var server = new P2pState(
   }
 );
 server.on("change:state", (state) => {
-  console.log("state change", state);
+  window.state = state;
   update();
 });
 
