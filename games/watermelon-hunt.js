@@ -17,7 +17,7 @@ const block_size = 50;
 addTitleScene({
   sceneName: "initial",
   titleText: '',
-  instructions: 'Press left side to jump left and right side to jump right',
+  instructions: 'Press left side of screen to jump left and right side to jump right',
   nextScene: 'game',
 })
 
