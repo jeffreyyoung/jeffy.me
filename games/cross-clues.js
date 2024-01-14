@@ -29,7 +29,7 @@ import { shuffle } from "./utils/random.js";
  * @typedef ActionMap
  * @type {{
  *      join: { actor: string },
- *      kick: { actor: string },
+ *      kick: { username: string },
  *      guess: { actor: string, coord: string, result: "correct" | "miss" }
  * }}
  */
@@ -74,7 +74,6 @@ function getUsedCoordsSet(
 ) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
-    .filter(Boolean);
 
   const coords = new Set([
     ...playerCoords,
@@ -199,14 +198,15 @@ var server = new P2pState(
           },
         };
       },
-      kick: (state, payload, actor) => {
-        if (!actor) {
+      kick: (state, payload) => {
+        let toKick = payload.username
+        if (!toKick) {
           return state;
         }
-        if (!state.players[actor]) {
+        if (!state.players[toKick]) {
           return state;
         }
-        const { [actor]: _, ...players } = state.players;
+        const { [toKick]: _, ...players } = state.players;
         return {
           ...state,
           players,
@@ -274,7 +274,7 @@ function ui() {
           // @ts-ignore
           (e) => {
             e.preventDefault();
-            const gameId = Math.random().toString(36).substring(4);
+            const gameId = Math.floor(Math.random()*9999+1000);
             window.localStorage.setItem(`isHost-${gameId}`, "true");
             window.location.href = `/games/cross-clues.html?lobbyId=${gameId}`;
           }
@@ -454,7 +454,7 @@ function ui() {
               ${player?.name} ${player?.isHost ? "(host)" : ""}
               ${player?.name === username ? "(you)" : ""}
               ${isHost && player?.name !== username ? html`<button @click=${() => {
-                server.send("kick", { actor: player.name });
+                server.send("kick", { username: player.name });
               }}>kick</button>` : ``}
             </li>
           `
