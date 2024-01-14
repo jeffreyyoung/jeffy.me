@@ -4,6 +4,7 @@ import {
 } from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { words } from "./cross-clues-words.js";
+import { shuffle } from "./utils/random.js";
 /**
  * @typedef Player
  * @type {{
@@ -20,6 +21,7 @@ import { words } from "./cross-clues-words.js";
  * players: Record<string, Player>
  * words: Record<string, string>
  * guesses: Record<string, "correct" | "miss">
+ * shuffledCoords: string[]
  * }}
  */
 
@@ -27,6 +29,7 @@ import { words } from "./cross-clues-words.js";
  * @typedef ActionMap
  * @type {{
  *      join: { actor: string },
+ *      kick: { actor: string },
  *      guess: { actor: string, coord: string, result: "correct" | "miss" }
  * }}
  */
@@ -60,7 +63,15 @@ const getWord = wordGetter();
  * @param {GameState=} gameState
  * @returns
  */
-function getUsedCoordsSet(gameState = { version: '0', players: {}, guesses: {}, words: {} }) {
+function getUsedCoordsSet(
+  gameState = {
+    version: "0",
+    players: {},
+    guesses: {},
+    words: {},
+    shuffledCoords: [],
+  }
+) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
     .filter(Boolean);
@@ -103,15 +114,21 @@ function getMistakeCount(gameState) {
  */
 function getUnusedCoord(gameState) {
   const coords = getUsedCoordsSet(gameState);
-  while (coords.size < 25) {
-    const letter = "ABCDE"[Math.floor(Math.random() * 5)];
-    const number = Math.floor(Math.random() * 5) + 1;
-    const coord = `${letter}${number}`;
-    if (!coords.has(coord)) {
-      return coord;
+  return gameState.shuffledCoords.find((coord) => !coords.has(coord)) || "";
+}
+
+/**
+ *
+ * @returns {string[]}
+ */
+function createShuffledCoords() {
+  let coords = [];
+  for (let letter of "ABCDE") {
+    for (let number of range(1, 5)) {
+      coords.push(`${letter}${number}`);
     }
   }
-  return "";
+  return shuffle(coords);
 }
 
 var server = new P2pState(
@@ -119,12 +136,12 @@ var server = new P2pState(
   ({}),
   /** @type {GameState} */
   ({
-    version: '0',
+    version: "0",
     players: {
       [username]: {
         name: username,
         isHost,
-        coord: getUnusedCoord(),
+        coord: createShuffledCoords()[0],
       },
     },
     words: {
@@ -140,6 +157,7 @@ var server = new P2pState(
       5: getWord(),
     },
     guesses: {},
+    shuffledCoords: createShuffledCoords(),
   }),
   {
     isHost,
@@ -163,6 +181,9 @@ var server = new P2pState(
         };
       },
       join: (state, payload, actor) => {
+        if (!actor) {
+          return state;
+        }
         if (state.players[actor]) {
           return state;
         }
@@ -178,19 +199,32 @@ var server = new P2pState(
           },
         };
       },
+      kick: (state, payload, actor) => {
+        if (!actor) {
+          return state;
+        }
+        if (!state.players[actor]) {
+          return state;
+        }
+        const { [actor]: _, ...players } = state.players;
+        return {
+          ...state,
+          players,
+        };
+      },
     },
   }
 );
-server.on('change:state', (state) => {
-  console.log('state change', state)
+server.on("change:state", (state) => {
+  console.log("state change", state);
   update();
-})
+});
 
-server.on('change:connected', (connected) => {
+server.on("change:connected", (connected) => {
   if (connected) {
     server.send("join", { actor: username });
   }
-})
+});
 
 function ui() {
   if (!username) {
@@ -279,6 +313,9 @@ function ui() {
         ${isGuessed === "correct"
           ? html`<div class="correct fadeInUp-animation">✅</div>`
           : html``}
+        ${isGuessed === "miss"
+          ? html`<div class="correct fadeInUp-animation">❌</div>`
+          : html``}
       </td>`;
     });
   }
@@ -351,9 +388,13 @@ function ui() {
 
     ${playerCoord
       ? html`
-          <p style="text-align: center;"><strong>${playerCoord}</strong> is your tile</p>
+          <p style="text-align: center;">
+            <strong>${playerCoord}</strong> is your tile
+          </p>
           <p style="text-align: center;">Did your team guess correctly?</p>
-          <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
+          <div
+            style="display: flex; justify-content: center; align-items: center; gap: 12px;"
+          >
             <button
               @click=${() =>
                 server.send("guess", {
@@ -412,6 +453,9 @@ function ui() {
             <li>
               ${player?.name} ${player?.isHost ? "(host)" : ""}
               ${player?.name === username ? "(you)" : ""}
+              ${isHost && player?.name !== username ? html`<button @click=${() => {
+                server.send("kick", { actor: player.name });
+              }}>kick</button>` : ``}
             </li>
           `
       )}

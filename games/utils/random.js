@@ -40,3 +40,12 @@ export const randomItem = (arr) => {
 export const nRandomItems = (n, arr) => {
     return nUniqueRandomNumbers(n, 0, arr.length - 1).map((i) => arr[i]);
 }
+
+/**
+ * @template T
+ * @param {T[]} arr
+ * @returns {T[]}
+ */
+export const shuffle = (arr) => {
+    return arr.sort(() => Math.random() - 0.5);
+}

@@ -25,6 +25,7 @@ export const {
     tr,
     td,
     th,
+    label
 } = van.tags;
 
 export const noop = () => span({ style: 'display: none;'})
