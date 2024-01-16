@@ -72,6 +72,41 @@
         // add a character to screen
 
         let platformWidth = 10;
+        function addControls() {
+          add([
+            rect(width()/3, height()/5),
+            pos(width()/4, height()*0.8),
+            anchor('center'),
+            color(255, 255, 255),
+            opacity(0.35)
+          ])
+          add([
+            text('L', { size: height()/10, color: 'red' }),
+            pos(width()/4, height()*0.8),
+            anchor('center'),
+            outline(4),
+            color(255, 255, 255),
+            opacity(0.55)
+          ])
+
+          add([
+            rect(width()/3, height()/5),
+            pos(width()*3/4, height()*0.8),
+            anchor('center'),
+            color(255, 255, 255),
+            opacity(0.35)
+          ])
+          add([
+            text('R', { size: height()/10, color: 'red' }),
+            pos(width()*3/4, height()*0.8),
+            anchor('center'),
+            outline(4),
+            color(255, 255, 255),
+            opacity(0.55)
+          ])
+        }
+        addControls();
+
         // add platform
         add([
           rect(width() * 2, platformWidth),

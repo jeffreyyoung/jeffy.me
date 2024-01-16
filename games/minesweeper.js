@@ -399,7 +399,7 @@ const Game = div(
   h4(
     "remaining safe tiles ",
     remainingNonBombTiles,
-    " - ",
+    " • ",
     state.bombCount,
     " bombs"
   ),
