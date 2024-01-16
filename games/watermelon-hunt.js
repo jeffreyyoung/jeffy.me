@@ -191,6 +191,44 @@ scene("game", (levelIdx = 0) => {
     pos(5, 5),
     fixed(),
   ]);
+  function addControls() {
+    add([
+      rect(width()/3, height()/5),
+      pos(width()/4, height()*0.8),
+      anchor('center'),
+      color(255, 255, 255),
+      opacity(0.35),
+      fixed(),
+    ])
+    add([
+      text('L', { size: height()/10 }),
+      pos(width()/4, height()*0.8),
+      anchor('center'),
+      outline(4),
+      color(255, 255, 255),
+      opacity(0.55),
+      fixed(),
+    ])
+
+    add([
+      rect(width()/3, height()/5),
+      pos(width()*3/4, height()*0.8),
+      anchor('center'),
+      color(255, 255, 255),
+      opacity(0.35),
+      fixed(),
+    ])
+    add([
+      text('R', { size: height()/10 }),
+      pos(width()*3/4, height()*0.8),
+      anchor('center'),
+      outline(4),
+      color(255, 255, 255),
+      opacity(0.55),
+      fixed(),
+    ])
+  }
+  addControls();
   let isLastLevel = levelIdx === levels.length - 1;
   let level = addLevel(levels[levelIdx], {
     tileHeight: block_size,
