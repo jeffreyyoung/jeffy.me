@@ -1,0 +1,107 @@
+<html style="font-size: 16px">
+  <head>
+    <title>scum</title>
+    <script src="scum.js" type="module"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      .hand {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 1em;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(1em, 1em));
+      }
+      .card {
+        border: 1px solid black;
+        border-radius: 5px;
+        background-color: white;
+        padding: 5px;
+        width: 3em;
+        min-width: 10em;
+        max-width: 100px;
+        aspect-ratio: 0.75;
+        transform: rotate(-3deg);
+        transition: transform 0.2s ease-in-out;
+      }
+      .card:hover {
+        outline: 2px solid gold;
+      }
+      .pile {
+        display: relative;
+        width: 3em;
+        padding: 5px;
+        min-width: 10em;
+        max-width: 100px;
+        aspect-ratio: 0.75;
+      }
+      .pile .card {
+        position: absolute;
+      }
+      .pile .card:nth-child(2n) {
+        transform: rotate(18deg);
+      }
+      .pile .card:nth-child(3n) {
+        transform: rotate(-8deg);
+      }
+      .pile .card:nth-child(4n) {
+        transform: rotate(10deg);
+      }
+      .pile .card:nth-child(4n) {
+        transform: rotate(-2deg);
+      }
+      .card.covered {
+        background-color: gray;
+      }
+      .card.covered p {
+        color: gray;
+      }
+      .card p {
+        font-size: 2em;
+        margin: 0;
+      }
+      .clubs,
+      .spades {
+        color: black;
+      }
+      .hearts,
+      .diamonds {
+        color: red;
+      }
+      #game-slot {
+        display: grid;
+        gap: 12px;
+        grid-template-areas: 
+          "top top top"
+          "left center right"
+          "bottom bottom bottom"
+      }
+      #pile {
+        grid-area: center;
+        transform: scale(0.7);
+      }
+      #my-hand {
+        grid-area: bottom;
+      }
+      #top {
+        grid-area: top;
+        transform: scale(0.7);
+      }
+      /* https://studiochris.us/2018/07/02/playing-cards-with-css-grid/ */
+    </style>
+  </head>
+  <body>
+    <div id="game-slot">
+      <div id="top">
+        <div class="hand" id="hand-2"></div>
+      </div>
+      <div id="pile" class="pile">
+        
+      </div>
+      <div id="my-hand" class="hand">
+        
+      </div>
+    </div>
+  </body>
+</html>
