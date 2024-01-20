@@ -226,6 +226,18 @@ function render() {
             local.x = middleOfScreenX;
             local.y = middleOfScreenY;
             local.revealed = true;
+            if (local.rotation === 0) {
+                local.rotation = randomNumber(-360, 360);
+            }
+        }
+    }
+
+    if (stackName === 'removed') {
+        for (const card of cards) {
+            const local = localState[getKey(card)];
+            local.x = middleOfScreenX*4;
+            local.y = middleOfScreenY*-3;
+            local.revealed = true;
             local.rotation = randomNumber(-360, 360);
         }
     }
@@ -270,9 +282,14 @@ function Card(c, covered = false) {
           local.selected ? "selected" : ""
         }}`,
       style: () =>
-        `transform: translate(${local.x}px, ${
-          local.y + (local.selected ? -(cardHeight() / 3) : 0)
-        }px) rotate(${local.rotation}deg); z-index: ${local.zIndex}`,
+        `
+        width: ${Math.max(windowWidth.val / 20, 50)}px;
+        transform:
+            translate(${local.x}px, ${
+                local.y + (local.selected ? -(cardHeight() / 3) : 0)
+            }px)
+            rotate(${local.rotation}deg);
+        z-index: ${local.zIndex}`,
     },
     p(valueToCharacter(c.value)),
     p(suitToSymbol(c.suit))
@@ -324,6 +341,23 @@ function selectOrPlay(card) {
   }
 }
 
+/**
+ * 
+ * @param {State['cards'][string]} card 
+ */
+function maybeRemoveDiscardPile(card) {
+    
+    if (card.pileName === 'discard') {
+        Object.values(gameState.cards)
+            .filter((c) => c.pileName === 'discard')
+            .forEach((c) => {
+                c.pileName = 'removed';
+            });
+        render();
+    }
+
+}
+
 function getCardFromTarget(target) {
   if (!(target instanceof HTMLElement)) return;
 
@@ -342,5 +376,8 @@ function getCardFromTarget(target) {
 document.getElementById("game-slot").addEventListener("click", (e) => {
   const card = getCardFromTarget(e.target);
   if (!card) return;
+  console.log('card clicked!', card.pileName);
+  maybeRemoveDiscardPile(card);
   selectOrPlay(card);
+  
 });
