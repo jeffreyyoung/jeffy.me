@@ -7,106 +7,50 @@
       * {
         user-select: none;
       }
-      .hand {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 1em;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(1em, 1em));
-      }
       .card {
         border: 1px solid black;
         border-radius: 5px;
-        background-color: white;
+        background-color: gray;;
+        color: gray;
         padding: 5px;
         width: 8em;
         aspect-ratio: 0.75;
         transform: rotate(-3deg);
         transition: transform 0.2s ease-in-out;
+        position: absolute;
+        transition: transform 1s;
       }
+
+      .revealed.clubs,
+      .revealed.spades {
+        color: black;
+        background-color: white;
+      }
+      .revealed.hearts,
+      .revealed.diamonds {
+        color: red;
+        background-color: white;
+      }
+
       .card:hover {
         outline: 2px solid gold;
       }
-      .pile {
-        display: relative;
-        padding: 5px;
-        min-width: 10em;
-        max-width: 100px;
-      }
-      .pile .card {
-        position: absolute;
-      }
-      .pile .card:nth-child(2n) {
-        transform: rotate(18deg);
-      }
-      .pile .card:nth-child(3n) {
-        transform: rotate(-8deg);
-      }
-      .pile .card:nth-child(4n) {
-        transform: rotate(10deg);
-      }
-      .pile .card:nth-child(4n) {
-        transform: rotate(-2deg);
-      }
-      .card.covered {
-        background-color: gray;
-      }
-      .card.covered p {
-        color: gray;
-      }
+      
       .card p {
         font-size: 2em;
         margin: 0;
       }
-      .clubs,
-      .spades {
-        color: black;
-      }
-      .hearts,
-      .diamonds {
-        color: red;
-      }
       #game-slot {
         height: 100vh;
         width: 100vw;
-        display: grid;
-        gap: 12px;
-        grid-template-areas: 
-          "top top top"
-          "left center right"
-          "bottom bottom bottom"
-      }
-      #pile {
-        grid-area: center;
-      }
-      #my-hand {
-        grid-area: bottom;
-      }
-      #top {
-        grid-area: top;
-      }
-      #left {
-
-      }
-      #right {
-
+        position: relative;
       }
       /* https://studiochris.us/2018/07/02/playing-cards-with-css-grid/ */
     </style>
   </head>
   <body>
     <div id="game-slot">
-      <div id="top">
-        <div class="hand" id="hand-2"></div>
-      </div>
-      <div id="pile" class="pile">
-        
-      </div>
-      <div id="my-hand" class="hand">
-        
-      </div>
+
     </div>
   </body>
 </html>
