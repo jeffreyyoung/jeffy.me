@@ -16,9 +16,12 @@
         width: 8em;
         aspect-ratio: 0.75;
         transform: rotate(-3deg);
-        transition: transform 0.2s ease-in-out;
-        position: absolute;
         transition: transform 1s;
+        position: absolute;
+      }
+
+      .dragging .card {
+        transition: transform 0.1s;
       }
 
       .revealed.clubs,
@@ -32,10 +35,10 @@
         background-color: white;
       }
 
-      .card:hover {
+      .card.selected {
         outline: 2px solid gold;
       }
-      
+
       .card p {
         font-size: 2em;
         margin: 0;
