@@ -184,13 +184,13 @@ async function render() {
   const cardWidth = document.querySelector(".card")?.clientWidth || 100;
   const middleOfScreenX = windowWidth.val / 2 - cardWidth;
   const middleOfScreenY = windowHeight.val / 2 - cardHeight();
-  let timeOut = 0;
-  let handIndex = 0;
   for (const [stackName, cards] of Object.entries(stacks)) {
     if (iter.isCanceled()) return;
 
     if (stackName === "deck") {
-      if (iter.isCanceled()) {return;}
+      if (iter.isCanceled()) {
+        return;
+      }
       for (const card of cards) {
         await wait(5);
         if (iter.isCanceled()) return;
@@ -208,34 +208,38 @@ async function render() {
       let sorted = cards.sort((a, b) => a.value - b.value);
       let zIndex = 0;
       if (isMe) {
+        let y = windowHeight.val - cardHeight() - 25;
         for (let i = 0; i < sorted.length; i++) {
-            if (iter.isCanceled()) return;
-            await wait(5);
-            let card = sorted[i];
-            const local = localState[getKey(card)];
-            let minX = 0;
-            let maxX = windowWidth.val - cardWidth;
-            let dx = (maxX - minX) / sorted.length;
-            local.x = minX + dx * i;
-            local.y = windowHeight.val - cardHeight() - 15;
-            local.revealed = true;
-            local.zIndex = zIndex++;
-            local.rotation = 0;
+          if (iter.isCanceled()) return;
+          await wait(5);
+          let card = sorted[i];
+          const local = localState[getKey(card)];
+          let minX = 0;
+          let maxX = windowWidth.val - cardWidth;
+          let dx = (maxX - minX) / sorted.length;
+          local.x = minX + dx * i;
+          local.y = y;
+          local.revealed = true;
+          local.zIndex = zIndex++;
+          local.rotation = 0;
         }
       } else {
         for (let i = 0; i < sorted.length; i++) {
-            if (iter.isCanceled()) return;
-            await wait(5);
-            const otherPlayers = gameState.players.filter((p) => p.name !== "player1").map((p) => p.name);
-            const playerIndex = otherPlayers.indexOf(player);
-            const card = sorted[i];
-            const local = localState[getKey(card)];
-            let userAreaWidth = windowWidth.val / otherPlayers.length;
-            local.x = userAreaWidth * playerIndex + userAreaWidth / 2 - cardWidth / 2;
-            local.y = cardHeight()/2-(2*i);
-            local.revealed = false;
-            local.zIndex = zIndex++;
-            local.rotation = 0;
+          if (iter.isCanceled()) return;
+          await wait(5);
+          const otherPlayers = gameState.players
+            .filter((p) => p.name !== "player1")
+            .map((p) => p.name);
+          const playerIndex = otherPlayers.indexOf(player);
+          const card = sorted[i];
+          const local = localState[getKey(card)];
+          let userAreaWidth = windowWidth.val / otherPlayers.length;
+          local.x =
+            userAreaWidth * playerIndex + userAreaWidth / 2 - cardWidth / 2;
+          local.y = cardHeight() / 2 - 2 * i;
+          local.revealed = false;
+          local.zIndex = zIndex++;
+          local.rotation = 0;
         }
       }
       // align cards at bottom of screen
