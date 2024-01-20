@@ -159,7 +159,24 @@ window.addEventListener("resize", () => {
   render();
 });
 
-function render() {
+function cancelable() {
+  let isCanceled = false;
+
+  return {
+    cancel() {
+      isCanceled = true;
+    },
+    isCanceled() {
+      return isCanceled;
+    },
+  };
+}
+
+let iter = cancelable();
+
+async function render() {
+  iter.cancel();
+  iter = cancelable();
   const stacks = groupBy(Object.values(gameState.cards), "pileName");
   const stackKeys = Object.keys(stacks);
 
@@ -170,15 +187,18 @@ function render() {
   let timeOut = 0;
   let handIndex = 0;
   for (const [stackName, cards] of Object.entries(stacks)) {
+    if (iter.isCanceled()) return;
+
     if (stackName === "deck") {
+      if (iter.isCanceled()) {return;}
       for (const card of cards) {
-        setTimeout(() => {
-          const local = localState[getKey(card)];
-          local.x = middleOfScreenX;
-          local.y = middleOfScreenY;
-          local.revealed = false;
-          local.rotation = randomNumber(-360, 360);
-        }, ++timeOut * 7);
+        await wait(5);
+        if (iter.isCanceled()) return;
+        const local = localState[getKey(card)];
+        local.x = middleOfScreenX;
+        local.y = middleOfScreenY;
+        local.revealed = false;
+        local.rotation = randomNumber(-360, 360);
       }
     }
 
@@ -187,59 +207,65 @@ function render() {
       const isMe = player === "player1";
       let sorted = cards.sort((a, b) => a.value - b.value);
       let zIndex = 0;
-      for (let i = 0; i < sorted.length; i++) {
-        let card = sorted[i];
-        const local = localState[getKey(card)];
-        // if is me
-        let minX = 0;
-        let maxX = windowWidth.val - cardWidth;
-        let y = windowHeight.val - cardHeight() - 15;
-        if (!isMe) {
-          const otherPlayers = gameState.players
-            .map((p) => p.name)
-            .filter((p) => p !== "player1");
-          const numHands = otherPlayers.length;
-          console.log("numHands", numHands);
-          const handWidth = windowWidth.val / numHands;
-          minX = handWidth * otherPlayers.indexOf(player);
-          maxX = minX + handWidth - handWidth / 1.2; // 30 for padding
-          y = 15;
+      if (isMe) {
+        for (let i = 0; i < sorted.length; i++) {
+            if (iter.isCanceled()) return;
+            await wait(5);
+            let card = sorted[i];
+            const local = localState[getKey(card)];
+            let minX = 0;
+            let maxX = windowWidth.val - cardWidth;
+            let dx = (maxX - minX) / sorted.length;
+            local.x = minX + dx * i;
+            local.y = windowHeight.val - cardHeight() - 15;
+            local.revealed = true;
+            local.zIndex = zIndex++;
+            local.rotation = 0;
         }
-        let dx = (maxX - minX) / sorted.length;
-        local.x = minX + dx * i;
-        const rx = 30 / sorted.length;
-        //   local.rotation = -15 + i * rx;
-        local.rotation = 0;
-        local.y = y;
-        local.revealed = isMe;
-        local.zIndex = zIndex++;
-        handIndex++;
+      } else {
+        for (let i = 0; i < sorted.length; i++) {
+            if (iter.isCanceled()) return;
+            await wait(5);
+            const otherPlayers = gameState.players.filter((p) => p.name !== "player1").map((p) => p.name);
+            const playerIndex = otherPlayers.indexOf(player);
+            const card = sorted[i];
+            const local = localState[getKey(card)];
+            let userAreaWidth = windowWidth.val / otherPlayers.length;
+            local.x = userAreaWidth * playerIndex + userAreaWidth / 2 - cardWidth / 2;
+            local.y = cardHeight()/2-(2*i);
+            local.revealed = false;
+            local.zIndex = zIndex++;
+            local.rotation = 0;
+        }
       }
-
       // align cards at bottom of screen
     }
 
     if (stackName === "discard") {
-        for (let i = 0; i < cards.length; i++) {
-            let card = cards[i];
-            const local = localState[getKey(card)];
-            local.x = middleOfScreenX;
-            local.y = middleOfScreenY;
-            local.revealed = true;
-            if (local.rotation === 0) {
-                local.rotation = randomNumber(-360, 360);
-            }
+      for (let i = 0; i < cards.length; i++) {
+        if (iter.isCanceled()) return;
+        await wait(5);
+        let card = cards[i];
+        const local = localState[getKey(card)];
+        local.x = middleOfScreenX;
+        local.y = middleOfScreenY;
+        local.revealed = true;
+        if (local.rotation === 0) {
+          local.rotation = randomNumber(-360, 360);
         }
+      }
     }
 
-    if (stackName === 'removed') {
-        for (const card of cards) {
-            const local = localState[getKey(card)];
-            local.x = middleOfScreenX*4;
-            local.y = middleOfScreenY*-3;
-            local.revealed = true;
-            local.rotation = randomNumber(-360, 360);
-        }
+    if (stackName === "removed") {
+      for (const card of cards) {
+        if (iter.isCanceled()) return;
+        await wait(5);
+        const local = localState[getKey(card)];
+        local.x = middleOfScreenX * 4;
+        local.y = middleOfScreenY * -3;
+        local.revealed = true;
+        local.rotation = randomNumber(-360, 360);
+      }
     }
   }
 }
@@ -286,8 +312,8 @@ function Card(c, covered = false) {
         width: ${Math.max(windowWidth.val / 20, 50)}px;
         transform:
             translate(${local.x}px, ${
-                local.y + (local.selected ? -(cardHeight() / 3) : 0)
-            }px)
+          local.y + (local.selected ? -(cardHeight() / 3) : 0)
+        }px)
             rotate(${local.rotation}deg);
         z-index: ${local.zIndex}`,
     },
@@ -326,36 +352,34 @@ function selectOrPlay(card) {
       .forEach((c) => (c.selected = false));
     clickedCardState.selected = true;
   } else {
-    const discardSize = Object.values(gameState.cards)
-        .filter((c) => c.pileName === 'discard')
-        .length;
+    const discardSize = Object.values(gameState.cards).filter(
+      (c) => c.pileName === "discard"
+    ).length;
     Object.values(localState)
-        .filter((c) => c.selected)
-        .forEach((local, index) => {
-            local.zIndex = discardSize + 1 + index;
-            local.selected = false
-            gameState.cards[local.key].pileName = 'discard';
-        });
+      .filter((c) => c.selected)
+      .forEach((local, index) => {
+        local.zIndex = discardSize + 1 + index;
+        local.selected = false;
+        gameState.cards[local.key].pileName = "discard";
+      });
     render();
     // move to deck
   }
 }
 
 /**
- * 
- * @param {State['cards'][string]} card 
+ *
+ * @param {State['cards'][string]} card
  */
 function maybeRemoveDiscardPile(card) {
-    
-    if (card.pileName === 'discard') {
-        Object.values(gameState.cards)
-            .filter((c) => c.pileName === 'discard')
-            .forEach((c) => {
-                c.pileName = 'removed';
-            });
-        render();
-    }
-
+  if (card.pileName === "discard") {
+    Object.values(gameState.cards)
+      .filter((c) => c.pileName === "discard")
+      .forEach((c) => {
+        c.pileName = "removed";
+      });
+    render();
+  }
 }
 
 function getCardFromTarget(target) {
@@ -376,8 +400,7 @@ function getCardFromTarget(target) {
 document.getElementById("game-slot").addEventListener("click", (e) => {
   const card = getCardFromTarget(e.target);
   if (!card) return;
-  console.log('card clicked!', card.pileName);
+  console.log("card clicked!", card.pileName);
   maybeRemoveDiscardPile(card);
   selectOrPlay(card);
-  
 });
