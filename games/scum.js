@@ -11,7 +11,7 @@ function getKey(c) {
 }
 
 function cardHeight() {
-    return document.querySelector(".card")?.clientHeight || 100;
+  return document.querySelector(".card")?.clientHeight || 100;
 }
 
 /**
@@ -59,10 +59,12 @@ const gameState = reactive(
 );
 
 const localState = reactive(
-  /** @type {Record<string, { x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean }>} */
+  /** @type {Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean }>} */
   (
     genCards().reduce((acc, c) => {
       acc[getKey(c)] = {
+        key: getKey(c),
+        value: c.value,
         x: 0,
         y: 0,
         rotation: 0,
@@ -148,7 +150,7 @@ function valueToCharacter(value) {
       return value.toString();
   }
 }
-const isDragging = van.state(false)
+const isDragging = van.state(false);
 const windowWidth = van.state(window.innerWidth);
 const windowHeight = van.state(window.innerHeight);
 window.addEventListener("resize", () => {
@@ -216,6 +218,17 @@ function render() {
 
       // align cards at bottom of screen
     }
+
+    if (stackName === "discard") {
+        for (let i = 0; i < cards.length; i++) {
+            let card = cards[i];
+            const local = localState[getKey(card)];
+            local.x = middleOfScreenX;
+            local.y = middleOfScreenY;
+            local.revealed = true;
+            local.rotation = randomNumber(-360, 360);
+        }
+    }
   }
 }
 
@@ -268,32 +281,47 @@ function Card(c, covered = false) {
 
 van.add(
   document.getElementById("game-slot"),
-  list(() => div({
-    class: () => `game ${isDragging.val ? 'dragging' : ''}`,
-  }), gameState.cards, (c) => Card(c.val))
+  list(
+    () =>
+      div({
+        class: () => `game ${isDragging.val ? "dragging" : ""}`,
+      }),
+    gameState.cards,
+    (c) => Card(c.val)
+  )
 );
-
 
 /**
  *
  * @param {State['cards'][string]} card
  */
-function maybeSelectCard(card) {
+function selectOrPlay(card) {
   const key = getKey(card);
-  const local = localState[key];
+  const clickedCardState = localState[key];
 
   if (card.pileName !== "player-hand#player1") return;
 
-  if (!local.selected) {
-    // clear selected
-    Object.entries(localState).forEach(([k, v]) => {
-      if (v.selected && gameState.cards[k].value !== card.value) {
-        v.selected = false;
-      }
-    });
-  }
+  let curSelected = Object.values(localState).filter((c) => c.selected);
 
-  local.selected = !local.selected;
+  if (!clickedCardState.selected) {
+    Object.values(localState)
+      .filter((c) => c.selected && c.value !== clickedCardState.value)
+      .forEach((c) => (c.selected = false));
+    clickedCardState.selected = true;
+  } else {
+    const discardSize = Object.values(gameState.cards)
+        .filter((c) => c.pileName === 'discard')
+        .length;
+    Object.values(localState)
+        .filter((c) => c.selected)
+        .forEach((local, index) => {
+            local.zIndex = discardSize + 1 + index;
+            local.selected = false
+            gameState.cards[local.key].pileName = 'discard';
+        });
+    render();
+    // move to deck
+  }
 }
 
 function getCardFromTarget(target) {
@@ -311,62 +339,8 @@ function getCardFromTarget(target) {
   return card;
 }
 
-
-
-
-function onDragStart(target) {
-    isDragging.val = false;
-}
-
-function onDrag(x, y) {
-    isDragging.val = true;
-  Object.entries(localState)
-    .filter(([k, v]) => v.selected)
-    .forEach(([k, v]) => {
-      v.x = x;
-      v.y = y;
-    });
-}
-
-function onDragEnd(target) {
-    if (!isDragging.val) {
-        const card = getCardFromTarget(target);
-        if (card) {
-            maybeSelectCard(card);
-        }
-    }
-    isDragging.val = false;
-  // maybe do something?
-
-  render();
-}
-const gameEl = document.getElementById("game-slot");
-
-let isMouseDown = false;
-gameEl.addEventListener("mousedown", (e) => {
-    isMouseDown = true;
-  onDragStart(e.target);
-});
-
-gameEl.addEventListener("mouseup", (e) => {
-    isMouseDown = false;
-    onDragEnd(e.target);
-});
-
-gameEl.addEventListener("mousemove", (e) => {
-    if (isMouseDown && e.clientY < (windowHeight.val - cardHeight()-20)) {
-        onDrag(e.clientX, e.clientY);
-    }
-});
-
-gameEl.addEventListener('touchstart', (e) => {
-    onDragStart(e.target);
-});
-
-gameEl.addEventListener('touchmove', (e) => {
-    onDrag(e.touches[0].clientX, e.touches[0].clientY);
-});
-
-gameEl.addEventListener('touchend', (e) => {
-    onDragEnd(e.target);
+document.getElementById("game-slot").addEventListener("click", (e) => {
+  const card = getCardFromTarget(e.target);
+  if (!card) return;
+  selectOrPlay(card);
 });
