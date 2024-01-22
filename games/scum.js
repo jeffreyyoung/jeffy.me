@@ -332,7 +332,7 @@ async function render() {
     }
 
     if (stackName.startsWith("player-")) {
-      const player = stackName.slice("player-".length)
+      const player = stackName.slice("player-".length);
       const isMe = player === "player1";
       let sorted = cards.sort((a, b) => a.value - b.value);
       let zIndex = 0;
@@ -424,6 +424,22 @@ async function runGame() {
 }
 runGame();
 
+const playableCardsSet = van.derive(() => {
+  // if (gameState.turn !== "player1") {
+  //     return new Set();
+  // }
+  const hand = getPile(gameState, `player-player1`);
+  const discardSetSize = getDiscardSetSize(gameState);
+  const byValue = groupBy(hand, "value");
+
+  const playable = new Set();
+  for (const [_, cards] of Object.entries(byValue)) {
+    if (cards.length >= discardSetSize) {
+      cards.forEach((c) => playable.add(getKey(c)));
+    }
+  }
+  return playable;
+});
 /**
  *
  * @param {State['cards'][number]} c
@@ -431,6 +447,7 @@ runGame();
  */
 function Card(c, covered = false) {
   const local = localState.cards[getKey(c)];
+  const playable = playableCardsSet.val;
 
   return div(
     {
@@ -438,18 +455,22 @@ function Card(c, covered = false) {
       "data-value": () => c.value,
       "data-pile": () => c.pileName,
       class: () =>
-        `card ${c.suit} ${local.revealed ? "revealed" : ""} ${
-          local.selected ? "selected" : ""
-        }`,
-      style: () =>
-        `
-        width: ${Math.max(windowWidth() / 20, 50)}px;
-        transform:
-            translate(${local.x}px, ${
-          local.y + (local.selected ? -(cardHeight() / 3) : 0)
-        }px)
-            rotate(${local.rotation}deg);
-        z-index: ${local.zIndex}`,
+        [
+          "card",
+          c.suit,
+          local.revealed ? "revealed" : "",
+          local.selected ? "selected" : "",
+          playable.has(getKey(c)) ? "playable" : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      
+      style: () => [
+        `width: ${Math.max(windowWidth() / 20, 50)}px;`,
+        `transform: translate(${local.x}px, ${local.y + (local.selected ? -(cardHeight()/3) : 0)}px) rotate(${local.rotation}deg);`,
+        `z-index: ${local.zIndex};`,
+      ].join(' '),
+       
     },
     p(valueToCharacter(c.value)),
     p(suitToSymbol(c.suit))
@@ -469,14 +490,14 @@ van.add(
 );
 
 const canPass = van.derive(() => {
-    const player = gameState.players.find((p) => p.name === "player1");
-    if (!player) return false;
+  const player = gameState.players.find((p) => p.name === "player1");
+  if (!player) return false;
 
-    const hand = getPile(gameState, `player-${player.name}`);
-    if (hand.length === 0) return false;
+  const hand = getPile(gameState, `player-${player.name}`);
+  if (hand.length === 0) return false;
 
-    return !player.didPass;
-})
+  return !player.didPass;
+});
 
 van.add(
   document.getElementById("game-slot"),
@@ -491,40 +512,44 @@ van.add(
   )
 );
 
-van.add(
-    document.getElementById("game-slot"),
-    () => {
-        if (!canPass.val) {
-            return span();
-        } else {
-            return button({
-                onclick: () => {
-                    server.send('pass', {});
-                }
-            }, 'pass')
-        }
-    }
-)
-
+van.add(document.getElementById("game-slot"), () => {
+  if (!canPass.val) {
+    return span();
+  } else {
+    return button(
+      {
+        onclick: () => {
+          server.send("pass", {});
+        },
+      },
+      "pass"
+    );
+  }
+});
 
 /**
- * 
- * @param {State} gameState 
+ *
+ * @param {State} gameState
  */
 function getDiscardSetSize(gameState) {
-    const discardPile = getPile(gameState, "discard");
-    if (discardPile.length === 0) {
-        return 0;
-    }
+  const discardPile = getPile(gameState, "discard");
+  if (discardPile.length === 0) {
+    return 0;
+  }
 
-    return groupBy(discardPile, "value")[discardPile[0].value].length || 0;
+  return groupBy(discardPile, "value")[discardPile[0].value].length || 0;
 }
 
 /**
  *
- * @param {State['cards'][string]} card
+ * @param {State['cards'][string] | undefined} card
  */
 function selectOrPlay(card) {
+  console.log("card", card);
+  if (!card) {
+    Object.values(localState.cards).forEach((c) => (c.selected = false));
+    return;
+  }
   const key = getKey(card);
   const clickedCardState = localState.cards[key];
 
@@ -532,27 +557,26 @@ function selectOrPlay(card) {
 
   let curSelected = Object.values(localState.cards).filter((c) => c.selected);
 
-
   // deselect all other card types
-  Object.values(localState.cards).filter(c => c.value !== card.value).forEach(c => c.selected = false);
-
+  Object.values(localState.cards)
+    .filter((c) => c.value !== card.value)
+    .forEach((c) => (c.selected = false));
 
   if (clickedCardState.selected) {
     let discardPileSize = getPile(gameState, "discard").length;
     // if a selected card was clicked, play it
     curSelected.forEach((c) => {
-        c.selected = false;
-        gameState.cards[c.key].pileName = 'discard';
-        c.zIndex = discardPileSize++;
-
+      c.selected = false;
+      gameState.cards[c.key].pileName = "discard";
+      c.zIndex = discardPileSize++;
     });
     render();
-    return;  
+    return;
   }
 
-  let cardsOfValue = groupBy(getPile(gameState, "player-player1"), 'value')[card.value] || [];
+  let cardsOfValue =
+    groupBy(getPile(gameState, "player-player1"), "value")[card.value] || [];
   let discardSetSize = getDiscardSetSize(gameState);
-  
 
   if (cardsOfValue.length < discardSetSize) {
     // doesn't have enough of this type to select it
@@ -566,7 +590,6 @@ function selectOrPlay(card) {
     return;
   }
 
-  
   // select $discardSetSize cards of this type
   cardsOfValue.forEach((c) => {
     localState.cards[getKey(c)].selected = false;
@@ -574,8 +597,10 @@ function selectOrPlay(card) {
 
   let cardsToSelect = [
     card,
-    ...cardsOfValue.filter((c) => c.suit !== card.suit).slice(0, discardSetSize - 1),
-  ]
+    ...cardsOfValue
+      .filter((c) => c.suit !== card.suit)
+      .slice(0, discardSetSize - 1),
+  ];
 
   cardsToSelect.forEach((c, i) => {
     localState.cards[getKey(c)].selected = true;
@@ -589,6 +614,8 @@ function selectOrPlay(card) {
  * @param {State['cards'][string]} card
  */
 function maybeRemoveDiscardPile(card) {
+  if (!card) return;
+
   if (card.pileName === "discard") {
     Object.values(gameState.cards)
       .filter((c) => c.pileName === "discard")
@@ -599,6 +626,11 @@ function maybeRemoveDiscardPile(card) {
   }
 }
 
+/**
+ *
+ * @param {*} target
+ * @returns {State['cards'][string] | undefined}
+ */
 function getCardFromTarget(target) {
   if (!(target instanceof HTMLElement)) return;
 
@@ -614,10 +646,8 @@ function getCardFromTarget(target) {
   return card;
 }
 
-document.getElementById("game-slot").addEventListener("click", (e) => {
+document.querySelector("body").addEventListener("click", (e) => {
   const card = getCardFromTarget(e.target);
-  if (!card) return;
-  console.log("card clicked!", card.pileName);
   maybeRemoveDiscardPile(card);
   selectOrPlay(card);
 });
