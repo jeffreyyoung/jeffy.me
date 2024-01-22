@@ -1,3 +1,17 @@
+export function cancelable() {
+    let isCanceled = false;
+  
+    return {
+      cancel() {
+        isCanceled = true;
+      },
+      isCanceled() {
+        return isCanceled;
+      },
+    };
+  }
+  
+
 /**
  *
  * @param {number} min
@@ -54,9 +68,10 @@ export const shuffle = (arr) => {
  * @template T
  * @param {T[]} xs
  * @param {keyof T} key
- * @returns {Record<string, T[]>}
+ * @returns {Record<T[key], T[]>}
  */
 export function groupBy(xs, key) {
+    // @ts-ignore
   return xs.reduce(function (rv, x) {
     // @ts-ignore
     (rv[x[key]] = rv[x[key]] || []).push(x);
@@ -72,3 +87,4 @@ export function groupBy(xs, key) {
 export function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
