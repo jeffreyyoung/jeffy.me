@@ -425,9 +425,9 @@ async function runGame() {
 runGame();
 
 const playableCardsSet = van.derive(() => {
-  // if (gameState.turn !== "player1") {
-  //     return new Set();
-  // }
+  if (gameState.turn !== "player1") {
+      return new Set();
+  }
   const hand = getPile(gameState, `player-player1`);
   const discardSetSize = getDiscardSetSize(gameState);
   const byValue = groupBy(hand, "value");
@@ -440,6 +440,7 @@ const playableCardsSet = van.derive(() => {
   }
   return playable;
 });
+
 /**
  *
  * @param {State['cards'][number]} c
@@ -447,7 +448,6 @@ const playableCardsSet = van.derive(() => {
  */
 function Card(c, covered = false) {
   const local = localState.cards[getKey(c)];
-  const playable = playableCardsSet.val;
 
   return div(
     {
@@ -460,7 +460,7 @@ function Card(c, covered = false) {
           c.suit,
           local.revealed ? "revealed" : "",
           local.selected ? "selected" : "",
-          playable.has(getKey(c)) ? "playable" : "",
+          playableCardsSet.val.has(getKey(c)) ? "playable" : "",
         ]
           .filter(Boolean)
           .join(" "),
