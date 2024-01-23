@@ -54,7 +54,6 @@ import { singleton } from "./utils/singleton.js";
  *
  */
 
-
 const suits = ["spades", "hearts", "clubs", "diamonds"];
 
 /**
@@ -98,7 +97,7 @@ function valueToCharacter(value) {
  * @param {Card} c
  */
 function getKey(c) {
-  return c.suit+c.value;
+  return c.suit + c.value;
 }
 
 /**
@@ -198,7 +197,6 @@ const server = () =>
                 card.pileName = `player-${
                   state.players[i % state.players.length].name
                 }`;
-                
               }
 
               return state;
@@ -272,11 +270,16 @@ const server = () =>
               if (payload.cards.length === 0) {
                 return state;
               }
-              if (!payload.cards.every((c) => c.value > state.turnMinCardValue)) {
+              if (
+                !payload.cards.every((c) => c.value > state.turnMinCardValue)
+              ) {
                 return state;
               }
 
-              if (state.turnSetSize > 0 && payload.cards.length !== state.turnSetSize) {
+              if (
+                state.turnSetSize > 0 &&
+                payload.cards.length !== state.turnSetSize
+              ) {
                 return state;
               }
               if (state.turnSetSize === 0) {
@@ -284,13 +287,13 @@ const server = () =>
               } else if (payload.cards.length !== state.turnSetSize) {
                 return state;
               }
-              
+
               state.turnMinCardValue = payload.cards[0].value;
 
               const pile = getPile(state, "discard");
 
               let highestIndex = Math.max(...pile.map((c) => c.pileIndex));
-              
+
               for (const toPlay of payload.cards) {
                 const card = state.cards[getKey(toPlay)];
                 card.pileName = "discard";
@@ -402,8 +405,11 @@ async function render() {
           const local = localState.cards[getKey(card)];
           local.x = minX + i * dx;
           local.y = y;
-          local.playable = card.value > gameState.turnMinCardValue && (gameState.turnSetSize === 0 || valueToCount[card.value].length >= gameState.turnSetSize);
-          console.log('calculate playable');
+          local.playable =
+            card.value > gameState.turnMinCardValue &&
+            (gameState.turnSetSize === 0 ||
+              valueToCount[card.value].length >= gameState.turnSetSize);
+          console.log("calculate playable");
           local.revealed = true;
           local.rotation = 0;
         }
@@ -571,8 +577,6 @@ document.querySelector("body").addEventListener("click", (e) => {
   selectOrPlay(card);
 });
 
-
-
 /**
  *
  * @param {State['cards'][number]} c
@@ -604,7 +608,7 @@ function Card(c) {
           `transform: translate(${local.x}px, ${
             local.y + (local.selected ? -(cardHeight() / 2) : 0)
           }px) rotate(${local.rotation}deg);`,
-          `z-index: ${c.value*10+suits.indexOf(c.suit)};`,
+          `z-index: ${c.value * 10 + suits.indexOf(c.suit)};`,
         ].join(" "),
     },
     p(valueToCharacter(c.value)),
@@ -668,10 +672,22 @@ van.add(
           style:
             "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 3; flex-direction: column;",
         },
+        h4(
+          {
+            style: () =>
+              [
+                "margin: 0;",
+                status.val === "pre-game" ? "" : "display: none;",
+              ].join(" "),
+          },
+          "players"
+        ),
         list(
           () =>
             ul({
-              style: () => (status.val === "pre-game" ? "" : "display: none;"),
+              style: () =>
+                "list-style-type: none; margin: 0; padding: 0; margin-bottom: 12px;" +
+                (status.val === "pre-game" ? "" : "display: none;"),
             }),
           gameState.players,
           (player) => li(player.val.name)
