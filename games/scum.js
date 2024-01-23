@@ -602,7 +602,7 @@ function Card(c) {
         [
           `width: ${Math.max(windowWidth() / 20, 50)}px;`,
           `transform: translate(${local.x}px, ${
-            local.y + (local.selected ? -(cardHeight() / 3) : 0)
+            local.y + (local.selected ? -(cardHeight() / 2) : 0)
           }px) rotate(${local.rotation}deg);`,
           `z-index: ${c.value*10+suits.indexOf(c.suit)};`,
         ].join(" "),
