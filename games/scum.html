@@ -4,19 +4,40 @@
     <script src="scum.js" type="module"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+      input {
+        font-size: 1rem;
+      }
+      nav {
+        position: relative;
+        padding: 4px 12px;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+      }
+      .setup {
+        padding: 4px 12px;
+      }
+      nav h1 {
+        margin: 0;
+        padding: 0;
+        font-size: 2em;
+      }
       * {
         user-select: none;
+      }
+      nav & {
+        user-select: auto;
       }
       .card {
         border: 1px solid black;
         border-radius: 5px;
-        background-color: gray;;
+        background-color: gray;
         color: gray;
         padding: 5px;
         width: 8em;
         aspect-ratio: 0.75;
         transform: rotate(-3deg);
-        transition: transform .3s;
+        transition: transform 0.3s;
         position: absolute;
         top: 0;
         left: 0;
@@ -54,8 +75,13 @@
     </style>
   </head>
   <body>
-    <div id="game-slot">
-
-    </div>
+    <nav>
+      <div>
+        <a href="/">home</a>
+        <h1>scum</h1>
+      </div>
+      <div id="invite-slot"></div>
+    </nav>
+    <div id="game-slot"></div>
   </body>
 </html>

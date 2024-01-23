@@ -28,7 +28,9 @@ export const needsLobbyId = van.derive(() => {
 
 export function SetUserName() {
   return div(
-    { style: "margin-bottom: 30px" },
+    { 
+      class: 'setup',
+      style: "margin-bottom: 30px" },
     p("What is your name?"),
     form(
       {
@@ -56,7 +58,7 @@ export function SetUserName() {
 
 export function LobbySelection() {
   return div(
-    { style: "margin-bottom: 30px" },
+    { style: "margin-bottom: 30px", class: 'setup' },
     p("create new game"),
     form(
       {

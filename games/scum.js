@@ -1,9 +1,10 @@
 import van from "../deps/van.js";
-import { reactive, list } from "../deps/van-x.js";
+import { reactive, list, stateFields, calc } from "../deps/van-x.js";
 import { button, div, p, span } from "./utils/tags.js";
 import { groupBy, wait, randomNumber, cancelable } from "./utils/random.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
+import { username, lobbyId, PreGameGate, InviteSlot } from "./utils/pre-game.js";
 
 let gate = cancelable();
 
@@ -47,6 +48,7 @@ function genCards() {
 const gameState = reactive(
   /** @type {State} */
   ({
+    turn: "",
     version: "0",
     players: [
       {
@@ -205,7 +207,7 @@ const server = new P2pState(
 
 const localState = reactive(
   /** @type {{
-    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean }>
+    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean, playable: boolean }>
   }} */
   ({
     cards: genCards().reduce((acc, c) => {
@@ -425,20 +427,22 @@ async function runGame() {
 runGame();
 
 const playableCardsSet = van.derive(() => {
-  if (gameState.turn !== "player1") {
-      return new Set();
+  console.log("deriving playable cards");
+  console.log("!!!!", stateFields(gameState));
+  if (stateFields(gameState).turn.val !== "player1") {
+    return "";
   }
   const hand = getPile(gameState, `player-player1`);
   const discardSetSize = getDiscardSetSize(gameState);
   const byValue = groupBy(hand, "value");
 
-  const playable = new Set();
+  const playable = [];
   for (const [_, cards] of Object.entries(byValue)) {
     if (cards.length >= discardSetSize) {
-      cards.forEach((c) => playable.add(getKey(c)));
+      cards.forEach((c) => playable.push(getKey(c)));
     }
   }
-  return playable;
+  return playable.join(" ");
 });
 
 /**
@@ -446,9 +450,18 @@ const playableCardsSet = van.derive(() => {
  * @param {State['cards'][number]} c
  * @returns
  */
-function Card(c, covered = false) {
-  const local = localState.cards[getKey(c)];
+function isUserPile(c) {
+  return c.pileName.startsWith("player-");
+}
 
+/**
+ *
+ * @param {State['cards'][number]} c
+ * @returns
+ */
+function Card(c) {
+  const local = localState.cards[getKey(c)];
+  console.log("rendering card");
   return div(
     {
       "data-suite": () => c.suit,
@@ -460,34 +473,24 @@ function Card(c, covered = false) {
           c.suit,
           local.revealed ? "revealed" : "",
           local.selected ? "selected" : "",
-          playableCardsSet.val.has(getKey(c)) ? "playable" : "",
+          playableCardsSet.val?.indexOf?.(getKey(c)) !== -1 ? "playable" : "",
         ]
           .filter(Boolean)
           .join(" "),
-      
-      style: () => [
-        `width: ${Math.max(windowWidth() / 20, 50)}px;`,
-        `transform: translate(${local.x}px, ${local.y + (local.selected ? -(cardHeight()/3) : 0)}px) rotate(${local.rotation}deg);`,
-        `z-index: ${local.zIndex};`,
-      ].join(' '),
-       
+
+      style: () =>
+        [
+          `width: ${Math.max(windowWidth() / 20, 50)}px;`,
+          `transform: translate(${local.x}px, ${
+            local.y + (local.selected ? -(cardHeight() / 3) : 0)
+          }px) rotate(${local.rotation}deg);`,
+          `z-index: ${local.zIndex};`,
+        ].join(" "),
     },
     p(valueToCharacter(c.value)),
     p(suitToSymbol(c.suit))
   );
 }
-
-van.add(
-  document.getElementById("game-slot"),
-  list(
-    () =>
-      div({
-        class: () => `game ${isDragging.val ? "dragging" : ""}`,
-      }),
-    gameState.cards,
-    (c) => Card(c.val)
-  )
-);
 
 const canPass = van.derive(() => {
   const player = gameState.players.find((p) => p.name === "player1");
@@ -499,33 +502,49 @@ const canPass = van.derive(() => {
   return !player.didPass;
 });
 
+van.add(document.getElementById('invite-slot'), InviteSlot());
+
 van.add(
   document.getElementById("game-slot"),
-  list(
-    () => div({ class: "player-area" }),
-    gameState.players,
-    (p) =>
-      div(
-        { class: "player", id: () => `player-${p.val.name}` },
-        () => p.val.name
-      )
+  div(
+    PreGameGate(() => {
+      console.log("in pre game thing!");
+      return div(
+        list(
+          () =>
+            div({
+              class: () => `game ${isDragging.val ? "dragging" : ""}`,
+            }),
+          gameState.cards,
+          (c) => Card(c.val)
+        ),
+        list(
+          () => div({ class: "player-area" }),
+          gameState.players,
+          (p) =>
+            div(
+              { class: "player", id: () => `player-${p.val.name}` },
+              () => p.val.name
+            )
+        ),
+        () => {
+          if (!canPass.val) {
+            return span();
+          } else {
+            return button(
+              {
+                onclick: () => {
+                  server.send("pass", {});
+                },
+              },
+              "pass"
+            );
+          }
+        }
+      );
+    })
   )
 );
-
-van.add(document.getElementById("game-slot"), () => {
-  if (!canPass.val) {
-    return span();
-  } else {
-    return button(
-      {
-        onclick: () => {
-          server.send("pass", {});
-        },
-      },
-      "pass"
-    );
-  }
-});
 
 /**
  *
