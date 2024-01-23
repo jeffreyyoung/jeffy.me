@@ -432,6 +432,7 @@ async function render() {
         local.y = middleOfScreenY;
         local.revealed = true;
         local.playable = false;
+        local.zIndex = card.value;
         if (local.rotation === 0) {
           local.rotation = randomNumber(-360, 360);
         }
