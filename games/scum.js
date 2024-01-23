@@ -4,228 +4,14 @@ import { button, div, p, span } from "./utils/tags.js";
 import { groupBy, wait, randomNumber, cancelable } from "./utils/random.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
-import { username, lobbyId, PreGameGate, InviteSlot, isHost } from "./utils/pre-game.js";
+import {
+  username,
+  lobbyId,
+  PreGameGate,
+  InviteSlot,
+  isHost,
+} from "./utils/pre-game.js";
 import { singleton } from "./utils/singleton.js";
-
-let gate = cancelable();
-
-const isDragging = van.state(false);
-let windowWidth = () => window.innerWidth;
-let windowHeight = () => window.innerHeight;
-window.addEventListener("resize", () => {
-  render();
-});
-
-/**
- * @param {Card} c
- */
-function getKey(c) {
-  return c.suit + c.value;
-}
-
-function cardHeight() {
-  return document.querySelector(".card")?.clientHeight || 100;
-}
-
-/**
- * @returns {Card[]}
- */
-function genCards() {
-  const cards = [];
-  /** @type {Card['suit'][]} */
-  const suits = ["spades", "hearts", "clubs", "diamonds"];
-  for (const suit of suits) {
-    for (let i = 1; i <= 13; i++) {
-      cards.push({
-        suit,
-        value: i,
-      });
-    }
-  }
-  // @ts-ignore
-  return cards;
-}
-
-const gameState = reactive(
-  /** @type {State} */
-  ({
-    turn: "",
-    version: "0",
-    players: [
-      {
-        name: "player1",
-      },
-      {
-        name: "player2",
-      },
-      {
-        name: "player3",
-      },
-    ],
-    cards: genCards().reduce((acc, c) => {
-      acc[getKey(c)] = {
-        ...c,
-        pileName: "deck",
-        pileIndex: 0,
-      };
-      return acc;
-    }, {}),
-  })
-);
-
-/**
- * @param {State} state
- * @param {string} name
- * @returns {State['cards'][number][]}
- * */
-function getPile(state, name) {
-  return Object.values(state.cards).filter((c) => c.pileName === name);
-}
-
-const server = () => singleton('the-mind', () => new P2pState(
-  /** @type {ActionMap} */
-  ({}),
-  gameState,
-  {
-    isHost: isHost.val,
-    roomId: lobbyId.val,
-    actorUsername: username.val,
-    onConnectionChange: (connected) => {},
-    onStateChange: (state) => {
-      if (state.version !== gameState.version) {
-        recursiveAssign(gameState, state);
-      }
-
-      render();
-    },
-    actions: {
-      join(state, payload, actor) {
-        if (state.players.find((p) => p.name === payload.name)) {
-          return state;
-        }
-        state.players.push({
-          name: payload.name,
-          didPass: false,
-        });
-        return state;
-      },
-      kick(state, payload, actor) {
-        state.players = state.players.filter((p) => p.name !== payload.name);
-        if (state.status === "pre-game") {
-          return state;
-        }
-
-        let playerCards = Object.values(state.cards).filter((c) =>
-          c.pileName.startsWith(`player-${payload.name}`)
-        );
-
-        for (let i = 0; i < playerCards.length; i++) {
-          const card = playerCards[i];
-          card.pileName = `player-${
-            state.players[i % state.players.length].name
-          }`;
-        }
-
-        return state;
-      },
-      pass(state, payload, actor) {
-        if (state.turn !== actor) return state;
-
-        const player = state.players.find((p) => p.name === actor);
-
-        if (!player) return state;
-
-        player.didPass = true;
-
-        if (state.players.every((p) => p.didPass)) {
-          state.players.forEach((p) => (p.didPass = false));
-          const pile = getPile(state, "discard");
-          pile.forEach((c) => (c.pileName = "removed"));
-          state.turn = actor;
-        } else {
-          // get next player
-          const playerIndex = state.players.findIndex((p) => p.name === actor);
-          while (true) {
-            const nextPlayerIndex = (playerIndex + 1) % state.players.length;
-            const nextPlayer = state.players[nextPlayerIndex];
-            if (!nextPlayer.didPass) {
-              state.turn = nextPlayer.name;
-              break;
-            }
-          }
-        }
-
-        return state;
-      },
-      start(state, payload, actor) {
-        const players = state.players.map((p) => p.name);
-        // deal cards
-        const shuffled = Object.values(state.cards).sort(
-          () => Math.random() - 0.5
-        );
-
-        for (let i = 0; i < shuffled.length; i++) {
-          const card = shuffled[i];
-          card.pileName = `player-${players[i % players.length]}`;
-        }
-
-        state.status = "in-progress";
-        return state;
-      },
-      play(state, payload, actor) {
-        if (state.turn !== actor) return state;
-
-        const player = state.players.find((p) => p.name === actor);
-
-        if (!player) return state;
-
-        if (player.didPass) return state;
-
-        const pile = getPile(state, "discard").sort(
-          (a, b) => a.value - b.value
-        );
-        let highestIndex = Math.max(...pile.map((c) => c.pileIndex));
-        const size =
-          pile.length === 0
-            ? "any"
-            : groupBy(pile, "value")[payload.cards[0].value];
-
-        if (size !== "any" && payload.cards.length !== size.length)
-          return state;
-
-        for (const toPlay of payload.cards) {
-          const card = state.cards[getKey(toPlay)];
-          if (card.pileName !== `player-${actor}`) return state;
-          card.pileName = "discard";
-          card.pileIndex = ++highestIndex;
-        }
-
-        return state;
-      },
-    },
-  }
-));
-
-const localState = reactive(
-  /** @type {{
-    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean, playable: boolean }>
-  }} */
-  ({
-    cards: genCards().reduce((acc, c) => {
-      acc[getKey(c)] = {
-        key: getKey(c),
-        value: c.value,
-        x: 0,
-        y: 0,
-        rotation: 0,
-        revealed: false,
-        selected: false,
-        zIndex: 0,
-      };
-      return acc;
-    }, {}),
-  })
-);
 
 /**
  * @typedef Card
@@ -297,11 +83,233 @@ function valueToCharacter(value) {
   }
 }
 
+/**
+ * @param {Card} c
+ */
+function getKey(c) {
+  return c.suit + c.value;
+}
+
+/**
+ * @returns {Card[]}
+ */
+function genCards() {
+  const cards = [];
+  /** @type {Card['suit'][]} */
+  const suits = ["spades", "hearts", "clubs", "diamonds"];
+  for (const suit of suits) {
+    for (let i = 1; i <= 13; i++) {
+      cards.push({
+        suit,
+        value: i,
+      });
+    }
+  }
+  // @ts-ignore
+  return cards;
+}
+
+const gameState = reactive(
+  /** @type {State} */
+  ({
+    turn: "",
+    version: "0",
+    status: "pre-game",
+    players: [],
+    cards: genCards().reduce((acc, c) => {
+      acc[getKey(c)] = {
+        ...c,
+        pileName: "deck",
+        pileIndex: 0,
+      };
+      return acc;
+    }, {}),
+  })
+);
+
+/**
+ * @param {State} gameState
+ * @param {string} name
+ * @returns {State['cards'][number][]}
+ * */
+function getPile(gameState, name) {
+  return Object.values(gameState.cards).filter((c) => c.pileName === name);
+}
+
+const server = () =>
+  singleton(
+    "the-mind",
+    () =>
+      new P2pState(
+        /** @type {ActionMap} */
+        ({}),
+        gameState,
+        {
+          isHost: isHost.val,
+          roomId: lobbyId.val,
+          actorUsername: username.val,
+          onConnectionChange: (connected) => {
+            if (!connected) return;
+            server().send("join", { name: username.val });
+          },
+          onStateChange: (state) => {
+            if (state.version !== gameState.version) {
+              recursiveAssign(gameState, state);
+            }
+
+            render();
+          },
+          actions: {
+            join(state, payload, actor) {
+              if (state.players.find((p) => p.name === payload.name)) {
+                return state;
+              }
+              state.players.push({
+                name: payload.name,
+                didPass: false,
+              });
+              return state;
+            },
+            kick(state, payload, actor) {
+              state.players = state.players.filter(
+                (p) => p.name !== payload.name
+              );
+              if (state.status === "pre-game") {
+                return state;
+              }
+
+              let playerCards = Object.values(state.cards).filter((c) =>
+                c.pileName.startsWith(`player-${payload.name}`)
+              );
+
+              for (let i = 0; i < playerCards.length; i++) {
+                const card = playerCards[i];
+                card.pileName = `player-${
+                  state.players[i % state.players.length].name
+                }`;
+              }
+
+              return state;
+            },
+            pass(state, payload, actor) {
+              if (state.turn !== actor) return state;
+
+              const player = state.players.find((p) => p.name === actor);
+
+              if (!player) return state;
+
+              player.didPass = true;
+
+              if (state.players.every((p) => p.didPass)) {
+                state.players.forEach((p) => (p.didPass = false));
+                const pile = getPile(state, "discard");
+                pile.forEach((c) => (c.pileName = "removed"));
+                state.turn = actor;
+              } else {
+                // get next player
+                const playerIndex = state.players.findIndex(
+                  (p) => p.name === actor
+                );
+                while (true) {
+                  const nextPlayerIndex =
+                    (playerIndex + 1) % state.players.length;
+                  const nextPlayer = state.players[nextPlayerIndex];
+                  if (!nextPlayer.didPass) {
+                    state.turn = nextPlayer.name;
+                    break;
+                  }
+                }
+              }
+
+              return state;
+            },
+            start(state, payload, actor) {
+              const players = state.players.map((p) => p.name);
+
+              if (players.length === 0) {
+                return;
+              }
+              // deal cards
+              const shuffled = Object.values(state.cards).sort(
+                () => Math.random() - 0.5
+              );
+
+              for (let i = 0; i < shuffled.length; i++) {
+                const card = shuffled[i];
+                card.pileName = `player-${players[i % players.length]}`;
+              }
+
+              state.status = "in-progress";
+              return state;
+            },
+            play(state, payload, actor) {
+              if (state.turn !== actor) return state;
+
+              const player = state.players.find((p) => p.name === actor);
+
+              if (!player) return state;
+
+              if (player.didPass) return state;
+
+              const pile = getPile(state, "discard").sort(
+                (a, b) => a.value - b.value
+              );
+              let highestIndex = Math.max(...pile.map((c) => c.pileIndex));
+              const size =
+                pile.length === 0
+                  ? "any"
+                  : groupBy(pile, "value")[payload.cards[0].value];
+
+              if (size !== "any" && payload.cards.length !== size.length)
+                return state;
+
+              for (const toPlay of payload.cards) {
+                const card = state.cards[getKey(toPlay)];
+                if (card.pileName !== `player-${actor}`) return state;
+                card.pileName = "discard";
+                card.pileIndex = ++highestIndex;
+              }
+
+              return state;
+            },
+          },
+        }
+      )
+  );
+
+const localState = reactive(
+  /** @type {{
+    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean, playable: boolean }>
+  }} */
+  ({
+    cards: genCards().reduce((acc, c) => {
+      acc[getKey(c)] = {
+        key: getKey(c),
+        value: c.value,
+        x: 0,
+        y: 0,
+        rotation: 0,
+        revealed: false,
+        selected: false,
+        zIndex: 0,
+      };
+      return acc;
+    }, {}),
+  })
+);
+
 // @ts-ignore
 window.state = gameState;
 // @ts-ignore
 window.localState = localState;
 
+function cardHeight() {
+  return document.querySelector(".card")?.clientHeight || 100;
+}
+let windowWidth = () => window.innerWidth;
+let windowHeight = () => window.innerHeight;
+
+let gate = cancelable();
 async function render() {
   gate.cancel();
   gate = cancelable();
@@ -336,11 +344,11 @@ async function render() {
 
     if (stackName.startsWith("player-")) {
       const player = stackName.slice("player-".length);
-      const isMe = player === "player1";
+      const isMe = player === username.val;
       let sorted = cards.sort((a, b) => a.value - b.value);
       let zIndex = 0;
       if (isMe) {
-        let y = windowHeight() - cardHeight() - 25;
+        let y = windowHeight() - cardHeight() - 36;
         for (let i = 0; i < sorted.length; i++) {
           if (gate.isCanceled()) return;
           //   await wait(5);
@@ -360,7 +368,7 @@ async function render() {
           if (gate.isCanceled()) return;
           //   await wait(5);
           const otherPlayers = gameState.players
-            .filter((p) => p.name !== "player1")
+            .filter((p) => p.name !== username.val)
             .map((p) => p.name);
           const playerIndex = otherPlayers.indexOf(player);
           const card = sorted[i];
@@ -406,146 +414,9 @@ async function render() {
   }
 }
 
-render();
-async function runGame() {
+window.addEventListener("resize", () => {
   render();
-
-  await wait(1000);
-  // deal cards
-  const cards = Object.values(gameState.cards);
-  const shuffledCards = cards.sort(() => Math.random() - 0.5);
-  let index = 0;
-  while (shuffledCards.length) {
-    for (const player of gameState.players) {
-      const card = shuffledCards.pop();
-      if (!card) break;
-      card.pileName = `player-${player.name}`;
-      card.pileIndex = index++;
-    }
-  }
-  render();
-}
-runGame();
-
-const playableCardsSet = van.derive(() => {
-  console.log("deriving playable cards");
-  console.log("!!!!", stateFields(gameState));
-  if (stateFields(gameState).turn.val !== "player1") {
-    return "";
-  }
-  const hand = getPile(gameState, `player-player1`);
-  const discardSetSize = getDiscardSetSize(gameState);
-  const byValue = groupBy(hand, "value");
-
-  const playable = [];
-  for (const [_, cards] of Object.entries(byValue)) {
-    if (cards.length >= discardSetSize) {
-      cards.forEach((c) => playable.push(getKey(c)));
-    }
-  }
-  return playable.join(" ");
 });
-
-/**
- *
- * @param {State['cards'][number]} c
- * @returns
- */
-function isUserPile(c) {
-  return c.pileName.startsWith("player-");
-}
-
-/**
- *
- * @param {State['cards'][number]} c
- * @returns
- */
-function Card(c) {
-  const local = localState.cards[getKey(c)];
-  console.log("rendering card");
-  return div(
-    {
-      "data-suite": () => c.suit,
-      "data-value": () => c.value,
-      "data-pile": () => c.pileName,
-      class: () =>
-        [
-          "card",
-          c.suit,
-          local.revealed ? "revealed" : "",
-          local.selected ? "selected" : "",
-          playableCardsSet.val?.indexOf?.(getKey(c)) !== -1 ? "playable" : "",
-        ]
-          .filter(Boolean)
-          .join(" "),
-
-      style: () =>
-        [
-          `width: ${Math.max(windowWidth() / 20, 50)}px;`,
-          `transform: translate(${local.x}px, ${
-            local.y + (local.selected ? -(cardHeight() / 3) : 0)
-          }px) rotate(${local.rotation}deg);`,
-          `z-index: ${local.zIndex};`,
-        ].join(" "),
-    },
-    p(valueToCharacter(c.value)),
-    p(suitToSymbol(c.suit))
-  );
-}
-
-const canPass = van.derive(() => {
-  const player = gameState.players.find((p) => p.name === "player1");
-  if (!player) return false;
-
-  const hand = getPile(gameState, `player-${player.name}`);
-  if (hand.length === 0) return false;
-
-  return !player.didPass;
-});
-
-van.add(document.getElementById('invite-slot'), InviteSlot());
-
-van.add(
-  document.getElementById("game-slot"),
-  div(
-    PreGameGate(() => {
-      console.log("in pre game thing!");
-      return div(
-        list(
-          () =>
-            div({
-              class: () => `game ${isDragging.val ? "dragging" : ""}`,
-            }),
-          gameState.cards,
-          (c) => Card(c.val)
-        ),
-        list(
-          () => div({ class: "player-area" }),
-          gameState.players,
-          (p) =>
-            div(
-              { class: "player", id: () => `player-${p.val.name}` },
-              () => p.val.name
-            )
-        ),
-        () => {
-          if (!canPass.val) {
-            return span();
-          } else {
-            return button(
-              {
-                onclick: () => {
-                  server().send("pass", {});
-                },
-              },
-              "pass"
-            );
-          }
-        }
-      );
-    })
-  )
-);
 
 /**
  *
@@ -587,10 +458,11 @@ function selectOrPlay(card) {
     // if a selected card was clicked, play it
     curSelected.forEach((c) => {
       c.selected = false;
-      gameState.cards[c.key].pileName = "discard";
-      c.zIndex = discardPileSize++;
     });
-    render();
+
+    server().send("play", {
+      cards: curSelected.map((c) => gameState.cards[c.key]),
+    });
     return;
   }
 
@@ -631,23 +503,6 @@ function selectOrPlay(card) {
 
 /**
  *
- * @param {State['cards'][string]} card
- */
-function maybeRemoveDiscardPile(card) {
-  if (!card) return;
-
-  if (card.pileName === "discard") {
-    Object.values(gameState.cards)
-      .filter((c) => c.pileName === "discard")
-      .forEach((c) => {
-        c.pileName = "removed";
-      });
-    render();
-  }
-}
-
-/**
- *
  * @param {*} target
  * @returns {State['cards'][string] | undefined}
  */
@@ -668,6 +523,125 @@ function getCardFromTarget(target) {
 
 document.querySelector("body").addEventListener("click", (e) => {
   const card = getCardFromTarget(e.target);
-  maybeRemoveDiscardPile(card);
   selectOrPlay(card);
 });
+
+const playableCardsSet = van.derive(() => {
+  console.log("deriving playable cards");
+  console.log("!!!!", stateFields(gameState));
+  if (stateFields(gameState).turn.val !== username.val) {
+    return "";
+  }
+  const hand = getPile(gameState, `player-player1`);
+  const discardSetSize = getDiscardSetSize(gameState);
+  const byValue = groupBy(hand, "value");
+
+  const playable = [];
+  for (const [_, cards] of Object.entries(byValue)) {
+    if (cards.length >= discardSetSize) {
+      cards.forEach((c) => playable.push(getKey(c)));
+    }
+  }
+  return playable.join(" ");
+});
+
+/**
+ *
+ * @param {State['cards'][number]} c
+ * @returns
+ */
+function Card(c) {
+  const local = localState.cards[getKey(c)];
+  console.log("rendering card");
+  return div(
+    {
+      "data-suite": () => c.suit,
+      "data-value": () => c.value,
+      "data-pile": () => c.pileName,
+      class: () =>
+        [
+          "card",
+          c.suit,
+          local.revealed ? "revealed" : "",
+          local.selected ? "selected" : "",
+          playableCardsSet.val?.indexOf?.(getKey(c)) !== -1 ? "playable" : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+
+      style: () =>
+        [
+          `width: ${Math.max(windowWidth() / 20, 50)}px;`,
+          `transform: translate(${local.x}px, ${
+            local.y + (local.selected ? -(cardHeight() / 3) : 0)
+          }px) rotate(${local.rotation}deg);`,
+          `z-index: ${local.zIndex};`,
+        ].join(" "),
+    },
+    p(valueToCharacter(c.value)),
+    p(suitToSymbol(c.suit))
+  );
+}
+
+const canPass = van.derive(() => {
+  const player = gameState.players.find((p) => p.name === username.val);
+  if (!player) return false;
+
+  const hand = getPile(gameState, `player-${player.name}`);
+  if (hand.length === 0) return false;
+
+  return !player.didPass;
+});
+
+van.add(document.getElementById("invite-slot"), InviteSlot());
+const status = stateFields(gameState).status;
+van.add(
+  document.getElementById("game-slot"),
+  PreGameGate(() => {
+    // this triggers server connection
+    server();
+    console.log("in pre game thing!");
+    return div(
+      list(
+        () =>
+          div({
+            class: () => `game`,
+          }),
+        gameState.cards,
+        (c) => Card(c.val)
+      ),
+      list(
+        () => div({ class: "player-area" }),
+        gameState.players,
+        (p) =>
+          div(
+            { class: "player", id: () => `player-${p.val.name}` },
+            () => p.val.name
+          )
+      ),
+      div(
+        {
+          class: "controls",
+          style:
+            "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center;",
+        },
+        button(
+          {
+            style: () =>
+              [
+                isHost.val && status.val === "pre-game" ? "" : "display: none;",
+              ].join(" "),
+            onclick: () => server().send("start", {}),
+          },
+          "start"
+        ),
+        button(
+          {
+            style: () => [canPass.val ? "" : "display: none;"].join(" "),
+          },
+          "pass"
+        )
+      )
+    );
+  })
+);
