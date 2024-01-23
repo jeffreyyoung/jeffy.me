@@ -1,7 +1,13 @@
 import van from "../deps/van.js";
 import { reactive, list, stateFields, calc } from "../deps/van-x.js";
-import { button, div, li, p, span, ul } from "./utils/tags.js";
-import { groupBy, wait, randomNumber, cancelable, randomItem } from "./utils/random.js";
+import { button, div, h4, li, p, span, ul } from "./utils/tags.js";
+import {
+  groupBy,
+  wait,
+  randomNumber,
+  cancelable,
+  randomItem,
+} from "./utils/random.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import {
@@ -40,6 +46,8 @@ import { singleton } from "./utils/singleton.js";
  *  version: string,
  *  status: 'pre-game' | 'in-progress' | 'finished',
  *  turn: string,
+ *  turnSetSize: number;
+ *  turnMinCardValue: number;
  *  players: Player[],
  *  cards: Record<string, Card & { pileName?: `player-${string}` | 'removed' | 'deck' | 'discard', pileIndex?: number }>,
  * }} State
@@ -187,11 +195,13 @@ const server = () =>
                 card.pileName = `player-${
                   state.players[i % state.players.length].name
                 }`;
+                
               }
 
               return state;
             },
             pass(state, payload, actor) {
+              console.log("passing");
               if (state.turn !== actor) return state;
 
               const player = state.players.find((p) => p.name === actor);
@@ -204,6 +214,8 @@ const server = () =>
                 state.players.forEach((p) => (p.didPass = false));
                 const pile = getPile(state, "discard");
                 pile.forEach((c) => (c.pileName = "removed"));
+                state.turnMinCardValue = 0;
+                state.turnSetSize = 0;
                 state.turn = actor;
               } else {
                 // get next player
@@ -241,6 +253,8 @@ const server = () =>
 
               state.status = "in-progress";
               state.turn = randomItem(players);
+              state.turnMinCardValue = 0;
+              state.turnSetSize = 0;
               return state;
             },
             play(state, payload, actor) {
@@ -252,21 +266,30 @@ const server = () =>
 
               if (player.didPass) return state;
 
-              const pile = getPile(state, "discard").sort(
-                (a, b) => a.value - b.value
-              );
-              let highestIndex = Math.max(...pile.map((c) => c.pileIndex));
-              const size =
-                pile.length === 0
-                  ? "any"
-                  : groupBy(pile, "value")[payload.cards[0].value];
-
-              if (size !== "any" && payload.cards.length !== size.length)
+              if (payload.cards.length === 0) {
                 return state;
+              }
+              if (!payload.cards.every((c) => c.value > state.turnMinCardValue)) {
+                return state;
+              }
 
+              if (state.turnSetSize > 0 && payload.cards.length !== state.turnSetSize) {
+                return state;
+              }
+              if (state.turnSetSize === 0) {
+                state.turnSetSize = payload.cards.length;
+              } else if (payload.cards.length !== state.turnSetSize) {
+                return state;
+              }
+              
+              state.turnMinCardValue = payload.cards[0].value;
+
+              const pile = getPile(state, "discard");
+
+              let highestIndex = Math.max(...pile.map((c) => c.pileIndex));
+              
               for (const toPlay of payload.cards) {
                 const card = state.cards[getKey(toPlay)];
-                if (card.pileName !== `player-${actor}`) return state;
                 card.pileName = "discard";
                 card.pileIndex = ++highestIndex;
               }
@@ -292,6 +315,7 @@ const localState = reactive(
         rotation: 0,
         revealed: false,
         selected: false,
+        playable: false,
         zIndex: 0,
       };
       return acc;
@@ -307,8 +331,22 @@ window.localState = localState;
 function cardHeight() {
   return document.querySelector(".card")?.clientHeight || 100;
 }
+const cardWidth = () => document.querySelector(".card")?.clientWidth || 100;
 let windowWidth = () => window.innerWidth;
 let windowHeight = () => window.innerHeight;
+/**
+ * @param {State} state
+ * @param {string} name
+ * @returns {number}
+ * */
+function getPlayerX(state, name) {
+  const otherPlayers = state.players
+    .filter((p) => p.name !== username.val)
+    .map((p) => p.name);
+  let userAreaWidth = windowWidth() / otherPlayers.length;
+  const playerIndex = otherPlayers.indexOf(name);
+  return userAreaWidth * playerIndex + userAreaWidth / 2 - cardWidth() / 2;
+}
 
 let gate = cancelable();
 async function render() {
@@ -317,8 +355,7 @@ async function render() {
   const stacks = groupBy(Object.values(gameState.cards), "pileName");
   const stackKeys = Object.keys(stacks);
   console.log("stack keys", stackKeys);
-  const cardWidth = document.querySelector(".card")?.clientWidth || 100;
-  const middleOfScreenX = windowWidth() / 2 - cardWidth / 2;
+  const middleOfScreenX = windowWidth() / 2 - cardWidth() / 2;
   const middleOfScreenY = windowHeight() / 2 - cardHeight();
 
   for (const [_stackName, cards] of Object.entries(stacks)) {
@@ -339,6 +376,7 @@ async function render() {
         local.x = middleOfScreenX;
         local.y = middleOfScreenY;
         local.revealed = false;
+        local.playable = false;
         local.rotation = randomNumber(-360, 360);
       }
     }
@@ -347,19 +385,23 @@ async function render() {
       const player = stackName.slice("player-".length);
       const isMe = player === username.val;
       let sorted = cards.sort((a, b) => a.value - b.value);
+      const minX = 0;
+      const maxX = windowWidth() - cardWidth();
+      const dx = (maxX - minX) / sorted.length;
       let zIndex = 0;
       if (isMe) {
+        // check if is playable
+        const valueToCount = groupBy(cards, "value");
         let y = windowHeight() - cardHeight() - 36;
         for (let i = 0; i < sorted.length; i++) {
           if (gate.isCanceled()) return;
           //   await wait(5);
           let card = sorted[i];
           const local = localState.cards[getKey(card)];
-          let minX = 0;
-          let maxX = windowWidth() - cardWidth;
-          let dx = (maxX - minX) / sorted.length;
-          local.x = minX + dx * i;
+          local.x = minX + i * dx;
           local.y = y;
+          local.playable = card.value > gameState.turnMinCardValue && (gameState.turnSetSize === 0 || valueToCount[card.value].length >= gameState.turnSetSize);
+          console.log('calculate playable');
           local.revealed = true;
           local.zIndex = zIndex++;
           local.rotation = 0;
@@ -367,18 +409,12 @@ async function render() {
       } else {
         for (let i = 0; i < sorted.length; i++) {
           if (gate.isCanceled()) return;
-          //   await wait(5);
-          const otherPlayers = gameState.players
-            .filter((p) => p.name !== username.val)
-            .map((p) => p.name);
-          const playerIndex = otherPlayers.indexOf(player);
           const card = sorted[i];
           const local = localState.cards[getKey(card)];
-          let userAreaWidth = windowWidth() / otherPlayers.length;
-          local.x =
-            userAreaWidth * playerIndex + userAreaWidth / 2 - cardWidth / 2;
+          local.x = getPlayerX(gameState, player);
           local.y = -0.5 * cardHeight() - 2 * i;
           local.revealed = false;
+          local.playable = false;
           local.zIndex = zIndex++;
           local.rotation = 0;
         }
@@ -395,6 +431,7 @@ async function render() {
         local.x = middleOfScreenX;
         local.y = middleOfScreenY;
         local.revealed = true;
+        local.playable = false;
         if (local.rotation === 0) {
           local.rotation = randomNumber(-360, 360);
         }
@@ -409,6 +446,7 @@ async function render() {
         local.x = middleOfScreenX * 4;
         local.y = middleOfScreenY * -3;
         local.revealed = true;
+        local.playable = false;
         local.rotation = randomNumber(-360, 360);
       }
     }
@@ -437,15 +475,17 @@ function getDiscardSetSize(gameState) {
  * @param {State['cards'][string] | undefined} card
  */
 function selectOrPlay(card) {
-  console.log("card", card);
   if (!card) {
     Object.values(localState.cards).forEach((c) => (c.selected = false));
     return;
   }
+  console.log("selectOrPlay", card);
   const key = getKey(card);
   const clickedCardState = localState.cards[key];
 
-  if (card.pileName !== "player-"+username.val) return;
+  if (!clickedCardState.playable) return;
+
+  if (card.pileName !== "player-" + username.val) return;
 
   let curSelected = Object.values(localState.cards).filter((c) => c.selected);
 
@@ -468,7 +508,9 @@ function selectOrPlay(card) {
   }
 
   let cardsOfValue =
-    groupBy(getPile(gameState, "player-"+username.val), "value")[card.value] || [];
+    groupBy(getPile(gameState, "player-" + username.val), "value")[
+      card.value
+    ] || [];
   let discardSetSize = getDiscardSetSize(gameState);
 
   if (cardsOfValue.length < discardSetSize) {
@@ -502,6 +544,8 @@ function selectOrPlay(card) {
   render();
 }
 
+const turn = stateFields(gameState).turn;
+
 /**
  *
  * @param {*} target
@@ -527,24 +571,7 @@ document.querySelector("body").addEventListener("click", (e) => {
   selectOrPlay(card);
 });
 
-const playableCardsSet = van.derive(() => {
-  console.log("deriving playable cards");
-  console.log("!!!!", stateFields(gameState));
-  if (stateFields(gameState).turn.val !== username.val) {
-    return "";
-  }
-  const hand = getPile(gameState, `player-${username.val}`);
-  const discardSetSize = getDiscardSetSize(gameState);
-  const byValue = groupBy(hand, "value");
 
-  const playable = [];
-  for (const [_, cards] of Object.entries(byValue)) {
-    if (cards.length >= discardSetSize) {
-      cards.forEach((c) => playable.push(getKey(c)));
-    }
-  }
-  return playable.join(" ");
-});
 
 /**
  *
@@ -561,11 +588,12 @@ function Card(c) {
       "data-pile": () => c.pileName,
       class: () =>
         [
+          turn.val ? "" : "",
           "card",
           c.suit,
           local.revealed ? "revealed" : "",
           local.selected ? "selected" : "",
-          playableCardsSet.val?.indexOf?.(getKey(c)) !== -1 ? "playable" : "",
+          local.playable && turn.val === username.val ? "playable" : "",
         ]
           .filter(Boolean)
           .join(" "),
@@ -615,14 +643,20 @@ van.add(
         () => div({ class: "player-area" }),
         gameState.players,
         (player, _, i) =>
-          div(
+          h4(
             {
               class: "player",
               id: () => `player-${player.val.name}`,
               style: () =>
                 [
-                    status.val === "pre-game" || player.val.name === username.val ? "display: none;" : "",
-                    `left: ${windowWidth() / gameState.players.length * i}px;`,
+                  `transform: translate(${getPlayerX(
+                    gameState,
+                    player.val.name
+                  )}, 8px);`,
+                  status.val === "pre-game" || player.val.name === username.val
+                    ? "display: none;"
+                    : "",
+                  `left: ${(windowWidth() / gameState.players.length) * i}px;`,
                 ].join(" "),
             },
             () => player.val.name
@@ -655,6 +689,7 @@ van.add(
         button(
           {
             style: () => [canPass.val ? "" : "display: none;"].join(" "),
+            onclick: () => server().send("pass", {}),
           },
           "pass"
         )
