@@ -26,6 +26,7 @@ function range(start, end) {
 /**
  * @typedef GameState
  * @type {{
+ *  version: string,
  *  players: Record<string, Player>,
  *  level: number,
  *  history: string[],
@@ -79,6 +80,7 @@ export let server = ({ isHost, lobbyId, actor, onStateChange }) =>
         ({}),
         /** @type {GameState} */
         ({
+          version: '0',
           players: {},
           level: 0,
           history: [],

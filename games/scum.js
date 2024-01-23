@@ -4,7 +4,8 @@ import { button, div, p, span } from "./utils/tags.js";
 import { groupBy, wait, randomNumber, cancelable } from "./utils/random.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
-import { username, lobbyId, PreGameGate, InviteSlot } from "./utils/pre-game.js";
+import { username, lobbyId, PreGameGate, InviteSlot, isHost } from "./utils/pre-game.js";
+import { singleton } from "./utils/singleton.js";
 
 let gate = cancelable();
 
@@ -81,14 +82,14 @@ function getPile(state, name) {
   return Object.values(state.cards).filter((c) => c.pileName === name);
 }
 
-const server = new P2pState(
+const server = () => singleton('the-mind', () => new P2pState(
   /** @type {ActionMap} */
   ({}),
   gameState,
   {
-    isHost: true,
-    roomId: "scum",
-    actorUsername: "player1",
+    isHost: isHost.val,
+    roomId: lobbyId.val,
+    actorUsername: username.val,
     onConnectionChange: (connected) => {},
     onStateChange: (state) => {
       if (state.version !== gameState.version) {
@@ -203,7 +204,7 @@ const server = new P2pState(
       },
     },
   }
-);
+));
 
 const localState = reactive(
   /** @type {{
@@ -534,7 +535,7 @@ van.add(
             return button(
               {
                 onclick: () => {
-                  server.send("pass", {});
+                  server().send("pass", {});
                 },
               },
               "pass"
