@@ -1,7 +1,7 @@
 import van from "../deps/van.js";
 import { reactive, list, stateFields, calc } from "../deps/van-x.js";
-import { button, div, p, span } from "./utils/tags.js";
-import { groupBy, wait, randomNumber, cancelable } from "./utils/random.js";
+import { button, div, li, p, span, ul } from "./utils/tags.js";
+import { groupBy, wait, randomNumber, cancelable, randomItem } from "./utils/random.js";
 import { P2pState } from "./utils/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import {
@@ -240,6 +240,7 @@ const server = () =>
               }
 
               state.status = "in-progress";
+              state.turn = randomItem(players);
               return state;
             },
             play(state, payload, actor) {
@@ -444,7 +445,7 @@ function selectOrPlay(card) {
   const key = getKey(card);
   const clickedCardState = localState.cards[key];
 
-  if (card.pileName !== "player-player1") return;
+  if (card.pileName !== "player-"+username.val) return;
 
   let curSelected = Object.values(localState.cards).filter((c) => c.selected);
 
@@ -467,7 +468,7 @@ function selectOrPlay(card) {
   }
 
   let cardsOfValue =
-    groupBy(getPile(gameState, "player-player1"), "value")[card.value] || [];
+    groupBy(getPile(gameState, "player-"+username.val), "value")[card.value] || [];
   let discardSetSize = getDiscardSetSize(gameState);
 
   if (cardsOfValue.length < discardSetSize) {
@@ -532,7 +533,7 @@ const playableCardsSet = van.derive(() => {
   if (stateFields(gameState).turn.val !== username.val) {
     return "";
   }
-  const hand = getPile(gameState, `player-player1`);
+  const hand = getPile(gameState, `player-${username.val}`);
   const discardSetSize = getDiscardSetSize(gameState);
   const byValue = groupBy(hand, "value");
 
@@ -613,18 +614,34 @@ van.add(
       list(
         () => div({ class: "player-area" }),
         gameState.players,
-        (p) =>
+        (player, _, i) =>
           div(
-            { class: "player", id: () => `player-${p.val.name}` },
-            () => p.val.name
+            {
+              class: "player",
+              id: () => `player-${player.val.name}`,
+              style: () =>
+                [
+                    status.val === "pre-game" || player.val.name === username.val ? "display: none;" : "",
+                    `left: ${windowWidth() / gameState.players.length * i}px;`,
+                ].join(" "),
+            },
+            () => player.val.name
           )
       ),
       div(
         {
           class: "controls",
           style:
-            "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center;",
+            "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 3; flex-direction: column;",
         },
+        list(
+          () =>
+            ul({
+              style: () => (status.val === "pre-game" ? "" : "display: none;"),
+            }),
+          gameState.players,
+          (player) => li(player.val.name)
+        ),
         button(
           {
             style: () =>
