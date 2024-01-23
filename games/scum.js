@@ -54,6 +54,9 @@ import { singleton } from "./utils/singleton.js";
  *
  */
 
+
+const suits = ["spades", "hearts", "clubs", "diamonds"];
+
 /**
  *
  * @param {Card['suit']} suit
@@ -95,7 +98,7 @@ function valueToCharacter(value) {
  * @param {Card} c
  */
 function getKey(c) {
-  return c.suit + c.value;
+  return c.suit+c.value;
 }
 
 /**
@@ -303,7 +306,7 @@ const server = () =>
 
 const localState = reactive(
   /** @type {{
-    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, zIndex: number, selected: boolean, playable: boolean }>
+    cards: Record<string, { key: string; value: number, x: number, y: number, revealed: boolean, rotation: number, selected: boolean, playable: boolean }>
   }} */
   ({
     cards: genCards().reduce((acc, c) => {
@@ -316,7 +319,6 @@ const localState = reactive(
         revealed: false,
         selected: false,
         playable: false,
-        zIndex: 0,
       };
       return acc;
     }, {}),
@@ -403,7 +405,6 @@ async function render() {
           local.playable = card.value > gameState.turnMinCardValue && (gameState.turnSetSize === 0 || valueToCount[card.value].length >= gameState.turnSetSize);
           console.log('calculate playable');
           local.revealed = true;
-          local.zIndex = zIndex++;
           local.rotation = 0;
         }
       } else {
@@ -415,7 +416,6 @@ async function render() {
           local.y = -0.5 * cardHeight() - 2 * i;
           local.revealed = false;
           local.playable = false;
-          local.zIndex = zIndex++;
           local.rotation = 0;
         }
       }
@@ -432,7 +432,6 @@ async function render() {
         local.y = middleOfScreenY;
         local.revealed = true;
         local.playable = false;
-        local.zIndex = card.value;
         if (local.rotation === 0) {
           local.rotation = randomNumber(-360, 360);
         }
@@ -605,7 +604,7 @@ function Card(c) {
           `transform: translate(${local.x}px, ${
             local.y + (local.selected ? -(cardHeight() / 3) : 0)
           }px) rotate(${local.rotation}deg);`,
-          `z-index: ${local.zIndex};`,
+          `z-index: ${c.value*10+suits.indexOf(c.suit)};`,
         ].join(" "),
     },
     p(valueToCharacter(c.value)),
