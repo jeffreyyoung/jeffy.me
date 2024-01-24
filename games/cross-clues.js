@@ -1,7 +1,7 @@
 import {
   html,
   render,
-} from "https://cdn.jsdelivr.net/npm/lit-html@3.0.2/lit-html.min.js";
+} from "https://cdn.jsdelivr.net/npm/lit-html@1/+esm";
 import { P2pState } from "./utils/p2p-state.js";
 import { words } from "./cross-clues-words.js";
 import { shuffle } from "./utils/random.js";

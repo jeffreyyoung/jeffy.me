@@ -1,5 +1,3 @@
-/// <reference path="../@types/kaboom-global.d.ts" />
-// @ts-ignore
 import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 
 import { addNotificationText, addTitleScene } from "./utils/addNotificationText.js";
