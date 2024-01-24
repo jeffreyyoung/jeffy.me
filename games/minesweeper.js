@@ -10,7 +10,6 @@ import { singleton } from "./utils/singleton.js";
 import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
 import { reactive, list, stateFields, calc } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
-import { confetti } from "./utils/confetti.js";
 import { nUniqueRandomNumbers } from "./utils/random.js";
 
 /**
@@ -281,9 +280,10 @@ const remainingNonBombTiles = van.derive(() => {
     .length;
 });
 
+
 const isGameOver = van.derive(() => {
   if (remainingNonBombTiles.val === 0) {
-    confetti();
+    doConfetti();
   }
   return remainingNonBombTiles.val === 0;
 });
