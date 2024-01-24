@@ -11,7 +11,7 @@ import { van, div, button, h1, span, h4, ul, li } from "./utils/tags.js";
 import { reactive, list, stateFields, calc } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { nUniqueRandomNumbers } from "./utils/random.js";
-
+import { doConfetti } from "./utils/confetti.js";
 /**
  *
  * @param {number} start
