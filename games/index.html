@@ -5,36 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       * {
-        margin: 0;
+        margin: 0px;
+        min-width: 0px;
       }
       html {
         height: 100%;
         background: linear-gradient(to bottom, #c471f5 0%, #fa71cd 100%);
       }
       body {
-        height: calc(100% - 24px);
+        height: 100%;
         color: #fff;
         font-family: sans-serif;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 12px;
-        padding: 12px;
+        min-width: 0px;
+        overflow: hidden;
       }
       body > * {
-        margin: 0 12px;
-        max-width: 999999px;
         min-width: 0px;
+        overflow: hidden;
+        width: 100%;
+
       }
       nav {
-        margin-top: 12px;
+        padding-top: 12px;
+        padding-bottom: 12px;;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-direction: row;
-        overflow: hidden;
         width: 100%;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      nav > *:first-child {
+        margin-left: 6px;
+      }
+      nav > *:last-child {
+        margin-right: 6px;
+      }
+      nav > * {
+        flex: 1;
+      }
+      .nav-right {
+        display: flex;
+        justify-content: flex-end;
+      }
+      nav h3 {
+        margin: 0;
+        text-align: center;
       }
 
       button, select {
@@ -54,20 +75,11 @@
         padding: 6px 12px;
         border-radius: 6px;
       }
-      nav > * {
-        flex: 1;
-      }
-      .nav-right {
-        display: flex;
-        justify-content: flex-end;
-      }
-      nav h3 {
-        margin: 0;
-        text-align: center;
-      }
+
       #game-slot {
         background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 12px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
         flex: 1;
         display: flex;
         height: 100%;
@@ -89,7 +101,7 @@
   <body>
     <nav>
         <div class="nav-left" id="select-game-slot"></div>
-        <h3 class="nav-center">jeffy games 👻</h3>
+        <h3 class="nav-center">games 👻</h3>
         <div class="nav-right">
             <button id="invite-button">invite</button>
         </div>

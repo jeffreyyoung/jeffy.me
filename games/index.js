@@ -281,7 +281,7 @@ van.add(
   iframe({
     frameBorder: "0",
     src: () => `/games/${game.val}?lobbyId=${lobbyId.val}`,
-    style: () => (game.val && lobbyId.val ? "" : "display: none;"),
+    style: () => (game.val && lobbyId.val && username.val ? "" : "display: none;"),
   })
 
   // PreGameGate(() => {
