@@ -11,5 +11,5 @@
     "declarationDir": "types",
     "declaration": true
   },
-  "include": ["**/*.js", "@types/types.d.ts"],
+  "include": ["**/*.js", "@types/types.d.ts", "@types/generated/main.d.ts"],
 }

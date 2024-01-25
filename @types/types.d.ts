@@ -1,5 +1,26 @@
 declare module "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs" {
-  type Kaboom = typeof import("./kaboom.d.ts").default;
-  const kaboom: Kaboom;
-  export default kaboom;
+  export * from 'kaboom';
+  import Default from 'kaboom';
+  export default Default;
+}
+
+declare module "https://esm.sh/@arrow-js/core@1.0.0-alpha.9" {
+  export * from '@arrow-js/core';
+}
+
+declare module "https://esm.sh/canvas-confetti@1.6.0" {
+  export default function createConfetti(options?: any): any;
+}
+
+declare module "https://esm.sh/peerjs@1.5.2?bundle-deps" {
+  export * from 'peerjs';
+  export type PeerJsConnection = import('peerjs').DataConnection;
+}
+
+declare module "https://esm.sh/preact@10.19.3" {
+  export * from 'preact';
+}
+
+declare module "https://esm.sh/@preact/signals@1.2.2?deps=preact@10.19.3" {
+  export * from '@preact/signals';
 }

@@ -18,6 +18,7 @@ const roomPrefix = '55555jeffy-me';
  * @template {{ version: string }} State
  * @template {{
  *    isHost: boolean,
+ *    autoConnect?: boolean,
  *    roomId: string,
  *    actorUsername: string,
  *    actions: {
@@ -70,9 +71,13 @@ export class P2pState {
    */
   constructor(actionMap, initialState, args) {
     console.log("setup server", args);
+    const autoConnect = args.autoConnect ?? true;
     this.args = args;
+    this.args.autoConnect = autoConnect;
     this.state = initialState;
-    this.peer = this.setupPeer();
+    if (autoConnect) {
+      this.peer = this.setupPeer();
+    }
     if (args.onStateChange) {
       this.on("change:state", args.onStateChange);
       this.setState(initialState);
@@ -81,6 +86,21 @@ export class P2pState {
       this.on("change:connected", args.onConnectionChange);
       this.setConnected(false);
     }
+  }
+
+  /**
+   * @param {{ username: string, roomId: string, isHost: boolean }} args
+   * @returns {boolean}
+   * */
+  connect({ username, roomId, isHost }) {
+    this.args.actorUsername = username;
+    this.args.roomId = roomId;
+    this.args.isHost = isHost;
+    if (this.peer) {
+      return false;
+    }
+    this.peer = this.setupPeer();
+    return true;
   }
 
   /**
@@ -122,6 +142,7 @@ export class P2pState {
       this.connections.push(conn);
       this.setConnected(true);
       conn.on("data", (data) => {
+        // @ts-ignore
         this.onPeerData(data);
       });
     });
@@ -141,6 +162,7 @@ export class P2pState {
       })
       
       conn.on("data", (data) => {
+        // @ts-ignore
         this.onPeerData(data);
       });
       conn.on("close", () => {
@@ -176,6 +198,7 @@ export class P2pState {
     this.peer.on('error', (e) => {
       console.error('peer error', e);
     })
+    // @ts-ignore err
     this.peer.on("close", (err) => {
       console.error("peer closed", err);
       this.setConnected(false);

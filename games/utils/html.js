@@ -5,6 +5,11 @@ console.log(result); // <input value="&lt;img&gt;">
 // Questions? rob {at} robwu.nl
 // */
 
+/**
+ * 
+ * @param {string} str 
+ * @returns 
+ */
 export function escapeHtml(str) {
     // Note: string cast using String; may throw if `str` is non-serializable, e.g. a Symbol.
     // Most often this is not the case though.
@@ -15,6 +20,12 @@ export function escapeHtml(str) {
 }
 
 // A tag for template literals that escapes any value as HTML.
+/**
+ * 
+ * @param {string[]} strings 
+ * @param  {...any} values 
+ * @returns 
+ */
 export function html(strings, ...values) {
    let results = [];
    for (let i = 0; i < strings.length; ++i) {

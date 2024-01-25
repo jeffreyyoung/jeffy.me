@@ -32,7 +32,7 @@ css`
 
 /** @type GameState */
 const initialState = {
-  version: '0',
+  version: "0",
   board: [
     ["", "", ""],
     ["", "", ""],

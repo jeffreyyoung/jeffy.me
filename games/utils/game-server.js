@@ -132,7 +132,9 @@ export function createGameServer({
     
           host.on("data", (data) => {
             console.log("data from host", data);
+            // @ts-expect-error
             state = data;
+            // @ts-expect-error
             onStateChange(data);
           });
         });
