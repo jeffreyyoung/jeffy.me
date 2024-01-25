@@ -36,8 +36,16 @@
         overflow: hidden;
         width: 100%;
       }
+      nav > * {
+        flex: 1;
+      }
+      .nav-right {
+        display: flex;
+        justify-content: flex-end;
+      }
       nav h3 {
         margin: 0;
+        text-align: center;
       }
       #game-slot {
         background-color: rgba(255, 255, 255, 0.3);
@@ -62,10 +70,14 @@
   </head>
   <body>
     <nav>
-        <h3>jeffy games 👻</h3>
-        <div id="select-game-slot"></div>
+        <div class="nav-left" id="select-game-slot"></div>
+        <h3 class="nav-center">jeffy games 👻</h3>
+        <div class="nav-right">
+            <button id="invite-button">invite</button>
+        </div>
     </nav>
     <div id="game-slot"></div>
+    <div id="modal-slot"></div>
     <script type="module" src="/games/index.js"></script>
   </body>
 </html>

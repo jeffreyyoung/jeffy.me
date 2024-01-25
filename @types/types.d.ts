@@ -24,3 +24,9 @@ declare module "https://esm.sh/preact@10.19.3" {
 declare module "https://esm.sh/@preact/signals@1.2.2?deps=preact@10.19.3" {
   export * from '@preact/signals';
 }
+
+declare module "https://esm.sh/qrcode@1.5.3" {
+  export * from 'qrcode';
+  import Default from 'qrcode';
+  export default Default;
+}
