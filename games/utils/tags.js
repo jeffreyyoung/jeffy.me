@@ -12,6 +12,7 @@ export const {
     h2,
     h3,
     h4,
+    hr,
     h5,
     h6,
     div,
