@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
     <script src="cross-clues.js" type="module"></script>
+
     <style>
       @keyframes fadeInUp {
         0% {
@@ -109,6 +110,12 @@
 
       </div>
     </nav>
+    <script>
+      const isIframe = window.location !== window.parent.location;
+      if (isIframe) {
+        document.querySelector('nav').style.display = 'none';
+      }
+    </script>
     <div id="game"></div>
     <details open style="margin-top: 16px">
       <summary><h4 style="display: inline">how to play</h4></summary>

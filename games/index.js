@@ -44,7 +44,6 @@ van.derive(() => {
 })
 
 
-
 van.add(
   document.getElementById("game-slot"),
   PreGameGate(() => {

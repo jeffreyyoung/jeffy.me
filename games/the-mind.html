@@ -108,6 +108,12 @@
       </div>
       <div id="invite-slot"></div>
     </nav>
+    <script>
+      const isIframe = window.location !== window.parent.location;
+      if (isIframe) {
+        document.querySelector('nav').style.display = 'none';
+      }
+    </script>
     <div id="game"></div>
     <details open style="margin-top: 16px">
       <summary><h4 style="display: inline">how to play</h4></summary>

@@ -88,6 +88,12 @@
       </div>
       <div id="invite-slot"></div>
     </nav>
+    <script>
+      const isIframe = window.location !== window.parent.location;
+      if (isIframe) {
+        document.querySelector('nav').style.display = 'none';
+      }
+    </script>
     <div id="game-slot"></div>
   </body>
 </html>
