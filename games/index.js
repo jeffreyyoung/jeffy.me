@@ -50,7 +50,7 @@ van.add(
   PreGameGate(() => {
     return iframe({
         frameBorder: '0',
-        src: () => `${game.val}?lobbyId=${lobbyId.val}`,
+        src: () => `/games/${game.val}?lobbyId=${lobbyId.val}`,
         style: () => game.val ? "" : "display: none;",
     });
   })
