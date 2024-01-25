@@ -1,16 +1,15 @@
 export function cancelable() {
-    let isCanceled = false;
-  
-    return {
-      cancel() {
-        isCanceled = true;
-      },
-      isCanceled() {
-        return isCanceled;
-      },
-    };
-  }
-  
+  let isCanceled = false;
+
+  return {
+    cancel() {
+      isCanceled = true;
+    },
+    isCanceled() {
+      return isCanceled;
+    },
+  };
+}
 
 /**
  *
@@ -71,7 +70,7 @@ export const shuffle = (arr) => {
  * @returns {Record<T[key], T[]>}
  */
 export function groupBy(xs, key) {
-    // @ts-ignore
+  // @ts-ignore
   return xs.reduce(function (rv, x) {
     // @ts-ignore
     (rv[x[key]] = rv[x[key]] || []).push(x);
@@ -80,11 +79,21 @@ export function groupBy(xs, key) {
 }
 
 /**
- * 
- * @param {number} ms 
- * @returns 
+ *
+ * @param {number} ms
+ * @returns
  */
 export function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function getQueryParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+}
+
+export function setQueryParam(name, value) {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set(name, value);
+  window.history.replaceState({}, "", `${location.pathname}?${urlParams}`);
+}

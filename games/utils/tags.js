@@ -25,7 +25,10 @@ export const {
     tr,
     td,
     th,
-    label
+    label,
+    select,
+    option,
+    iframe,
 } = van.tags;
 
 export const noop = () => span({ style: 'display: none;'})
