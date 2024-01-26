@@ -9,11 +9,11 @@
         min-width: 0px;
         font-family: sans-serif;
       }
-      html, body {
+      html,
+      body {
         height: 100%;
         background: black;
       }
-
 
       #main-view {
         height: 100%;
@@ -108,38 +108,46 @@
       #views-container {
         overflow: hidden;
       }
-      /* #views-container > *:nth-child(1) {
-        transform: scaleX(97%) translateY(20px);
-      } */
-      #views-container > *:nth-child(2) {
-        height: calc(100% - 40px) !important;
-        top: 40px !important;
+      #views-container > * {
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      }
+      #views-container > .invite-modal {
+        transform: scale(0.8) translateY(25vh);
+        opacity: 0;
+        pointer-events: none;
         border-radius: 12px;
-        overflow: hidden;
       }
-      #views-container > *:not(:only-child) {
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
+      #views-container > .invite-modal.showing {
+        pointer-events: all;
+        transform: scale(1) translateY(40px);
+        opacity: 1;
+        pointer-events: all;
       }
-      #views-container > *:only-child {
-        border-radius: 0;
-        height: 100%;
-        transform: none;
+      #views-container > .backgrounded {
+        transform: scale(95%) translateY(0);
+        opacity: 0.8;
+        border-radius: 12px;
+      }
+      .invite-modal h3 {
+        margin-top: 24px;
+      }
+      .invite-modal button h3 {
+        margin: 0;
       }
     </style>
+    <script type="module" src="/games/index.js" defer></script>
   </head>
   <body>
     <div id="views-container">
-      <div id="main-view" class="foregrounded">
+      <div id="main-view">
         <nav>
-          <div class="nav-left" id="select-game-slot"></div>
-          <div class="nav-right">
-            <button id="invite-button">invite</button>
+          <div class="nav-left">
+            <span><h3>games 👻</h3></span>
           </div>
+          <div class="nav-right" id="select-game-slot"></div>
         </nav>
         <div id="game-slot"></div>
       </div>
     </div>
-    <script type="module" src="/games/index.js"></script>
   </body>
 </html>

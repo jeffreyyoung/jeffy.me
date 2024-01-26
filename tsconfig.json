@@ -9,7 +9,8 @@
     "checkJs": true,
     "noEmit": true,
     "declarationDir": "types",
-    "declaration": true
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
   },
   "include": ["**/*.js", "@types/types.d.ts", "@types/generated/main.d.ts"],
 }

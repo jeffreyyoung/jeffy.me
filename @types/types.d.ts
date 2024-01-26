@@ -30,3 +30,25 @@ declare module "https://esm.sh/qrcode@1.5.3" {
   import Default from 'qrcode';
   export default Default;
 }
+
+declare module "https://esm.sh/react@18.2.0" {
+  import Default from "react";
+  export default Default;
+}
+declare module "https://esm.sh/react-dom@18.2.0" {
+  export * from "react-dom";
+  import Default from "react-dom";
+  export default Default;
+}
+
+declare module "https://esm.sh/framer-motion@11.0.3" {
+  export * from "framer-motion";
+  import Default from "framer-motion";
+  export default Default;
+}
+
+declare module "https://esm.sh/htm@3.1.1" {
+  export * from "htm";
+  import Default from "htm";
+  export default Default;
+}

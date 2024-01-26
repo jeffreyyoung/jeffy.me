@@ -23,8 +23,16 @@ import { getQRCodeDataUrl } from "./utils/qr-code.js";
 
 // icon https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg
 
-const showModal = van.state(false);
+const isModalVisible = van.state(false);
 
+van.derive(() => {
+  const mainView = document.querySelector("#main-view");
+  if (isModalVisible.val) {
+    mainView.classList.add("backgrounded");
+  } else {
+    mainView.classList.remove("backgrounded");
+  }
+});
 const games = [
   ["", "select a game"],
   ["tic-tac-toe.html", "tic tac toe ⭕️❌"],
@@ -39,8 +47,6 @@ const maybeGame = games.find(([value]) => value === getQueryParam("game"))?.[0];
 
 console.log("query param!!!", maybeGame, getQueryParam("game"));
 const game = van.state(maybeGame || "");
-
-const qrcode = van.state("");
 
 van.derive(() => {
   if (game.val) {
@@ -70,36 +76,72 @@ van.derive(() => {
 });
 
 document.getElementById("invite-button").addEventListener("click", () => {
-  showModal.val = true;
+  isModalVisible.val = !isModalVisible.val;
+});
+
+const qrcode = van.state("");
+
+van.derive(() => {
+  if (lobbyId.val) {
+    getQRCodeDataUrl(window.location.href).then((url) => {
+      console.log("url!", url);
+      qrcode.val = url;
+    });
+  }
 });
 
 let inviteLinkTimeout;
-
 van.add(
   document.getElementById("views-container"),
   div(
     {
-      class: "inverted foregrounded foregrounded-view-0",
+      class: () => `
+            invite-modal
+            inverted
+            ${isModalVisible.val ? "showing" : "hiding"}
+          `,
       style: () => `
-                pointer-events: all;
-                width: 100%;
-                height: 100%;
-                flex: 1;
-                background-color: rgba(256, 256, 256);
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0 auto;
-                color: black;
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-                justify-content: center;
-                display: ${showModal.val ? "flex" : "none"};
-            `,
+                    width: calc(100% - 24px);
+                    height: 100%;
+                    flex: 1;
+                    background-color: rgba(256, 256, 256);
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    margin: 0 auto;
+                    color: black;
+                    flex-direction: column;
+                    gap: 12px;
+                    display: flex;
+                    padding: 12px;
+                `,
     },
+    button(
+      {
+        style: "align-self: end;",
+        onclick: () => (isModalVisible.val = !isModalVisible.val),
+      },
+      h3("close")
+    ),
+    h3("game"),
+    div(
+      {
+        style: "display: flex; flex-direction: row; gap: 6px; flex-wrap: wrap;",
+      },
+      ...games.map(([value, text]) =>
+        button(
+          {
+            onclick: () => {
+              game.val = value;
+              isModalVisible.val = false;
+            },
+          },
+          text
+        )
+      )
+    ),
     h3("invite link"),
     button(
       {
@@ -119,9 +161,13 @@ van.add(
     h3("qr code"),
     p("scan the qr code to join"),
     img({
+      style: `
+        max-width: 50%;
+        margin: 0 auto;
+      `,
       src: qrcode,
     }),
-    button({ onclick: () => (showModal.val = false) }, "close")
+   
   )
 );
 
@@ -130,8 +176,7 @@ van.add(
   button(
     {
       onclick: () => {
-        console.log("modal!!!");
-        showModal.val = !showModal.val;
+        isModalVisible.val = !isModalVisible.val;
       },
     },
     h3(
@@ -147,7 +192,7 @@ van.add(
         game.val
           ? img({
               src: () =>
-                showModal.val
+                isModalVisible.val
                   ? "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-up.svg"
                   : "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
             })

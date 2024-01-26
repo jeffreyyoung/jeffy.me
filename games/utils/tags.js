@@ -7,6 +7,8 @@ export const {
     form,
     ul,
     li,
+    nav,
+    main,
     p,
     h1,
     h2,

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+        font-size: 16px;
+      }
+
+      html,
+      body,
+      #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #root {
+        background-color: black;
+        position: relative;
+      }
+      #root > * {
+        position: absolute;
+        max-height: 100lvh;
+        max-width: 100lvw;
+        overflow: scroll;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: white;
+        transition: transform 0.2s ease-in-out, border-radius 0.2 ease-in-out, opacity 0.2s ease-in-out;
+      }
+      #root > .hidden {
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .page {
+        background-color: white;
+        display: flex;
+        flex-direction: column;
+
+      }
+
+      .page > nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+      }
+      .page nav > * {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+      .page > main {
+        flex: 1;
+        min-height: 0;
+      }
+      .game-container {
+        overflow: scroll;
+      }
+
+        /* #root > :not(.open), #root > .open:nth-last-of-type(2), #root > .open:nth-last-of-type(2), #root > .open:nth-last-of-type(2) {
+            background-color: red;
+            transform: scale3d(.96, .96, .96) translateY(3%);
+            border-radius: 12px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+    
+    
+      #root > .open:nth-last-of-type(2) {
+        background-color: green;
+        transform: scale3d(.98, .98, 1.4) translateY(4%);
+        border-radius: 12px;
+        opacity: .8;
+      }
+
+      #root > .open:nth-last-of-type(1) {
+        background-color: antiquewhite;
+        transform: scale3d(1, .98, 1.4) translateY(.02);
+        border-radius: 12px;
+        opacity: 1;
+      }
+
+      #root > .only-open {
+        background-color: white;
+        transform: none;
+        opacity: 1;
+      } */
+
+
+    </style>
+  </head>
+  <body>
+    <div id="root">
+
+    </div>
+    <script src="./player.js" type="module"></script>
+  </body>
+</html>
