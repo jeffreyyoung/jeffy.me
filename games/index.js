@@ -16,8 +16,13 @@ import {
   form,
   h4,
   hr,
+  svg,
+  image,
+  span,
 } from "./utils/tags.js";
 import { getQRCodeDataUrl } from "./utils/qr-code.js";
+
+// icon https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg
 
 const modals = reactive(
   /** @type {{ kind: "invite" }[]} */
@@ -35,6 +40,11 @@ const games = [
   ["air-hockey.html", "air hockey 🏒"],
   ["watermelon-hunt.html", "water-melon-hunt 🍉"],
 ];
+
+calc(() => {
+  modals.length;
+  console.log("modals length changed!!!!", modals.length);
+});
 
 const maybeGame = games.find(([value]) => value === getQueryParam("game"))?.[0];
 
@@ -62,13 +72,13 @@ van.derive(() => {
   // url
   let searchParams = new URLSearchParams(window.location.search);
   searchParams.set("lobbyId", lobbyId.val);
-  searchParams.set('game', game.val);
+  searchParams.set("game", game.val);
   window.history.replaceState(
     {},
     "",
     window.location.pathname + "?" + searchParams.toString()
   );
-})
+});
 
 document.getElementById("invite-button").addEventListener("click", () => {
   if (modals.at(-1)?.kind === "invite") {
@@ -85,7 +95,7 @@ document.getElementById("invite-button").addEventListener("click", () => {
 let inviteLinkTimeout;
 
 van.add(
-  document.getElementById("modal-slot"),
+  document.getElementById("views-container"),
   list(
     () =>
       div({
@@ -106,19 +116,18 @@ van.add(
       if (modal.val.kind === "invite") {
         return div(
           {
-            class: 'inverted',
+            class: "inverted foregrounded foregrounded-view-0",
             style: `
                 pointer-events: all;
-                padding: 12px;
+                width: 100%;
+                height: 100%;
+                flex: 1;
                 background-color: rgba(256, 256, 256);
-                border-radius: 12px;
-                height: 50vh;
-                position: relative;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 30vw;
-                max-width: 400px;
-                min-width: 200px;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 margin: 0 auto;
                 color: black;
                 display: flex;
@@ -159,21 +168,28 @@ van.add(
 
 van.add(
   document.getElementById("select-game-slot"),
-  select(
+  button(
     {
-      style: () => (username.val && game.val ? "" : "display: none;"),
-      value: () => game.val,
-      onchange: (e) => {
-        game.val = e.target.value;
-      },
+      style: "unset: all",
     },
-    ...games.map(([value, text]) => option({ value }, text))
+    h3(
+      {
+        style: `
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `
+      },
+      () => games.find(([path, name]) => path === game.val)?.[1] || "games 👻",
+      () =>
+        game.val
+          ? img({
+            src: "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
+          })
+          : span()
+    )
   )
 );
-
-van.derive(() => {
-  document.querySelector("#select-game-slot select").value = game.val;
-});
 
 function MyPregameGate() {
   return div(
@@ -186,6 +202,7 @@ function MyPregameGate() {
 van.add(
   document.getElementById("game-slot"),
   div(
+
     div(
       {
         style: () =>
@@ -209,7 +226,7 @@ van.add(
         },
         input({
           value: () => username.val,
-          style: 'margin-right: 12px;',
+          style: "margin-right: 12px;",
           placeholder: "your name",
         }),
         button("set name")
@@ -260,9 +277,11 @@ van.add(
           lobbyId.val = Math.random().toString(36).slice(2);
         },
       },
-      'start playing',
+      "start playing"
     ),
-    hr({ style: 'width: 50%; background-color: white; border: 1px solid white;' }),
+    hr({
+      style: "width: 50%; background-color: white; border: 1px solid white;",
+    }),
     form(
       {
         onsubmit: (e) => {
@@ -272,17 +291,21 @@ van.add(
       },
       input({
         value: () => lobbyId.val,
-        style: 'margin-right: 12px;',
+        style: "margin-right: 12px;",
         placeholder: "lobby id",
       }),
       button("join lobby")
     )
   ),
-  iframe({
-    frameBorder: "0",
-    src: () => `/games/${game.val}?lobbyId=${lobbyId.val}`,
-    style: () => (game.val && lobbyId.val && username.val ? "" : "display: none;"),
-  })
+  iframe(
+    {
+      frameBorder: "0",
+      src: () => game.val ? `/games/${game.val}?lobbyId=${lobbyId.val}` : '',
+      style: () =>
+        game.val && lobbyId.val && username.val ? "" : "display: none;",
+    },
+    game
+  )
 
   // PreGameGate(() => {
   //   return iframe({

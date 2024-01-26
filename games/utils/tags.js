@@ -31,6 +31,8 @@ export const {
     option,
     iframe,
     img,
+    svg,
+    image,
 } = van.tags;
 
 export const noop = () => span({ style: 'display: none;'})
