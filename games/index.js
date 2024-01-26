@@ -14,7 +14,6 @@ import {
   img,
   input,
   form,
-  h4,
   hr,
   svg,
   image,
@@ -24,12 +23,7 @@ import { getQRCodeDataUrl } from "./utils/qr-code.js";
 
 // icon https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg
 
-const modals = reactive(
-  /** @type {{ kind: "invite" }[]} */
-  ([])
-);
-
-const isConnected = van.state(false);
+const showModal = van.state(false);
 
 const games = [
   ["", "select a game"],
@@ -40,11 +34,6 @@ const games = [
   ["air-hockey.html", "air hockey 🏒"],
   ["watermelon-hunt.html", "water-melon-hunt 🍉"],
 ];
-
-calc(() => {
-  modals.length;
-  console.log("modals length changed!!!!", modals.length);
-});
 
 const maybeGame = games.find(([value]) => value === getQueryParam("game"))?.[0];
 
@@ -81,43 +70,17 @@ van.derive(() => {
 });
 
 document.getElementById("invite-button").addEventListener("click", () => {
-  if (modals.at(-1)?.kind === "invite") {
-    return;
-  }
-  getQRCodeDataUrl(window.location.href).then((dataUrl) => {
-    qrcode.val = dataUrl;
-  });
-  modals.push({
-    kind: "invite",
-  });
+  showModal.val = true;
 });
 
 let inviteLinkTimeout;
 
 van.add(
   document.getElementById("views-container"),
-  list(
-    () =>
-      div({
-        id: "modals-container",
-        onclick: () => {},
-        style: () =>
-          [
-            "position: absolute;",
-            "top: 0; left: 0; right: 0; bottom: 0;",
-            "pointer-events: none;",
-            // modalFields.length ? 'background-color: rgba(0, 0, 0, 0.5);' : ' pointer-events: none;',
-            "flex: 1; height: 100%;",
-          ].join(" "),
-        class: "modals-wrapper",
-      }),
-    modals,
-    (modal, remove, i) => {
-      if (modal.val.kind === "invite") {
-        return div(
-          {
-            class: "inverted foregrounded foregrounded-view-0",
-            style: `
+  div(
+    {
+      class: "inverted foregrounded foregrounded-view-0",
+      style: () => `
                 pointer-events: all;
                 width: 100%;
                 height: 100%;
@@ -130,39 +93,35 @@ van.add(
                 bottom: 0;
                 margin: 0 auto;
                 color: black;
-                display: flex;
                 flex-direction: column;
                 gap: 12px;
                 align-items: center;
                 justify-content: center;
+                display: ${showModal.val ? "flex" : "none"};
             `,
-          },
-          h3("invite link"),
-          button(
-            {
-              id: "copy-invite-link",
-              onclick: () => {
-                navigator.clipboard.writeText(window.location.href);
-                document.getElementById("copy-invite-link").innerText =
-                  "copied!";
-                clearTimeout(inviteLinkTimeout);
-                inviteLinkTimeout = setTimeout(() => {
-                  document.getElementById("copy-invite-link").innerText =
-                    "copy invite link";
-                }, 1000);
-              },
-            },
-            "copy invite link"
-          ),
-          h3("qr code"),
-          p("scan the qr code to join"),
-          img({
-            src: qrcode,
-          }),
-          button({ onclick: () => modals.pop() }, "close")
-        );
-      }
-    }
+    },
+    h3("invite link"),
+    button(
+      {
+        id: "copy-invite-link",
+        onclick: () => {
+          navigator.clipboard.writeText(window.location.href);
+          document.getElementById("copy-invite-link").innerText = "copied!";
+          clearTimeout(inviteLinkTimeout);
+          inviteLinkTimeout = setTimeout(() => {
+            document.getElementById("copy-invite-link").innerText =
+              "copy invite link";
+          }, 1000);
+        },
+      },
+      "copy invite link"
+    ),
+    h3("qr code"),
+    p("scan the qr code to join"),
+    img({
+      src: qrcode,
+    }),
+    button({ onclick: () => (showModal.val = false) }, "close")
   )
 );
 
@@ -170,7 +129,10 @@ van.add(
   document.getElementById("select-game-slot"),
   button(
     {
-      style: "unset: all",
+      onclick: () => {
+        console.log("modal!!!");
+        showModal.val = !showModal.val;
+      },
     },
     h3(
       {
@@ -178,31 +140,26 @@ van.add(
           display: flex;
           align-items: center;
           justify-content: center;
-        `
+        `,
       },
       () => games.find(([path, name]) => path === game.val)?.[1] || "games 👻",
       () =>
         game.val
           ? img({
-            src: "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
-          })
+              src: () =>
+                showModal.val
+                  ? "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-up.svg"
+                  : "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
+            })
           : span()
     )
   )
 );
 
-function MyPregameGate() {
-  return div(
-    div({
-      style: () => (username.val ? "" : "display: none;"),
-    })
-  );
-}
-
 van.add(
   document.getElementById("game-slot"),
   div(
-
+    {},
     div(
       {
         style: () =>
@@ -300,7 +257,7 @@ van.add(
   iframe(
     {
       frameBorder: "0",
-      src: () => game.val ? `/games/${game.val}?lobbyId=${lobbyId.val}` : '',
+      src: () => (game.val ? `/games/${game.val}?lobbyId=${lobbyId.val}` : ""),
       style: () =>
         game.val && lobbyId.val && username.val ? "" : "display: none;",
     },
