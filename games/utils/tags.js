@@ -14,6 +14,7 @@ export const {
     h2,
     h3,
     h4,
+    br,
     hr,
     h5,
     h6,
