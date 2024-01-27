@@ -115,8 +115,11 @@ van.add(
       style: () => `background-color: ${selectedGame.val?.color};`,
     },
     nav(
-      h1("👻 ", () => selectedGame.val?.name || "jeffy games"),
-      button({ onclick: () => (modalIsOpen.val = true) }, "open")
+      h1("👻 ", () => selectedGame.val?.name || ""),
+      button({ onclick: () => (modalIsOpen.val = true) }, img({
+        style: 'padding: 1px; display: flex;',
+        src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg"
+      }))
     ),
     main(
       {
@@ -282,7 +285,10 @@ van.add(
         },
         "👻"
       ),
-      button({ onclick: () => (modalIsOpen.val = false) }, "close")
+      button({ onclick: () => (modalIsOpen.val = false) }, img({
+        style: 'padding: 1px; display: flex;',
+        src: "https://esm.sh/feather-icons/dist/icons/x.svg"
+      }))
     ),
     main(
       {

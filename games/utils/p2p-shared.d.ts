@@ -1,9 +1,59 @@
+type AppState = {
+    game: string,
+    users: User[],
+    status: 'connected' | 'connecting',
+    gameOverStats?: {
+        userId: string,
+        primaryText: string,
+    }[]
+}
+
+type GameState = {
+    version: string,
+}
+
+type GameAction = {
+    actionId: string,
+    actorUserId: string,
+    action: {
+        type: string,
+        data: string,
+    }
+    resultGameState: string,
+    gameVersionBeforeAction: string,
+    gameVersionAfterAction: string,
+}
+
+type Update = {
+    appStateChange: {
+        data: AppState,
+        kind: {
+            type: 'initial' | 'update' | 'game-change' | 'game-over',
+        } | {
+            type: 'user-update',
+            userUpdated?: User,
+        } | {
+            type: 'user-left-id',
+            userId: string,
+        }
+    }
+    appState?: AppState,
+    gameAction?: GameAction,
+    forceUpdate?: GameState,
+}
+
+
+
+
+
+
 type User = {
   id: string;
   name: string;
   color: string;
   emoji: string;
 };
+
 
 type ClientToHostMessageMap = {
   "game-over": {
