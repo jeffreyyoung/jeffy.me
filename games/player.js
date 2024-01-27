@@ -26,9 +26,8 @@ import {
     makePartyId,
     makeUserId,
 } from './utils/game-values.js';
-
-
-
+import { P2pState } from "./utils/p2p/p2p-state.js";
+import { recursiveAssign } from "./utils/recursiveAssign.js";
 
 const games = [
   {
@@ -62,6 +61,105 @@ const selectedGameUrl = van.state("");
 const selectedGame = van.derive(() => {
   return games.find((game) => game.url === selectedGameUrl.val);
 });
+
+/**
+ * @typedef {{
+ *   version: string,
+ *   users: (User & { connected: boolean, isHost: boolean })[],
+ *   game: string,
+ *   gameState: any,
+ * }} AppState
+ */
+
+/**
+ * @type {AppState}
+ */
+const appState = {
+    game: '',
+    users: [],
+    version: "",
+    gameState: {},
+};
+
+const server = new P2pState(
+    /**
+     * @type {{
+     *    join: { user: AppState['users'][number] },
+     *    leave: { userId: string },
+     *    setGame: { game: string },
+     *    onGameUpdate: {
+     *        gameState: any,
+     *        action: any,
+     *    }
+     * }}
+     */
+    // @ts-ignore
+    ({}),
+    
+    appState,
+
+    {
+        actions: {
+            join: (state, { user }) => {
+                let u = state.users.find(u => u.id === user.id);
+                if (u) {
+                    Object.assign(u, user)
+                } else {
+                    state.users.push(user);
+                }
+                return state;
+            },
+            leave: (state, { userId }) => {
+                let index = state.users.findIndex(u => u.id === userId);
+                state.users.splice(index, 1);
+                return state;
+            },
+
+            setGame: (state, { game }) => {
+                state.game = game;
+                return state;
+            },
+            onGameUpdate: (state, { gameState, action }) => {
+                state.gameState = gameState;
+                return state;
+            },
+        },
+        onConnectionChange(connected) {
+            if (connected && user.val?.id) {
+                server.send('join', {
+                    user: { ...user.val, connected: true, isHost: isHost.val },
+                });
+            }
+        },
+        onStateChange(state) {
+            if (state.game !== selectedGameUrl.val) {
+              selectedGameUrl.val = state.game;
+            }
+            if (appState.version !== state.version) {
+                recursiveAssign(appState, state);
+            }
+        }
+    }
+);
+
+van.derive(() => {
+    if (partyId.val && user.val?.id) {
+        server.connect({
+            userId: user.val?.id,
+            roomId: partyId.val,
+            isHost: isHost.val,
+        });
+    }
+})
+
+van.derive(() => {
+    if (selectedGame.val?.url) {
+        server.send('setGame', { game: selectedGame.val.url });
+    }
+});
+
+
+
 const mainViewContents = van.derive(() => {
   if (!user.val?.id) {
     return "select-user-name";
@@ -256,6 +354,8 @@ const players = van.state([
 
 const qrCodeUrl = van.state("");
 van.derive(() => {
+  const url = new URL(window.location.href);
+  // todo: update this  
   let curUrl = selectedGameUrl.val;
 
   if (!curUrl) {
