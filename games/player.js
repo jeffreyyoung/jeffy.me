@@ -28,8 +28,14 @@ import {
 } from './utils/game-values.js';
 import { P2pState } from "./utils/p2p/p2p-state.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
+import { stateFields, reactive } from "../deps/van-x.js";
 
 const games = [
+  {
+    name: 'speed minesweeper 💣',
+    url: '/games/minesweeper.html',
+    color: 'lightgray',
+  },
   {
     name: "tic-tac-toe ❌⭕️",
     url: "/games/tic-tac-toe.html",
@@ -57,10 +63,7 @@ const games = [
   },
 ];
 
-const selectedGameUrl = van.state("");
-const selectedGame = van.derive(() => {
-  return games.find((game) => game.url === selectedGameUrl.val);
-});
+
 
 /**
  * @typedef {{
@@ -71,15 +74,18 @@ const selectedGame = van.derive(() => {
  * }} AppState
  */
 
-/**
- * @type {AppState}
- */
-const appState = {
-    game: '',
-    users: [],
-    version: "",
-    gameState: {},
-};
+
+const appState = reactive(/** @type {AppState} */ ({
+  game: '',
+  users: [],
+  version: "",
+  gameState: {},
+}));
+
+const selectedGameUrl = stateFields(appState).game;
+const selectedGame = van.derive(() => {
+  return games.find((game) => game.url === selectedGameUrl.val);
+});
 
 const server = new P2pState(
     /**
@@ -132,9 +138,6 @@ const server = new P2pState(
             }
         },
         onStateChange(state) {
-            if (state.game !== selectedGameUrl.val) {
-              selectedGameUrl.val = state.game;
-            }
             if (appState.version !== state.version) {
                 recursiveAssign(appState, state);
             }
@@ -152,24 +155,17 @@ van.derive(() => {
     }
 })
 
-van.derive(() => {
-    if (selectedGame.val?.url) {
-        server.send('setGame', { game: selectedGame.val.url });
-    }
-});
-
-
 
 const mainViewContents = van.derive(() => {
   if (!user.val?.id) {
     return "select-user-name";
   }
-  if (!selectedGame.val?.url) {
-    return "select-game";
-  }
   if (!partyId.val) {
     console.log("party id", partyId.val);
     return "create-party";
+  }
+  if (!selectedGame.val?.url) {
+    return "select-game";
   }
   return "in-game";
 });
@@ -195,7 +191,7 @@ const renderGames = (props) => {
                     };
                   `,
         onclick: () => {
-          selectedGameUrl.val = game.url;
+          server.send('setGame', { game: game.url });
           modalIsOpen.val = false;
         },
       },
@@ -269,7 +265,7 @@ van.add(
               }
             `,
         },
-        h3("hi ", () => user.val?.name, "! 👋"),
+        h2("hi ", () => user.val?.name, "! 👋"),
         p("what game do you want to play?"),
         ...renderGames()
       ),
@@ -297,7 +293,9 @@ van.add(
 
             }
         },
-        label(p("create a party?"), br(), button({ name: 'action', value: "create" }, "create")),
+        h2("hi ", () => user.val?.name, "! 👋"),
+        p('do you want to create a party?'),
+        button({ name: 'action', value: "create" }, "create"),
         p("or join existing party?"),
         input({
         name: "lobby-id",
@@ -354,16 +352,15 @@ const players = van.state([
 
 const qrCodeUrl = van.state("");
 van.derive(() => {
-  const url = new URL(window.location.href);
-  // todo: update this  
-  let curUrl = selectedGameUrl.val;
-
-  if (!curUrl) {
+  
+  if (!partyId.val) {
     qrCodeUrl.val = "";
     return;
   }
-  getQRCodeDataUrl(curUrl).then((dataUrl) => {
-    if (curUrl !== selectedGameUrl.val) return;
+  let curPartyId = partyId.val;
+  let url = window.location.href.split('?')[0]+'?party='+partyId.val;
+  getQRCodeDataUrl(url).then((dataUrl) => {
+    if (curPartyId !== partyId.val) return;
     qrCodeUrl.val = dataUrl;
   });
 });
@@ -413,8 +410,15 @@ van.add(
       p("send an invite link"),
       button(
         {
+          id: 'copy-link-button',
           onclick: () => {
+            clearTimeout(window.copyLinkTimeout);
             navigator.clipboard.writeText(window.location.href);
+            let button = document.getElementById('copy-link-button');
+            button.innerText = 'copied!';
+            window.copyLinkTimeout = setTimeout(() => {
+              button.innerText = 'copy link';
+            }, 1000);
           },
         },
         "copy link"
