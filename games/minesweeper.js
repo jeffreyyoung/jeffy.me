@@ -119,7 +119,6 @@ const state = reactive(
     version: "0",
     board: createBoard(9, 9, 9),
     bombCount: 9,
-    revealedTileCount: 0,
     columnCount: 9,
     rowCount: 9,
     winner: "",
@@ -162,6 +161,7 @@ const server = () =>
         /** @type {{
          *    join: { username: string },
          *    move: { index: number, action: 'reveal' | 'flag' },
+         *    reset: {},
          * }} */
         // @ts-ignore
         ({}),
@@ -169,6 +169,19 @@ const server = () =>
         (state),
         {
           actions: {
+            reset: (state) => {
+              recursiveAssign(state, {
+                board: createBoard(9, 9, 9),
+                bombCount: 9,
+              })
+
+              for (let player of Object.values(state.players)) {
+                player.score = 0;
+                player.hasTouchedBomb = false;
+              }
+
+              return state;
+            },
             join: (state, _, actor) => {
               if (state.players[actor]) {
                 return state;
@@ -396,6 +409,14 @@ const Game = div(
     },
     () => (victor.val ? `${victor.val} wins!` : "draw!")
   ),
+  button({
+    onclick: () => {
+      server().send("reset", {});
+      // scroll to top
+      window.scrollTo(0, 0);
+    },
+    style: () => `display: ${isGameOver.val ? "block" : "none"}; margin: 0 auto;`,
+  }, 'play again'),
   h4(
     "remaining safe tiles ",
     remainingNonBombTiles,
