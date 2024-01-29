@@ -22,14 +22,16 @@ import { Game } from "./utils/p2p/Game.js";
  * players: Record<string, Player>
  * words: Record<string, string>
  * guesses: Record<string, "correct" | "miss">
- * shuffledCoords: string[]
+ * shuffledCoords: string[],
+ * shouldShowWrongGuesses: boolean
  * }}
  */
 
 /**
  * @typedef ActionMap
  * @type {{
- *      guess: { actor: string, coord: string, result: "correct" | "miss" }
+ *      guess: { actor: string, coord: string, result: "correct" | "miss" },
+ *      updateShouldShowWrongGuesses: { shouldShowWrongGuesses: boolean }
  * }}
  */
 
@@ -63,6 +65,7 @@ function getUsedCoordsSet(
     guesses: {},
     words: {},
     shuffledCoords: [],
+    shouldShowWrongGuesses: false,
   }
 ) {
   const playerCoords = Object.values(gameState?.players || {})
@@ -142,6 +145,7 @@ var server = new Game(
       5: getWord(),
     },
     guesses: {},
+    shouldShowWrongGuesses: false,
     shuffledCoords: createShuffledCoords(),
   }),
     /** @type {ActionMap} */
@@ -160,6 +164,12 @@ var server = new Game(
           }
         }
         return state;
+      },
+      updateShouldShowWrongGuesses: (state, { shouldShowWrongGuesses }) => {
+        return {
+          ...state,
+          shouldShowWrongGuesses,
+        };
       },
       guess: (state, { coord, result }, actor) => {
         return {
@@ -216,7 +226,7 @@ function ui() {
         ${isGuessed === "correct"
           ? html`<div class="correct fadeInUp-animation">✅</div>`
           : html``}
-        ${isGuessed === "miss"
+        ${(isGuessed === "miss" && gameState.shouldShowWrongGuesses)
           ? html`<div class="correct fadeInUp-animation">❌</div>`
           : html``}
       </td>`;
@@ -359,6 +369,19 @@ function ui() {
           `
       )}
     </ul>
+    <h4>settings</h4>
+
+      <label style="display: inline-flex; align-items: center;">
+        <input
+          type="checkbox"
+          ?checked=${gameState.shouldShowWrongGuesses}
+          @change=${(e) =>
+            server.action("updateShouldShowWrongGuesses", {
+              shouldShowWrongGuesses: e.target.checked,
+            })}
+        />
+        show wrong guesses
+      </label>
   `;
 }
 
