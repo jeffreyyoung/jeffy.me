@@ -1,13 +1,14 @@
 import {
   html,
   render,
-} from "https://cdn.jsdelivr.net/npm/lit-html@1/+esm";
-import { P2pState } from "./utils/p2p-state.js";
+} from "https://esm.sh/lit-html@3.1.1";
 import { words } from "./cross-clues-words.js";
 import { shuffle } from "./utils/random.js";
+import { Game } from "./utils/p2p/Game.js";
 /**
  * @typedef Player
  * @type {{
+ * id: string,
  * name: string,
  * isHost: boolean,
  * coord: string
@@ -21,25 +22,19 @@ import { shuffle } from "./utils/random.js";
  * players: Record<string, Player>
  * words: Record<string, string>
  * guesses: Record<string, "correct" | "miss">
- * shuffledCoords: string[]
+ * shuffledCoords: string[],
+ * shouldShowWrongGuesses: boolean
  * }}
  */
 
 /**
  * @typedef ActionMap
  * @type {{
- *      join: { actor: string },
- *      kick: { username: string },
- *      guess: { actor: string, coord: string, result: "correct" | "miss" }
+ *      guess: { actor: string, coord: string, result: "correct" | "miss" },
+ *      updateShouldShowWrongGuesses: { shouldShowWrongGuesses: boolean }
  * }}
  */
-const urlSearchParams = new URLSearchParams(
-  window.location.search.split("?")?.[1] || ""
-);
-const params = Object.fromEntries(urlSearchParams.entries());
-const username = localStorage.getItem("username") || "";
-const lobbyId = params.lobbyId || "";
-const isHost = window.localStorage.getItem(`isHost-${lobbyId}`) === "true";
+
 
 function wordGetter() {
   let usedWords = new Set();
@@ -70,6 +65,7 @@ function getUsedCoordsSet(
     guesses: {},
     words: {},
     shuffledCoords: [],
+    shouldShowWrongGuesses: false,
   }
 ) {
   const playerCoords = Object.values(gameState?.players || {})
@@ -131,19 +127,11 @@ function createShuffledCoords() {
   return shuffle(coords);
 }
 
-var server = new P2pState(
-  /** @type {ActionMap} */
-  ({}),
+var server = new Game(
   /** @type {GameState} */
   ({
     version: "0",
-    players: {
-      [username]: {
-        name: username,
-        isHost,
-        coord: createShuffledCoords()[0],
-      },
-    },
+    players: {},
     words: {
       A: getWord(),
       B: getWord(),
@@ -157,13 +145,32 @@ var server = new P2pState(
       5: getWord(),
     },
     guesses: {},
+    shouldShowWrongGuesses: false,
     shuffledCoords: createShuffledCoords(),
   }),
+    /** @type {ActionMap} */
+    ({}),
   {
-    isHost,
-    roomId: lobbyId,
-    actorUsername: username,
     actions: {
+      syncUsers: (state, { room }) => {
+        for (const user of room.users) {
+          if (!state.players[user.id]) {
+            state.players[user.id] = {
+              id: user.id,
+              name: user.name,
+              isHost: user.isHost,
+              coord: getUnusedCoord(state),
+            };
+          }
+        }
+        return state;
+      },
+      updateShouldShowWrongGuesses: (state, { shouldShowWrongGuesses }) => {
+        return {
+          ...state,
+          shouldShowWrongGuesses,
+        };
+      },
       guess: (state, { coord, result }, actor) => {
         return {
           ...state,
@@ -180,113 +187,18 @@ var server = new P2pState(
           },
         };
       },
-      join: (state, payload, actor) => {
-        if (!actor) {
-          return state;
-        }
-        if (state.players[actor]) {
-          return state;
-        }
-        return {
-          ...state,
-          players: {
-            ...state.players,
-            [actor]: {
-              name: actor,
-              isHost: actor === username && isHost,
-              coord: getUnusedCoord(state),
-            },
-          },
-        };
-      },
-      kick: (state, payload) => {
-        let toKick = payload.username
-        if (!toKick) {
-          return state;
-        }
-        if (!state.players[toKick]) {
-          return state;
-        }
-        const { [toKick]: _, ...players } = state.players;
-        return {
-          ...state,
-          players,
-        };
-      },
     },
   }
 );
-server.on("change:state", (state) => {
-  window.state = state;
+let username = '';
+server.gameLogic.emitter.on("change:state", (state, action) => {
+  username = server.userId;
   update();
 });
 
-server.on("change:connected", (connected) => {
-  if (connected) {
-    server.send("join", { actor: username });
-  }
-});
-
 function ui() {
-  if (!username) {
-    return html`
-      <form
-        @submit=${
-          // @ts-ignore
-          (e) => {
-            e.preventDefault();
-            const username = e.target.username.value;
-            localStorage.setItem("username", username.trim());
-            // refresh page
-            window.location = window.location;
-          }
-        }
-      >
-        <input
-          type="text"
-          name="username"
-          value=${username}
-          placeholder="Your username"
-        />
-        <button type="submit">Join</button>
-      </form>
-    `;
-  }
-
-  if (!lobbyId) {
-    return html`
-      <form
-        @submit=${
-          // @ts-ignore
-          (e) => {
-            e.preventDefault();
-            const lobbyId = e.target.lobbyId.value;
-            window.location.href = `/games/cross-clues.html?lobbyId=${lobbyId}`;
-          }
-        }
-      >
-        <p>join game with lobby code</p>
-        <input type="text" name="lobbyId" placeholder="lobby code" />
-        <button type="submit">join</button>
-      </form>
-      <hr />
-      <form
-        @submit=${
-          // @ts-ignore
-          (e) => {
-            e.preventDefault();
-            const gameId = Math.floor(Math.random()*9999+1000);
-            window.localStorage.setItem(`isHost-${gameId}`, "true");
-            window.location.href = `/games/cross-clues.html?lobbyId=${gameId}`;
-          }
-        }
-      >
-        <p>host a game</p>
-        <button type="submit">create</button>
-      </form>
-    `;
-  }
-  let gameState = server.state;
+  let gameState = server.gameLogic.state;
+  server.userId
 
   /**
    *
@@ -295,7 +207,7 @@ function ui() {
    * @returns
    */
   function renderRows(gameState, rowLetter) {
-    const actorState = gameState.players[username];
+    const actorState = gameState.players[server.userId];
     return range(1, 5).map((number) => {
       const coord = `${rowLetter}${number}`;
       const myCoord = actorState?.coord;
@@ -314,7 +226,7 @@ function ui() {
         ${isGuessed === "correct"
           ? html`<div class="correct fadeInUp-animation">✅</div>`
           : html``}
-        ${isGuessed === "miss"
+        ${(isGuessed === "miss" && gameState.shouldShowWrongGuesses)
           ? html`<div class="correct fadeInUp-animation">❌</div>`
           : html``}
       </td>`;
@@ -398,7 +310,7 @@ function ui() {
           >
             <button
               @click=${() =>
-                server.send("guess", {
+                server.action("guess", {
                   actor: username,
                   coord: playerCoord,
                   result: "correct",
@@ -408,7 +320,7 @@ function ui() {
             </button>
             <button
               @click=${() =>
-                server.send("guess", {
+                server.action("guess", {
                   actor: username,
                   coord: playerCoord,
                   result: "miss",
@@ -453,14 +365,23 @@ function ui() {
           html`
             <li>
               ${player?.name} ${player?.isHost ? "(host)" : ""}
-              ${player?.name === username ? "(you)" : ""}
-              ${isHost && player?.name !== username ? html`<button @click=${() => {
-                server.send("kick", { username: player.name });
-              }}>kick</button>` : ``}
             </li>
           `
       )}
     </ul>
+    <h4>settings</h4>
+
+      <label style="display: inline-flex; align-items: center;">
+        <input
+          type="checkbox"
+          ?checked=${gameState.shouldShowWrongGuesses}
+          @change=${(e) =>
+            server.action("updateShouldShowWrongGuesses", {
+              shouldShowWrongGuesses: e.target.checked,
+            })}
+        />
+        show wrong guesses
+      </label>
   `;
 }
 
@@ -474,36 +395,9 @@ function layout(children) {
 }
 
 function update() {
-  let lobbySlot = document.getElementById("lobby-slot");
-  if (lobbyId) {
-    render(lobbyInfo(), lobbySlot);
-  } else {
-    render(html``, lobbySlot);
-  }
   render(layout(ui()), document.getElementById("game"));
 }
-let timeoutId = 0;
-function lobbyInfo() {
-  return html`
-    <div style="">
-      <button
-        id="copy-link"
-        @click=${() => {
-          navigator.clipboard.writeText(window.location.href);
-          document.getElementById("copy-link").innerText = "copied!";
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            document.getElementById("copy-link").innerText = "copy invite link";
-          }, 1000);
-        }}
-      >
-        copy invite link
-      </button>
-      <br />
-      <small style="text-align: end">lobby code: ${lobbyId}</small>
-    </div>
-  `;
-}
+
 
 /**
  *

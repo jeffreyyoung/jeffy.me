@@ -95,5 +95,23 @@ export function getQueryParam(name) {
 export function setQueryParam(name, value) {
   const urlParams = new URLSearchParams(window.location.search);
   urlParams.set(name, value);
-  window.history.replaceState({}, "", `${location.pathname}?${urlParams}`);
+  window.history.pushState({}, "", `${location.pathname}?${urlParams}`);
+}
+
+/**
+ * @template T
+ * @param  {...T[]} arrays 
+ * @returns 
+ */
+export function union(...arrays) {
+  return [...new Set(arrays.flat())];
+}
+/**
+ * @template T
+ * @param {T[]} a 
+ * @param {T[]} b 
+ * @returns T[]
+ */
+export function arrayDiff(a, b) {
+  return a.filter((x) => !b.includes(x)).concat(b.filter((x) => !a.includes(x)));
 }

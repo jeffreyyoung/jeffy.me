@@ -24,18 +24,22 @@
         animation: 0.5s fadeInUp;
       }
 
+      .incorrect {
+        background-color: pink;
+      }
+
       @keyframes flash-player-color-key-frames {
         0% {
           background-color: var(--player-color);
         }
         100% {
-          background-color: rgba(221, 221, 221, 0.1);
+          background-color: var(--final-color);
         }
       }
 
       .flash-player-color-animation {
         animation: 0.5s flash-player-color-key-frames;
-        background-color: rgba(221, 221, 221, 0.1);
+        background-color: var(--final-color, (221, 221, 221, 0.1));
       }
 
       @keyframes point-animation {
@@ -183,15 +187,6 @@
     </style>
   </head>
   <body>
-    <nav>
-      <div>
-        <a href="/">home</a>
-        <h3>minesweeper race</h3>
-      </div>
-      <div id="invite-slot">
-
-      </div>
-    </nav>
     <div id="game-slot"></div>
     <details open>
       <summary><h4 style="display: inline; margin: 0;">how to play</h4></summary>

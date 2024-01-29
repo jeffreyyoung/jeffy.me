@@ -1,12 +1,5 @@
 import van from "../deps/van.js";
-import { server as getServer } from "./the-mind-game-server.js";
-import {
-  username,
-  lobbyId,
-  isHost,
-  LobbySelection,
-  SetUserName,
-} from "./utils/pre-game.js";
+import { game } from "./the-mind-game-server.js";
 const {
   form,
   ul,
@@ -32,12 +25,6 @@ const {
 /**
  * @typedef {import('./the-mind-game-server.js').GameState} GameState
  */
-
-
-let actor = username.val;
-van.derive(() => {
-  actor = username.val;
-});
 
 const mostRecentCard = van.state(
   /** @type {GameState['mostRecentCard']} */
@@ -76,37 +63,19 @@ const gameStatus = van.state(
   ("before-start")
 );
 
-let server = van.derive(() => {
-  if (!lobbyId.val) {
-    return null;
+let actor = game.userId;
+game.onStateChange((state) => {
+  actor = game.userId;
+  mistakeCount.val = state.mistakeCount;
+  if (state.status !== gameStatus.val) {
+    gameStatus.val = state.status;
   }
-  if (!username.val) {
-    return null;
+  if (state.status !== "in-level") {
+    mostRecentCard.val = null;
+  } else {
+    mostRecentCard.val = state.mostRecentCard || null;
   }
-  const _server = getServer({
-    isHost: isHost.val,
-    lobbyId: lobbyId.val,
-    onStateChange(state) {
-      mistakeCount.val = state.mistakeCount;
-      if (state.status !== gameStatus.val) {
-        gameStatus.val = state.status;
-      }
-      if (state.status !== "in-level") {
-        mostRecentCard.val = null;
-      } else {
-        mostRecentCard.val = state.mostRecentCard || null;
-      }
-      gameState.val = { ...state };
-    },
-    actor,
-  });
-  _server.on('change:connected', (connected) => {
-    if (connected) {
-      _server.send('join', {});
-    }
-  });
-  _server.send('join', {});
-  return _server;
+  gameState.val = { ...state };
 });
 
 const iAmReady = van.derive(() => {
@@ -118,27 +87,20 @@ const waitingOnText = van.derive(() => {
     "Waiting on " +
     Object.values(gameState.val.players)
       .filter((p) => p.status === "waiting")
-      .map((p) => (p.username === actor ? "you" : p.username))
+      .map((p) => (p.name === actor ? "you" : p.name))
       .join(", ")
   );
 });
 
 function App() {
-  let allSetup = van.derive(() => {
-    return lobbyId.val && username.val;
-  });
 
   return div(
-    () => (username.val && !lobbyId.val ? LobbySelection() : span()),
-    () => (!username.val ? SetUserName() : span()),
-    () => (allSetup.val && gameStatus.val === "in-level" ? Game() : span()),
-    () =>
-      allSetup.val && gameStatus.val === "before-start" ? Waiting() : span(),
-    () =>
-      allSetup.val && gameStatus.val === "level-complete"
+    () => (gameStatus.val === "in-level" ? Game() : span()),
+    () => gameStatus.val === "before-start" ? Waiting() : span(),
+    () => gameStatus.val === "level-complete"
         ? LevelComplete()
         : span(),
-    () => (allSetup.val ? PlayerList() : span())
+    () => ( PlayerList() )
   );
 }
 
@@ -147,8 +109,8 @@ function PlayerList() {
     let res = Object.values(gameState.val.players);
     return res.map((p) => {
       return [
-        p.username,
-        p.username === actor ? " (you)" : null,
+        p.name,
+        p.id === actor ? " (you)" : null,
         p.isHost ? " (host)" : null,
         " ",
         p.cards.map((c) => statusToEmoji[c.status]).join(""),
@@ -175,10 +137,7 @@ function Waiting() {
     p(waitingOnText),
     () =>
       iAmReady.val
-        ? button(
-            { onclick: () => server.val?.send('ready', {}) },
-            "ready"
-          )
+        ? button({ onclick: () => game.action("ready", {}) }, "ready")
         : p()
   );
 }
@@ -196,10 +155,7 @@ function LevelComplete() {
     p(waitingOnText),
     () =>
       iAmReady.val
-        ? button(
-            { onclick: () => server.val?.send('ready', {}) },
-            "ready"
-          )
+        ? button({ onclick: () => game.action("ready", {}) }, "ready")
         : p()
   );
 }
@@ -271,43 +227,18 @@ function Game() {
     ),
     button(
       {
-        style: () => `display: ${typeof nextNumber.val === 'number' ? "block" : "none"}`,
-        onclick: () => server.val.send('play-card', {})
+        style: () =>
+          `display: ${typeof nextNumber.val === "number" ? "block" : "none"}`,
+        onclick: () => game.action("play-card", {}),
       },
       "play ",
       nextNumber
-    ),
+    )
   );
 }
 
 van.add(document.getElementById("game"), App());
-let timeoutId = 0;
-van.add(document.getElementById("invite-slot"), () =>
-  lobbyId.val && username.val
-    ? div(
-        button(
-          {
-            style: "padding: 3px 6px; font-size: 0.8em;",
 
-            onclick: (e) => {
-              e.preventDefault();
-              navigator.clipboard.writeText(window.location.href);
-              e.target.innerText = "copied!";
-              clearTimeout(timeoutId);
-              timeoutId = setTimeout(() => {
-                e.target.innerText = "copy invite link";
-              }, 1000);
-            },
-          },
-          "copy invite link"
-        ),
-        h6(
-          { style: "margin-top: 10px; margin-bottom: 0px; text-align: end;" },
-          `lobby id: ${lobbyId.val}`
-        )
-      )
-    : span()
-);
 var statusToEmoji = {
   "played-correct": "✅",
   "played-incorrect": "❌",
