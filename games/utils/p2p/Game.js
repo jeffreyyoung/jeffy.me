@@ -88,7 +88,11 @@ export class Game {
     // todo: handle room stuff
     if (message.type === "action-result") {
       // we just apply the state
-      this.gameLogic.reconcileState(message.resultState);
+      this.gameLogic.reconcileState(
+        // @ts-expect-error
+        message.resultState,
+        message.action
+    );
     }
 
     if (message.type === "action") {

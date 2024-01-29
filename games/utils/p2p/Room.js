@@ -1,6 +1,38 @@
 import { State as StateLogic } from "./State.js";
 import { Peer } from "https://esm.sh/peerjs@1.5.2?bundle-deps";
 import { EventEmitter } from "./event-emitter.js";
+import { arrayDiff, shuffle } from "../random.js";
+import { colors, emojis } from "../game-values.js";
+
+/**
+ * 
+ * @param {string} pref 
+ * @param {{ color: string}[]} users 
+ * @returns 
+ */
+function getAvailableColor(pref, users) {
+    let available = arrayDiff(users.map((u) => u.color), colors);
+    console.log('available', available, pref);
+    if (available.includes(pref)) {
+        return pref;
+    }
+    return shuffle(available)[0] || colors[0];
+}
+
+/**
+ * 
+ * @param {string} pref 
+ * @param {{ emoji: string}[]} users 
+ * @returns 
+ */
+function getAvailableEmoji(pref, users) {
+    let available = arrayDiff(users.map((u) => u.emoji), emojis);
+    if (available.includes(pref)) {
+        return pref;
+    }
+    return shuffle(available)[0] || emojis[0];
+}
+
 
 /**
  * @typedef {import("./Room-types.js").RoomState} RoomState
@@ -16,7 +48,7 @@ export class Room {
   userId = "";
   isHost = false;
 
-  /** @type {EventEmitter<{ "change:connection": boolean }>} */
+  /** @type {EventEmitter<{ "change:connection": [boolean] }>} */
   emitter = new EventEmitter();
 
   /** @type {StateLogic<RoomActionMap, RoomState>, {}} */
@@ -49,9 +81,12 @@ export class Room {
             return state;
           },
           userJoin: (state, { user }, actor) => {
+            
             if (state.users.find((u) => u.id === user.id)) {
               return state;
             }
+            user.color = getAvailableColor(user.color, state.users);
+            user.emoji = getAvailableEmoji(user.emoji, state.users);
             state.users.push(user);
             return state;
           },
@@ -60,6 +95,8 @@ export class Room {
             if (userIndex === -1) {
               return state;
             }
+            user.color = getAvailableColor(user.color, state.users);
+            user.emoji = getAvailableEmoji(user.emoji, state.users);
             state.users[userIndex] = user;
             return state;
           },
@@ -71,11 +108,16 @@ export class Room {
       }
     );
 
+    this.roomState.emitter.on("change:state", (state, action) => {
+        this.sendRoomEventToIframe('syncUsers', {});
+    })
+
     window.addEventListener("message", (event) => {
       /** @type {import('./Room-types.js').IFrameMessageBase<any, any>} */
       let message = event.data;
 
       if (message?.kind !== "iframe-message") {
+        // @ts-expect-error
         if (message?.source?.startsWith("react")) {
             // ignore react messages
             return;
@@ -350,7 +392,7 @@ export class Room {
           resultState,
         });
       } else if (!this.isHost && resultState) {
-        this.roomState.reconcileState(resultState);
+        this.roomState.reconcileState(resultState, action);
       }
     }
   }

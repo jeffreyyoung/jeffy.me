@@ -121,7 +121,6 @@ const state = reactive(
 );
 
 
-
 // @ts-ignore
 window.state = state;
 
@@ -175,24 +174,17 @@ const server = new Game(
         }
         return state;
       },
-      userLeft: (state, { userId }) => {
-        return state;
-      },
-      userUpdate: (state, { userId, room }) => {
-        return state;
-      },
-      newUser: (state, { userId, room }) => {
-        let u = room.users.find((u) => u.id === userId);
-        if (!u) {
-          return state;
+      syncUsers: (state, { room }) => {
+        for (const user of room.users) {
+          state.players[user.id] = {
+            name: user.name,
+            isHost: user.isHost,
+            color: user.color,
+            score: state.players[user.id]?.score || 0,
+            hasTouchedBomb: state.players[user.id]?.hasTouchedBomb || false,
+          }
         }
-        state.players[userId] = {
-          name: u.name,
-          isHost: u.isHost,
-          color: u.color,
-          score: 0,
-          hasTouchedBomb: false,
-        }
+        return state;
       },
       reset: (state) => {
         recursiveAssign(state, {
@@ -206,6 +198,7 @@ const server = new Game(
         return state;
       },
       move: (state, { index, action: _action }, actor) => {
+        console.log('do move', index, _action)
         const action = _action;
         if (state.board[index].status !== "hidden") {
           return state;
@@ -280,6 +273,7 @@ const server = new Game(
 );
 
 server.onStateChange((nextState) => {
+  console.log("state change", nextState);
   recursiveAssign(state, nextState)
 })
 
@@ -343,7 +337,7 @@ const GameUI = div(
         {
           "data-index": index,
           style: () =>
-            `--player-color: ${state.players[cell.val.revealedBy]?.color}`,
+            `--player-color: ${state.players[cell.val.revealedBy]?.color}; --final-color: ${cell.val.status === 'incorrect' ? 'pink' : 'rgba(221, 221, 221, 0.1)'};`,
           class: () =>
             `tile ${
               cell.val.status !== "hidden"

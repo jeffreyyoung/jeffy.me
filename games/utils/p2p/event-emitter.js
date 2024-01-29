@@ -1,5 +1,5 @@
 /**
- * @template EventMap
+ * @template {Record<string, any[]>} EventMap
  */
 export class EventEmitter {
     constructor() {
@@ -7,8 +7,9 @@ export class EventEmitter {
         this.listeners = {};
     }
     /**
-     * @param {keyof EventMap} event
-     * @param {(...args: any[]) => void} cb
+     * @template {keyof EventMap} EventType
+     * @param {EventType} event
+     * @param {(...args: EventMap[EventType]) => void} cb
      */
     on(event, cb) {
         if (!this.listeners[event]) {
@@ -23,12 +24,12 @@ export class EventEmitter {
     /**
      * @template {keyof EventMap} EventType
      * @param {EventType} event
-     * @param {EventMap[EventType]} payload
+     * @param {EventMap[EventType]} args
      */
-    emit(event, payload) {
-        console.log("emit", event, payload);
+    emit(event, ...args) {
+        console.log("emit", event, ...args);
         this.listeners[event]?.forEach((cb) => {
-            cb(payload);
+            cb(...args);
         });
     }
 }

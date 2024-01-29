@@ -32,23 +32,23 @@ import { EventEmitter } from "./event-emitter.js";
 
 /**
  * @template ActionMap
- * @template {{ version: string }} State
+ * @template {{ version: string }} Shape
  * @template ExtraMeta
  */
 export class State {
-  /** @type {EventEmitter<{ "change:state": State }>} */
+  /** @type {EventEmitter<{ "change:state": [Shape, ActionObject<ActionMap, keyof ActionMap>] }>} */
   emitter = new EventEmitter();
 
-  /** @type {State} */
+  /** @type {Shape} */
   state;
 
-  /** @type {StateLogicArgs<ActionMap, State>} */
+  /** @type {StateLogicArgs<ActionMap, Shape>} */
   args;
 
   /**
    * @param {ActionMap} actionMap
-   * @param {State} initialState
-   * @param {StateLogicArgs<ActionMap, State>} args
+   * @param {Shape} initialState
+   * @param {StateLogicArgs<ActionMap, Shape>} args
    */
   constructor(actionMap, initialState, args) {
     this.state = initialState;
@@ -56,16 +56,17 @@ export class State {
   }
 
   /**
-   * @param {State} val
+   * @param {Shape} val
+   * @param {ActionObject<ActionMap, keyof ActionMap>} action;
    * */
-  setState(val) {
+  setState(val, action) {
     this.state = val;
-    this.emitter.emit("change:state", val);
+    this.emitter.emit("change:state", val, action);
   }
 
   /**
    *
-   * @param {(arg: State) => void} cb
+   * @param {(arg: Shape) => void} cb
    */
   onStateChange(cb) {
     return this.emitter.on("change:state", cb);
@@ -107,13 +108,18 @@ export class State {
    */
   handleAction(action) {
     let resultState = this.produceNextState(action);
-    this.setState(resultState);
+    this.setState(resultState, action);
     return resultState;
   }
 
-  reconcileState(resultState) {
+  /**
+   * @param {Shape} resultState 
+   * @param {ActionObject<ActionMap, keyof ActionMap>} action 
+   * @returns 
+   */
+  reconcileState(resultState, action) {
     recursiveAssign(this.state, resultState);
-    this.setState(this.state);
+    this.setState(this.state, action);
     return resultState;
   }
 }

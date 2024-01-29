@@ -13,9 +13,7 @@ export type RoomActionMap = {
 
 export type GameCommonActionMap = {
   init: {},
-  'newUser': { userId: string };
-  'userLeft': { userId: string };
-  'userUpdate': { userId: string };
+  'syncUsers': {};
 }
 
 export type User = {

@@ -187,7 +187,7 @@ van.add(
       style: () => `background-color: ${selectedGame.val?.color};`,
     },
     nav(
-      h1("👻 ", () => selectedGame.val?.name || ""),
+      h3("👻 ", () => selectedGame.val?.name || ""),
       button(
         { onclick: () => (modalIsOpen.val = true) },
         img({
@@ -308,7 +308,7 @@ van.add(
       style: () => "background-color: ivory;",
     },
     nav(
-      h1(
+      h3(
         {
           "aria-hidden": "true",
         },

@@ -24,18 +24,22 @@
         animation: 0.5s fadeInUp;
       }
 
+      .incorrect {
+        background-color: pink;
+      }
+
       @keyframes flash-player-color-key-frames {
         0% {
           background-color: var(--player-color);
         }
         100% {
-          background-color: rgba(221, 221, 221, 0.1);
+          background-color: var(--final-color);
         }
       }
 
       .flash-player-color-animation {
         animation: 0.5s flash-player-color-key-frames;
-        background-color: rgba(221, 221, 221, 0.1);
+        background-color: var(--final-color, (221, 221, 221, 0.1));
       }
 
       @keyframes point-animation {
