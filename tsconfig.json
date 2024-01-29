@@ -12,5 +12,10 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true,
   },
-  "include": ["**/*.js", "games/utils/p2p/Room-types.d.ts", "@types/types.d.ts", "@types/generated/main.d.ts"],
+  "include": [
+    "**/*.js",
+    "games/utils/p2p/Room-types.d.ts",
+    "@types/types.d.ts",
+    "@types/generated/main.d.ts",
+  ],
 }

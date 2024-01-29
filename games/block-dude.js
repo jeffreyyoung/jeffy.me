@@ -37,7 +37,8 @@ const levels = [
 ==       =                   =
 ==   BB  =       =   BB     M=
 ==============================
-`,  `
+`,
+  `
 ==============================
 =                            =
 =                            =
@@ -80,9 +81,9 @@ function generateLevel(seed) {
   let rows = [
     range(0, width).map(() => "="),
     ...range(0, height - 2).map(() => [
-        '=',
-        ...range(0, width - 2).map(() => ' '),
-        '='
+      "=",
+      ...range(0, width - 2).map(() => " "),
+      "=",
     ]),
     range(0, width).map(() => "="),
   ];
@@ -162,10 +163,9 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("click", (event) => {
-
-  if (event.clientX < window.innerWidth * .25) {
+  if (event.clientX < window.innerWidth * 0.25) {
     onInput("left");
-  } else if (event.clientX > window.innerWidth * .75) {
+  } else if (event.clientX > window.innerWidth * 0.75) {
     onInput("right");
   } else {
     onInput("pickup");
@@ -372,13 +372,13 @@ function _paint() {
             _x * blockSize + eyeWidth * 2,
             _y * blockSize + blockSize * 0.4,
             eyeWidth,
-            eyeWidth
+            eyeWidth,
           );
           ctx.fillRect(
             _x * blockSize + blockSize - eyeWidth * 3,
             _y * blockSize + blockSize * 0.4,
             eyeWidth,
-            eyeWidth
+            eyeWidth,
           );
 
           // add mouth
@@ -389,7 +389,7 @@ function _paint() {
             _y * blockSize + blockSize / 2 + blockSize / 4,
             blockSize / 6,
             0,
-            Math.PI
+            Math.PI,
           );
           ctx.stroke();
           setTimeout(() => {
@@ -407,7 +407,7 @@ function _paint() {
             eyeX,
             _y * blockSize + blockSize * 0.4,
             eyeWidth,
-            eyeWidth
+            eyeWidth,
           );
 
           // add mouth
@@ -420,7 +420,7 @@ function _paint() {
             mouthX,
             _y * blockSize + blockSize * 0.8,
             mouthWidth,
-            blockSize / 16
+            blockSize / 16,
           );
         }
       }

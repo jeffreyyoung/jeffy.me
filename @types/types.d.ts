@@ -1,15 +1,15 @@
 declare module "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs" {
-  export * from 'kaboom';
-  import Default from 'kaboom';
+  export * from "kaboom";
+  import Default from "kaboom";
   export default Default;
 }
 
 declare module "https://esm.sh/@arrow-js/core@1.0.0-alpha.9" {
-  export * from '@arrow-js/core';
+  export * from "@arrow-js/core";
 }
 
 declare module "https://esm.sh/lit-html@3.1.1" {
-  export * from 'lit-html';
+  export * from "lit-html";
 }
 
 declare module "https://esm.sh/canvas-confetti@1.6.0" {
@@ -17,21 +17,21 @@ declare module "https://esm.sh/canvas-confetti@1.6.0" {
 }
 
 declare module "https://esm.sh/peerjs@1.5.2?bundle-deps" {
-  export * from 'peerjs';
-  export type PeerJsConnection = import('peerjs').DataConnection;
+  export * from "peerjs";
+  export type PeerJsConnection = import("peerjs").DataConnection;
 }
 
 declare module "https://esm.sh/preact@10.19.3" {
-  export * from 'preact';
+  export * from "preact";
 }
 
 declare module "https://esm.sh/@preact/signals@1.2.2?deps=preact@10.19.3" {
-  export * from '@preact/signals';
+  export * from "@preact/signals";
 }
 
 declare module "https://esm.sh/qrcode@1.5.3" {
-  export * from 'qrcode';
-  import Default from 'qrcode';
+  export * from "qrcode";
+  import Default from "qrcode";
   export default Default;
 }
 

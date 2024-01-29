@@ -11,7 +11,6 @@ import {
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { Game } from "./utils/p2p/Game.js";
 
-
 /**
  * @typedef Card
  * @type {{
@@ -132,7 +131,7 @@ const initial = {
 
 const gameState = reactive(
   /** @type {State} */
-  (JSON.parse(JSON.stringify(initial)))
+  (JSON.parse(JSON.stringify(initial))),
 );
 
 /**
@@ -146,157 +145,146 @@ function getPile(gameState, name) {
 
 const server = new Game(
   initial,
-          /** @type {ActionMap} */
-          ({}),
-          
-        {
-          actions: {
-            syncUsers(state, payload, actor) {
-              for (const user of payload.room.users) {
-                if (!state.players.find((p) => p.id === user.id)) {
-                  state.players.push({
-                    id: user.id,
-                    isHost: user.isHost,
-                    name: user.name,
-                    didPass: false,
-                  });
-                }
-              }
-              return state;
-            },
-            kick(state, payload, actor) {
-              state.players = state.players.filter(
-                (p) => p.id !== payload.id
-              );
-              if (state.status === "pre-game") {
-                return state;
-              }
+  /** @type {ActionMap} */
+  ({}),
 
-              let playerCards = Object.values(state.cards).filter((c) =>
-                c.pileName.startsWith(`player-${payload.id}`)
-              );
+  {
+    actions: {
+      syncUsers(state, payload, actor) {
+        for (const user of payload.room.users) {
+          if (!state.players.find((p) => p.id === user.id)) {
+            state.players.push({
+              id: user.id,
+              isHost: user.isHost,
+              name: user.name,
+              didPass: false,
+            });
+          }
+        }
+        return state;
+      },
+      kick(state, payload, actor) {
+        state.players = state.players.filter((p) => p.id !== payload.id);
+        if (state.status === "pre-game") {
+          return state;
+        }
 
-              for (let i = 0; i < playerCards.length; i++) {
-                const card = playerCards[i];
-                card.pileName = `player-${
-                  state.players[i % state.players.length].id
-                }`;
-              }
+        let playerCards = Object.values(state.cards).filter((c) =>
+          c.pileName.startsWith(`player-${payload.id}`),
+        );
 
-              return state;
-            },
-            pass(state, payload, actor) {
-              console.log("passing");
-              if (state.turn !== actor) return state;
+        for (let i = 0; i < playerCards.length; i++) {
+          const card = playerCards[i];
+          card.pileName = `player-${
+            state.players[i % state.players.length].id
+          }`;
+        }
 
-              const player = state.players.find((p) => p.id === actor);
+        return state;
+      },
+      pass(state, payload, actor) {
+        console.log("passing");
+        if (state.turn !== actor) return state;
 
-              if (!player) return state;
+        const player = state.players.find((p) => p.id === actor);
 
-              player.didPass = true;
+        if (!player) return state;
 
-              if (state.players.every((p) => p.didPass)) {
-                state.players.forEach((p) => (p.didPass = false));
-                const pile = getPile(state, "discard");
-                pile.forEach((c) => (c.pileName = "removed"));
-                state.turnMinCardValue = 0;
-                state.turnSetSize = 0;
-                state.turn = actor;
-              } else {
-                // get next player
-                const playerIndex = state.players.findIndex(
-                  (p) => p.name === actor
-                );
-                while (true) {
-                  const nextPlayerIndex =
-                    (playerIndex + 1) % state.players.length;
-                  const nextPlayer = state.players[nextPlayerIndex];
-                  if (!nextPlayer.didPass) {
-                    state.turn = nextPlayer.name;
-                    break;
-                  }
-                }
-              }
+        player.didPass = true;
 
-              return state;
-            },
-            start(state, payload, actor) {
-              const players = state.players.map((p) => p.id);
+        if (state.players.every((p) => p.didPass)) {
+          state.players.forEach((p) => (p.didPass = false));
+          const pile = getPile(state, "discard");
+          pile.forEach((c) => (c.pileName = "removed"));
+          state.turnMinCardValue = 0;
+          state.turnSetSize = 0;
+          state.turn = actor;
+        } else {
+          // get next player
+          const playerIndex = state.players.findIndex((p) => p.name === actor);
+          while (true) {
+            const nextPlayerIndex = (playerIndex + 1) % state.players.length;
+            const nextPlayer = state.players[nextPlayerIndex];
+            if (!nextPlayer.didPass) {
+              state.turn = nextPlayer.name;
+              break;
+            }
+          }
+        }
 
-              if (players.length === 0) {
-                return;
-              }
-              // deal cards
-              const shuffled = Object.values(state.cards).sort(
-                () => Math.random() - 0.5
-              );
+        return state;
+      },
+      start(state, payload, actor) {
+        const players = state.players.map((p) => p.id);
 
-              for (let i = 0; i < shuffled.length; i++) {
-                const card = shuffled[i];
-                card.pileName = `player-${players[i % players.length]}`;
-              }
+        if (players.length === 0) {
+          return;
+        }
+        // deal cards
+        const shuffled = Object.values(state.cards).sort(
+          () => Math.random() - 0.5,
+        );
 
-              state.status = "in-progress";
-              state.turn = randomItem(players);
-              state.turnMinCardValue = 0;
-              state.turnSetSize = 0;
-              return state;
-            },
-            play(state, payload, actor) {
-              let cards = payload.cards.map(c => state.cards[c]);
-              if (state.turn !== actor) return state;
+        for (let i = 0; i < shuffled.length; i++) {
+          const card = shuffled[i];
+          card.pileName = `player-${players[i % players.length]}`;
+        }
 
-              const player = state.players.find((p) => p.id === actor);
+        state.status = "in-progress";
+        state.turn = randomItem(players);
+        state.turnMinCardValue = 0;
+        state.turnSetSize = 0;
+        return state;
+      },
+      play(state, payload, actor) {
+        let cards = payload.cards.map((c) => state.cards[c]);
+        if (state.turn !== actor) return state;
 
-              if (!player) return state;
+        const player = state.players.find((p) => p.id === actor);
 
-              if (player.didPass) return state;
+        if (!player) return state;
 
-              if (cards.length === 0) {
-                return state;
-              }
-              if (
-                !cards.every((c) => c.value > state.turnMinCardValue)
-              ) {
-                return state;
-              }
+        if (player.didPass) return state;
 
-              if (
-                state.turnSetSize > 0 &&
-                cards.length !== state.turnSetSize
-              ) {
-                return state;
-              }
-              if (state.turnSetSize === 0) {
-                state.turnSetSize = cards.length;
-              } else if (cards.length !== state.turnSetSize) {
-                return state;
-              }
+        if (cards.length === 0) {
+          return state;
+        }
+        if (!cards.every((c) => c.value > state.turnMinCardValue)) {
+          return state;
+        }
 
-              state.turnMinCardValue = cards[0].value;
+        if (state.turnSetSize > 0 && cards.length !== state.turnSetSize) {
+          return state;
+        }
+        if (state.turnSetSize === 0) {
+          state.turnSetSize = cards.length;
+        } else if (cards.length !== state.turnSetSize) {
+          return state;
+        }
 
-              const pile = getPile(state, "discard");
+        state.turnMinCardValue = cards[0].value;
 
-              let highestIndex = Math.max(...pile.map((c) => c.pileIndex), 0);
+        const pile = getPile(state, "discard");
 
-              for (const toPlay of cards) {
-                const card = state.cards[getKey(toPlay)];
-                card.pileName = "discard";
-                card.pileIndex = ++highestIndex;
-              }
+        let highestIndex = Math.max(...pile.map((c) => c.pileIndex), 0);
 
-              return state;
-            },
-          },
-        },
-)
+        for (const toPlay of cards) {
+          const card = state.cards[getKey(toPlay)];
+          card.pileName = "discard";
+          card.pileIndex = ++highestIndex;
+        }
+
+        return state;
+      },
+    },
+  },
+);
 
 server.onStateChange((state) => {
-  console.log('here', gameState);
+  console.log("here", gameState);
   recursiveAssign(gameState, state);
   render();
-})
-
+});
 
 const localState = reactive(
   /** @type {{
@@ -316,7 +304,7 @@ const localState = reactive(
       };
       return acc;
     }, {}),
-  })
+  }),
 );
 
 // @ts-ignore
@@ -603,7 +591,7 @@ function Card(c) {
         ].join(" "),
     },
     p(valueToCharacter(c.value)),
-    p(suitToSymbol(c.suit))
+    p(suitToSymbol(c.suit)),
   );
 }
 
@@ -621,80 +609,83 @@ const status = stateFields(gameState).status;
 van.add(
   document.getElementById("game-slot"),
   div(
-      list(
-        () =>
-          div({
-            class: () => `game`,
-          }),
-        gameState.cards,
-        (c) => Card(c.val)
-      ),
-      list(
-        () => div({ class: "player-area" }),
-        gameState.players,
-        (player, _, i) =>
-          h4(
-            {
-              class: "player",
-              id: () => `player-${player.val.id}`,
-              style: () =>
-                [
-                  `transform: translate(${getPlayerX(
-                    gameState,
-                    player.val.id
-                  )}, 8px);`,
-                  status.val === "pre-game" || player.val.id === server.userId
-                    ? "display: none;"
-                    : "",
-                  `left: ${(windowWidth() / gameState.players.length) * i}px;`,
-                ].join(" "),
-            },
-            () => player.val.name
-          )
-      ),
-      div(
-        {
-          class: "controls",
-          style:
-            "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 3; flex-direction: column;",
-        },
+    list(
+      () =>
+        div({
+          class: () => `game`,
+        }),
+      gameState.cards,
+      (c) => Card(c.val),
+    ),
+    list(
+      () => div({ class: "player-area" }),
+      gameState.players,
+      (player, _, i) =>
         h4(
           {
+            class: "player",
+            id: () => `player-${player.val.id}`,
             style: () =>
               [
-                "margin: 0;",
-                status.val === "pre-game" ? "" : "display: none;",
+                `transform: translate(${getPlayerX(
+                  gameState,
+                  player.val.id,
+                )}, 8px);`,
+                status.val === "pre-game" || player.val.id === server.userId
+                  ? "display: none;"
+                  : "",
+                `left: ${(windowWidth() / gameState.players.length) * i}px;`,
               ].join(" "),
           },
-          "players"
+          () => player.val.name,
         ),
-        list(
-          () =>
-            ul({
-              style: () =>
-                "list-style-type: none; margin: 0; padding: 0; margin-bottom: 12px;" +
-                (status.val === "pre-game" ? "" : "display: none;"),
-            }),
-          gameState.players,
-          (player) => li(player.val.name)
-        ),
-        button(
-          {
+    ),
+    div(
+      {
+        class: "controls",
+        style:
+          "position: absolute; bottom: 12px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 3; flex-direction: column;",
+      },
+      h4(
+        {
+          style: () =>
+            [
+              "margin: 0;",
+              status.val === "pre-game" ? "" : "display: none;",
+            ].join(" "),
+        },
+        "players",
+      ),
+      list(
+        () =>
+          ul({
             style: () =>
-              [
-                status.val === "pre-game" && gameState.players.find(p => p.id === server.userId)?.isHost ? "" : "display: none;",
-              ].join(" "),
-            onclick: () => server.action("start", {}),
-          },
-          "start"
-        ),
-        button(
-          {
-            style: () => [canPass.val ? "" : "display: none;"].join(" "),
-            onclick: () => server.action("pass", {}),
-          },
-          "pass"
-        )
-      )
-    )
+              "list-style-type: none; margin: 0; padding: 0; margin-bottom: 12px;" +
+              (status.val === "pre-game" ? "" : "display: none;"),
+          }),
+        gameState.players,
+        (player) => li(player.val.name),
+      ),
+      button(
+        {
+          style: () =>
+            [
+              status.val === "pre-game" &&
+              gameState.players.find((p) => p.id === server.userId)?.isHost
+                ? ""
+                : "display: none;",
+            ].join(" "),
+          onclick: () => server.action("start", {}),
+        },
+        "start",
+      ),
+      button(
+        {
+          style: () => [canPass.val ? "" : "display: none;"].join(" "),
+          onclick: () => server.action("pass", {}),
+        },
+        "pass",
+      ),
+    ),
+  ),
 );

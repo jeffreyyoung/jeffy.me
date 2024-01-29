@@ -93,12 +93,12 @@ function tokenize(str) {
       });
       i++;
       // string
-    } else if (isDigit(char) || (char === '-') && isDigit(str.at(i+1))) {
-        let sign = 1;
-        if (char === '-') {
-            i++;
-            sign = -1;
-        }
+    } else if (isDigit(char) || (char === "-" && isDigit(str.at(i + 1)))) {
+      let sign = 1;
+      if (char === "-") {
+        i++;
+        sign = -1;
+      }
       let value = 0;
       while (isDigit(str[i])) {
         value = value * 10 + parseInt(str[i]);
@@ -188,7 +188,7 @@ function assertArgCountExpression(name, actual, expression) {
     const expected = parseInt(expression.slice(1));
     if (actual !== expected) {
       throw new Error(
-        `${name} expects to be called with ${expected} arguments but was called with ${actual}`
+        `${name} expects to be called with ${expected} arguments but was called with ${actual}`,
       );
     }
   }
@@ -196,7 +196,7 @@ function assertArgCountExpression(name, actual, expression) {
     const expected = parseInt(expression.slice(2));
     if (actual < expected) {
       throw new Error(
-        `${name} expects to be called with at least ${expected} arguments but was called with ${actual}`
+        `${name} expects to be called with at least ${expected} arguments but was called with ${actual}`,
       );
     }
   }
@@ -293,7 +293,7 @@ export function interpret(ast, stack) {
       let res = first.value(
         ast.body.slice(1).map((node) => () => interpret(node, stack)),
         stack,
-        ast.body.slice(1)
+        ast.body.slice(1),
       );
       return res;
     }
@@ -380,12 +380,12 @@ function run(ast, out) {
             throw new Error(`fn should receive named arguments`);
           }
           let argNames = argNamesExpression.body.flatMap((name) =>
-            name.type === "identifier" ? [name.value] : []
+            name.type === "identifier" ? [name.value] : [],
           );
 
           if (argNamesExpression.body.length !== argNames.length) {
             throw new Error(
-              `fn - only identifiers should be passed into fn args`
+              `fn - only identifiers should be passed into fn args`,
             );
           }
 
@@ -483,7 +483,7 @@ function run(ast, out) {
           let [a, b] = args
             .map(get)
             .map((res) =>
-              res.type === "func" ? `<function ${res.name}>` : res.value
+              res.type === "func" ? `<function ${res.name}>` : res.value,
             );
           return {
             type: "number",
@@ -565,7 +565,7 @@ function run(ast, out) {
         value: (args, stack) => {
           if (args.length !== 1) {
             throw new Error(
-              `not accepts 1 arg but was called with ${args.length}`
+              `not accepts 1 arg but was called with ${args.length}`,
             );
           }
           return {
@@ -622,7 +622,7 @@ function run(ast, out) {
             res = func.value(
               [() => res, () => item, () => ({ type: "number", value: i })],
               stack.concat(),
-              []
+              [],
             );
           }
           return res;
@@ -694,14 +694,14 @@ function stringify(thing) {
 }
 function App() {
   const code = van.state(
-    `(fn sayHello (name) (print "hi" name))\n(sayHello "pam")`
+    `(fn sayHello (name) (print "hi" name))\n(sayHello "pam")`,
   );
   van.derive(() => {
     console.log("lang updated! ", code);
   });
   const tokens = van.derive(() => attempt(() => tokenize(code.val)));
   const ast = van.derive(() =>
-    attempt(() => (Array.isArray(tokens.val) ? toAST(tokens.val) : null))
+    attempt(() => (Array.isArray(tokens.val) ? toAST(tokens.val) : null)),
   );
   const output = van.derive(() => {
     if (ast.val instanceof Error) {
@@ -732,14 +732,14 @@ function App() {
         defaultValue: code.val,
         style: "height: 200px;",
       }),
-      button("run")
+      button("run"),
     ),
     h3("output"),
     pre(() => stringify(output.val)),
     h3("tokens"),
     pre(() => stringify(tokens.val)),
     h3("ast"),
-    pre(() => stringify(ast.val))
+    pre(() => stringify(ast.val)),
   );
 }
 
@@ -774,14 +774,14 @@ function EqualTest(code, expected, description = "") {
       { style: `background-color: ${isPass ? "lightgreen" : "red"}` },
       isPass ? "✅ pass" : "❌ fail",
       description ? " - " : "",
-      description
+      description,
     ),
     pre(preStyle, code),
     span(isPass ? "result" : "expected result: "),
     pre(preStyle, expected),
 
     isPass ? null : span("actual result: "),
-    isPass ? null : pre(preStyle, actual)
+    isPass ? null : pre(preStyle, actual),
   );
 }
 
@@ -790,7 +790,7 @@ function Tests() {
     EqualTest("(print (add 1 1))", "2"),
     EqualTest(
       "(print (add 1 2 3))",
-      "error: add expects to be called with 2 arguments but was called with 3"
+      "error: add expects to be called with 2 arguments but was called with 3",
     ),
     EqualTest("(fn addOne (n) (add 1 n))\n(print (addOne 1))", "2"),
     EqualTest('(print ((("hi"))) )', "hi"),
@@ -803,7 +803,7 @@ function Tests() {
         (if (lessThan n 5) "less" "more")
     )
     (print (lessThanFive 4))`,
-      "less"
+      "less",
     ),
     EqualTest(
       `
@@ -825,7 +825,7 @@ function Tests() {
     (print "(fib 5) =" (fib 5))
     (print "(fib 14) =" (fib 13))
             `,
-      `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`
+      `(fib 0) = 0\n(fib 1) = 1\n(fib 2) = 1\n(fib 3) = 2\n(fib 4) = 3\n(fib 5) = 5\n(fib 14) = 233`,
     ),
     EqualTest(
       `
@@ -836,7 +836,7 @@ function Tests() {
         ))
         `,
       "6",
-      "fold works with anonymous function"
+      "fold works with anonymous function",
     ),
     EqualTest(
       `
@@ -847,13 +847,13 @@ function Tests() {
           ))
           `,
       "6",
-      "fold works with named function"
+      "fold works with named function",
     ),
     EqualTest(
       `
         (print (list 1 2))
         `,
-      "(list 1 2)"
+      "(list 1 2)",
     ),
     EqualTest(`(print (first (list 1 2)))`, `1`),
     EqualTest(`(print (last (list 1 2)))`, `2`),
@@ -868,7 +868,7 @@ function Tests() {
 
             (print (yay))
         `,
-      "3"
+      "3",
     ),
     EqualTest(
       `
@@ -880,7 +880,7 @@ function Tests() {
 
         (print (yay 4))
     `,
-      "3"
+      "3",
     ),
     EqualTest(
       `
@@ -893,7 +893,7 @@ function Tests() {
     (print (yay 4))
     `,
       "4",
-      "function returns last statement"
+      "function returns last statement",
     ),
     EqualTest(`(print (append (list 1) 2))`, "(list 1 2)"),
     EqualTest("(print (type 1))", "number"),
@@ -908,7 +908,7 @@ function Tests() {
               (fn (myList cur) (append myList 1))
           )
       )`,
-      "(list 1 1)"
+      "(list 1 1)",
     ),
     EqualTest(
       `(print 
@@ -917,12 +917,12 @@ function Tests() {
             (fn (a) (add a 1))
         )
     )`,
-      "(list 2 3 4)"
+      "(list 2 3 4)",
     ),
     EqualTest(`(print (isType 5 "number"))`, "1"),
     EqualTest(`(print (isType "5" "number"))`, "0"),
     EqualTest(
-        `
+      `
         (fn myMap (myList mapper)
             (fold
                 myList
@@ -934,8 +934,8 @@ function Tests() {
 
         (print (myMap (list 1 2 3) (fn (a) (add a 1))))
         `,
-        '(list 2 3 4)'
-    )
+      "(list 2 3 4)",
+    ),
   );
 }
 

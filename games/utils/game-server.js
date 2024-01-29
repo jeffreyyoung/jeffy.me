@@ -30,7 +30,7 @@ export function getSingletonGameServer(args) {
  *  roomId: string,
  *  initialState: GameState,
  *  onAction: (state: GameState, action: Action) => GameState,
- *  onStateChange: (state: GameState) => any 
+ *  onStateChange: (state: GameState) => any
  * }}
  */
 
@@ -47,7 +47,14 @@ export function createGameServer({
   onAction,
   onStateChange,
 }) {
-  console.log('createGameServer', isHost, roomId, initialState, onAction, onStateChange)
+  console.log(
+    "createGameServer",
+    isHost,
+    roomId,
+    initialState,
+    onAction,
+    onStateChange,
+  );
   let state = initialState;
   /** @type {PeerJsConnection[]} */
   let connections = [];
@@ -55,7 +62,7 @@ export function createGameServer({
     onStateChange(state);
   });
   if (isHost) {
-    console.log('hosting room', roomId);
+    console.log("hosting room", roomId);
     // recieves
     let peer = new Peer(roomId);
     peer.on("open", function (id) {
@@ -65,7 +72,7 @@ export function createGameServer({
     peer.on("connection", function (conn) {
       console.log("connection", conn);
       setTimeout(() => {
-        conn.send(state)
+        conn.send(state);
       }, 500);
       connections.push(conn);
       conn.on("data", (action) => {
@@ -86,11 +93,11 @@ export function createGameServer({
         return state;
       },
       /**
-       * 
-       * @param {Action} action 
+       *
+       * @param {Action} action
        */
       send(action) {
-        console.log('action', action);
+        console.log("action", action);
         state = onAction(state, action);
         connections.forEach((connection) => connection.send(state));
         console.log("sending action to connections");
@@ -104,54 +111,53 @@ export function createGameServer({
   console.log("connection to roomId", roomId);
   /** @type {PeerJsConnection} */
   let _host;
-  
+
   function connectToHost() {
     let peer = new Peer();
     console.log("opening peer");
     peer.on("open", (id) => {
-        console.log("my peer id is", id);
-        let host = peer.connect(roomId);
-        host.on('error', (e) => {
-            console.log('error', e);
-            peer.destroy();
-            setTimeout(connectToHost, 1000);
-        })
-        console.log('connecting to host, retrying...');
-        setTimeout(() => {
-          if (!host.open) {
-            console.log('host not open');
-            peer.destroy();
-            connectToHost();
-          }
-        }, 5000);
-        host.on("open", () => {
-          console.log('connected to host');
-            _host = host;
-          queuedActions.forEach((action) => host.send(action));
-          console.log("on open");
-    
-          host.on("data", (data) => {
-            console.log("data from host", data);
-            // @ts-expect-error
-            state = data;
-            // @ts-expect-error
-            onStateChange(data);
-          });
-        });
-    
-        host.on('close', () => {
-            console.log("host closed");
-            // @ts-ignore
-            _host = null;
-            peer.destroy();
-            setTimeout(connectToHost, 1000);
-            // setup
-        })
+      console.log("my peer id is", id);
+      let host = peer.connect(roomId);
+      host.on("error", (e) => {
+        console.log("error", e);
+        peer.destroy();
+        setTimeout(connectToHost, 1000);
       });
+      console.log("connecting to host, retrying...");
+      setTimeout(() => {
+        if (!host.open) {
+          console.log("host not open");
+          peer.destroy();
+          connectToHost();
+        }
+      }, 5000);
+      host.on("open", () => {
+        console.log("connected to host");
+        _host = host;
+        queuedActions.forEach((action) => host.send(action));
+        console.log("on open");
+
+        host.on("data", (data) => {
+          console.log("data from host", data);
+          // @ts-expect-error
+          state = data;
+          // @ts-expect-error
+          onStateChange(data);
+        });
+      });
+
+      host.on("close", () => {
+        console.log("host closed");
+        // @ts-ignore
+        _host = null;
+        peer.destroy();
+        setTimeout(connectToHost, 1000);
+        // setup
+      });
+    });
   }
 
   connectToHost();
-
 
   return {
     getLatestState() {
@@ -162,9 +168,9 @@ export function createGameServer({
       return _host !== null;
     },
     /**
-     * 
-     * @param {Action} action 
-     * @returns 
+     *
+     * @param {Action} action
+     * @returns
      */
     send(action) {
       if (!_host) {
@@ -176,5 +182,3 @@ export function createGameServer({
     },
   };
 }
-
-

@@ -28,7 +28,6 @@ import { State } from "./State.js";
  * @typedef {import('./Room-types.js').RoomState} RoomState
  */
 
-
 /**
  * @template {{ version: string }} StateShape
  * @template CustomActions
@@ -54,7 +53,7 @@ export class Game {
     this.gameLogic = new State(
       /** @type {ActionMap} */ ({}),
       initialState,
-      logicArgs
+      logicArgs,
     );
 
     this.onStateChange = this.gameLogic.onStateChange.bind(this.gameLogic);
@@ -64,17 +63,17 @@ export class Game {
 
     // if we're not in an iframe, redirect to the player
     if (window.location === window.parent.location) {
-        window.location.href = `/games/party.html?game=${encodeURIComponent(window.location.pathname)}`
+      window.location.href = `/games/party.html?game=${encodeURIComponent(window.location.pathname)}`;
     }
 
-    this.action('syncUsers', {
-        isFirstSync: true,
+    this.action("syncUsers", {
+      isFirstSync: true,
     });
   }
 
   listenForMessages() {
     window.addEventListener("message", (event) => {
-        console.log("iframe message received", event.data);
+      console.log("iframe message received", event.data);
       if (event.data?.gameName === this.gameName) {
         this.handleMessage(event.data);
       }
@@ -92,8 +91,8 @@ export class Game {
       this.gameLogic.reconcileState(
         // @ts-expect-error
         message.resultState,
-        message.action
-    );
+        message.action,
+      );
     }
 
     if (message.type === "action") {

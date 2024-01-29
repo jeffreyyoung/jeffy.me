@@ -5,34 +5,39 @@ import { arrayDiff, shuffle } from "../random.js";
 import { colors, emojis } from "../game-values.js";
 
 /**
- * 
- * @param {string} pref 
- * @param {{ color: string}[]} users 
- * @returns 
+ *
+ * @param {string} pref
+ * @param {{ color: string}[]} users
+ * @returns
  */
 function getAvailableColor(pref, users) {
-    let available = arrayDiff(users.map((u) => u.color), colors);
-    console.log('available', available, pref);
-    if (available.includes(pref)) {
-        return pref;
-    }
-    return shuffle(available)[0] || colors[0];
+  let available = arrayDiff(
+    users.map((u) => u.color),
+    colors,
+  );
+  console.log("available", available, pref);
+  if (available.includes(pref)) {
+    return pref;
+  }
+  return shuffle(available)[0] || colors[0];
 }
 
 /**
- * 
- * @param {string} pref 
- * @param {{ emoji: string}[]} users 
- * @returns 
+ *
+ * @param {string} pref
+ * @param {{ emoji: string}[]} users
+ * @returns
  */
 function getAvailableEmoji(pref, users) {
-    let available = arrayDiff(users.map((u) => u.emoji), emojis);
-    if (available.includes(pref)) {
-        return pref;
-    }
-    return shuffle(available)[0] || emojis[0];
+  let available = arrayDiff(
+    users.map((u) => u.emoji),
+    emojis,
+  );
+  if (available.includes(pref)) {
+    return pref;
+  }
+  return shuffle(available)[0] || emojis[0];
 }
-
 
 /**
  * @typedef {import("./Room-types.js").RoomState} RoomState
@@ -57,7 +62,7 @@ export class Room {
   /**
    * @param {string} initialGame
    */
-  constructor(initialGame = '') {
+  constructor(initialGame = "") {
     /** @type {RoomState} */
     const initialState = {
       version: "",
@@ -81,7 +86,6 @@ export class Room {
             return state;
           },
           userJoin: (state, { user }, actor) => {
-            
             if (state.users.find((u) => u.id === user.id)) {
               return state;
             }
@@ -105,12 +109,12 @@ export class Room {
             return state;
           },
         },
-      }
+      },
     );
 
     this.roomState.emitter.on("change:state", (state, action) => {
-        this.sendRoomEventToIframe('syncUsers', { isFirstSync: false });
-    })
+      this.sendRoomEventToIframe("syncUsers", { isFirstSync: false });
+    });
 
     window.addEventListener("message", (event) => {
       /** @type {import('./Room-types.js').IFrameMessageBase<any, any>} */
@@ -119,8 +123,8 @@ export class Room {
       if (message?.kind !== "iframe-message") {
         // @ts-expect-error
         if (message?.source?.startsWith("react")) {
-            // ignore react messages
-            return;
+          // ignore react messages
+          return;
         }
         console.error("invalid iframe message", message);
         return;
@@ -138,7 +142,7 @@ export class Room {
     // this.onStateChange((state) => {
     //   if (state.game !== lastGame) {
     //     lastGame = state.game;
-        
+
     //     this.sendRoomEventToIframe('init', {});
     //   }
     // });
@@ -221,7 +225,7 @@ export class Room {
         // this probably means the host is gone
         setTimeout(
           () => this.connectToHost(),
-          Math.max((this.connectToHostTimeoutMs *= 2), 5000)
+          Math.max((this.connectToHostTimeoutMs *= 2), 5000),
         );
       }
     });
@@ -304,16 +308,16 @@ export class Room {
   sendRoomEventToIframe(type, payload) {
     /** @type {import('./Room-types.js').IFrameMessageBase<typeof type, typeof payload>} */
     let message = {
-        gameName: this.roomState.state.game,
-        action: {
-            actor: this.userId,
-            kind: "action",
-            payload,
-            // @ts-expect-error
-            type,
-        },
-        kind: "iframe-message",
-        type: "action",
+      gameName: this.roomState.state.game,
+      action: {
+        actor: this.userId,
+        kind: "action",
+        payload,
+        // @ts-expect-error
+        type,
+      },
+      kind: "iframe-message",
+      type: "action",
     };
 
     this.sendToIfame(message);
@@ -332,8 +336,8 @@ export class Room {
     };
     let iframe = document.querySelector("iframe");
     if (!iframe) {
-        console.error("no iframe found");
-        return;
+      console.error("no iframe found");
+      return;
     }
     iframe.contentWindow.postMessage(message, "*");
   }
@@ -408,11 +412,11 @@ export class Room {
   broadcastMessage(message) {
     console.log("sending message!", message);
     this.connections.forEach((conn) => {
-        if (conn.open) {
-            conn.send(message);
-        } else {
-            console.info('connection not open', conn);
-        }
+      if (conn.open) {
+        conn.send(message);
+      } else {
+        console.info("connection not open", conn);
+      }
     });
   }
 }

@@ -1,29 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Arrow js</title>
-</head>
-<body>
+  </head>
+  <body>
     <div id="app"></div>
 
     <script type="module">
-        import { reactive, html } from "https://esm.sh/@arrow-js/core@1.0.0-alpha.9";
+      import {
+        reactive,
+        html,
+      } from "https://esm.sh/@arrow-js/core@1.0.0-alpha.9";
 
-        console.log(reactive, html)
+      console.log(reactive, html);
 
-        const state = reactive({
-            count: 0,
-        });
+      const state = reactive({
+        count: 0,
+      });
 
-        const mount = html`
-            <button @click="${() => state.count++}">${() => state.count}</button>
-        `;
+      const mount = html`
+        <button @click="${() => state.count++}">${() => state.count}</button>
+      `;
 
-        setInterval(() => state.count++, 1000)
+      setInterval(() => state.count++, 1000);
 
-        mount(document.getElementById("app"));
-
+      mount(document.getElementById("app"));
     </script>
     <!-- Your content goes here -->
-</body>
+  </body>
 </html>

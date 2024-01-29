@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html style="font-size: 16px">
   <head>
     <title>tic tac toe ⭕️❌</title>
@@ -105,14 +105,12 @@
         <a href="/">home</a>
         <h3>tic tac toe</h3>
       </div>
-      <div id="invite-slot">
-
-      </div>
+      <div id="invite-slot"></div>
     </nav>
     <script>
       const isIframe = window.location !== window.parent.location;
       if (isIframe) {
-        document.querySelector('nav').style.display = 'none';
+        document.querySelector("nav").style.display = "none";
       }
     </script>
     <div id="game-slot"></div>

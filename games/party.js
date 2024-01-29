@@ -18,7 +18,7 @@ import {
   input,
   span,
   a,
-  h4
+  h4,
 } from "./utils/tags.js";
 import {
   colors,
@@ -40,7 +40,8 @@ van.derive(() => {
     return;
   }
   let curPartyId = partyId.val;
-  let url = window.location.origin + window.location.pathname + "?p=" + partyId.val;
+  let url =
+    window.location.origin + window.location.pathname + "?p=" + partyId.val;
   getQRCodeDataUrl(url).then((dataUrl) => {
     if (curPartyId !== partyId.val) return;
     qrCodeUrl.val = dataUrl;
@@ -98,7 +99,7 @@ const appState = reactive(
     game: games.find((game) => game.url === getQueryParam("game"))?.url || "",
     version: "",
     users: [],
-  })
+  }),
 );
 const gameStateField = stateFields(appState).game;
 van.derive(() => {
@@ -181,7 +182,7 @@ const renderGames = () => {
           modalIsOpen.val = false;
         },
       },
-      game.name
+      game.name,
     );
   });
 };
@@ -198,23 +199,24 @@ van.add(
       h3("👻 ", () => selectedGame.val?.name || ""),
       div(
         {
-          style: "display: flex; align-items: center; justify-content: center; gap: 6px;",
+          style:
+            "display: flex; align-items: center; justify-content: center; gap: 6px;",
         },
 
-          span({
-            style: () =>
-              `background-color: ${
-                connected.val ? "green" : "gold"
-              }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block;`,
-          }),
+        span({
+          style: () =>
+            `background-color: ${
+              connected.val ? "green" : "gold"
+            }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block;`,
+        }),
         button(
           { onclick: () => (modalIsOpen.val = true) },
           img({
             style: "padding: 1px; display: flex;",
             src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
-          })
-        )
-      )
+          }),
+        ),
+      ),
     ),
     main(
       {
@@ -245,16 +247,15 @@ van.add(
           },
         },
         label(
-          h4(
-          "enter a user name to play"),
+          h4("enter a user name to play"),
           br(),
           input({
-            style: 'margin-right: 6px;',
+            style: "margin-right: 6px;",
             name: "username",
             placeholder: "your name",
           }),
-          button("continue")
-        )
+          button("continue"),
+        ),
       ),
       //   select game
       div(
@@ -271,7 +272,7 @@ van.add(
         br(),
         br(),
         h3("in your party"),
-        ...renderPartyUi()
+        ...renderPartyUi(),
       ),
 
       //   create party
@@ -303,7 +304,7 @@ van.add(
           name: "lobby-id",
           placeholder: "lobby id",
         }),
-        button({ name: "action", value: "join" }, "join")
+        button({ name: "action", value: "join" }, "join"),
       ),
 
       //   in game
@@ -313,9 +314,9 @@ van.add(
               src: selectedGame.val?.url,
               style: "border: none; width: 100%; height: 100%;",
             })
-          : div()
-    )
-  )
+          : div(),
+    ),
+  ),
 );
 
 // menu
@@ -333,19 +334,20 @@ van.add(
         {
           "aria-hidden": "true",
         },
-        "👻"
+        "👻",
       ),
       button(
         { onclick: () => (modalIsOpen.val = false) },
         img({
           style: "padding: 1px; display: flex;",
           src: "https://esm.sh/feather-icons/dist/icons/x.svg",
-        })
-      )
+        }),
+      ),
     ),
     main(
       {
-        style: "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
+        style:
+          "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
       },
       h2("games"),
       ...renderGames(),
@@ -355,12 +357,12 @@ van.add(
       br(),
       br(),
       br(),
-      a({ href: window.location.pathname }, 'leave party'),
+      a({ href: window.location.pathname }, "leave party"),
       br(),
       br(),
-      a({ href: '/' }, 'jeffy.me')
-    )
-  )
+      a({ href: "/" }, "jeffy.me"),
+    ),
+  ),
 );
 
 let copyLinkTimeout;
@@ -371,19 +373,21 @@ function renderPartyUi() {
       return div(
         h3(
           {
-            style: () => `display: inline-block; margin: 0; margin-bottom: 6px; font-weight: normal;`,
+            style: () =>
+              `display: inline-block; margin: 0; margin-bottom: 6px; font-weight: normal;`,
           },
           span(
             {
-              style: () => `border-bottom: 2px solid ${user.val.color}; font-weight: bold;`
+              style: () =>
+                `border-bottom: 2px solid ${user.val.color}; font-weight: bold;`,
             },
-          user.val.emoji,
-          " ",
-          user.val.name,
+            user.val.emoji,
+            " ",
+            user.val.name,
           ),
-          () => user.val.isHost ? ' (host)' : '',
-          () => user.val.id === room.userId ? ' (you)' : '',
-        )
+          () => (user.val.isHost ? " (host)" : ""),
+          () => (user.val.id === room.userId ? " (you)" : ""),
+        ),
       );
     }),
     p("send an invite link"),
@@ -400,7 +404,7 @@ function renderPartyUi() {
           }, 1000);
         },
       },
-      "copy link"
+      "copy link",
     ),
     p("or have a friend scan this qr code"),
     () =>

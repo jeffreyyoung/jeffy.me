@@ -1,14 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Flappy watermelon feast</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <a href="/" style="padding: 2px; user-select: none; position: absolute; top: 5; right: 0; z-index: 99999">Quit</a>
+    <a
+      href="/"
+      style="
+        padding: 2px;
+        user-select: none;
+        position: absolute;
+        top: 5;
+        right: 0;
+        z-index: 99999;
+      "
+      >Quit</a
+    >
     <script type="module">
       import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
-      import { addNotificationText } from './utils/addNotificationText.js';
+      import { addNotificationText } from "./utils/addNotificationText.js";
 
       // initialize context
       kaboom({
@@ -17,7 +28,7 @@
 
       let score = 0;
       let time = 0;
-      
+
       loadSprite("bean", "https://kaboomjs.com/sprites/bean.png");
       loadSprite("pig", "https://kaboomjs.com/sprites/watermelon.png");
       scene("start", () => {

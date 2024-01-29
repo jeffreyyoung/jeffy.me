@@ -19,6 +19,4 @@ const {
   input,
 } = van.tags;
 
-const App = () => [
-    
-]
+const App = () => [];

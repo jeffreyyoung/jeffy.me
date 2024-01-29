@@ -2,7 +2,7 @@ import { recursiveAssign } from "../recursiveAssign.js";
 import { EventEmitter } from "./event-emitter.js";
 
 /**
- * 
+ *
  * @template ActionMap
  * @template {keyof ActionMap} Key
  * @typedef {{
@@ -11,7 +11,7 @@ import { EventEmitter } from "./event-emitter.js";
  *    type: Key,
  *    payload: ActionMap[Key]
  * }} ActionObject
- * 
+ *
  * @typedef {{
  *     'init': { }
  *     'user-joined': { userId: string },
@@ -113,9 +113,9 @@ export class State {
   }
 
   /**
-   * @param {Shape} resultState 
-   * @param {ActionObject<ActionMap, keyof ActionMap>} action 
-   * @returns 
+   * @param {Shape} resultState
+   * @param {ActionObject<ActionMap, keyof ActionMap>} action
+   * @returns
    */
   reconcileState(resultState, action) {
     recursiveAssign(this.state, resultState);

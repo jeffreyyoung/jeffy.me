@@ -70,7 +70,6 @@ scene("game", () => {
     }),
     pos(center()),
     anchor("center"),
-    
   ]);
   function setScore(nextScore) {
     score = nextScore;
@@ -87,17 +86,17 @@ scene("game", () => {
       pos(width(), height() - 48),
       offscreen({ destroy: false }),
       // color(255, 180, 255),
-      move(LEFT, 480+(score*15)),
+      move(LEFT, 480 + score * 15),
       "barrier", // add a tag here
     ]);
 
     barrier.onExitScreen(() => {
-        console.log('barrier is gone!!!!');
-        barrier.destroy();
-        setScore(score + 1);
-    })
-    let minTime = Math.max(1-(score * .1), .8);
-    let maxTime = Math.max(1.5-(score*.1), 1);
+      console.log("barrier is gone!!!!");
+      barrier.destroy();
+      setScore(score + 1);
+    });
+    let minTime = Math.max(1 - score * 0.1, 0.8);
+    let maxTime = Math.max(1.5 - score * 0.1, 1);
     wait(rand(minTime, maxTime), () => {
       addBarrier();
     });
@@ -117,12 +116,12 @@ scene("game", () => {
   // add a kaboom on mouse click
   onClick(() => {
     if (bean.isGrounded()) {
-        bean.jump(1000);
+      bean.jump(1000);
     }
   });
   onKeyPress(() => {
     if (bean.isGrounded()) {
-        bean.jump(1000);
+      bean.jump(1000);
     }
   });
 });

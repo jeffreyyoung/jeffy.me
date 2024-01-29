@@ -397,4 +397,6 @@ WHIP
 WIND
 WITCH
 WORM
-YARD`.split('\n').map(word => word.trim().toLocaleLowerCase());
+YARD`
+  .split("\n")
+  .map((word) => word.trim().toLocaleLowerCase());

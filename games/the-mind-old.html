@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>The Mind Game</title>
@@ -62,7 +62,7 @@
 
       function render() {
         const urlSearchParams = new URLSearchParams(
-          window.location.search.split("?")?.[1] || ""
+          window.location.search.split("?")?.[1] || "",
         );
         const params = Object.fromEntries(urlSearchParams.entries());
         const username = localStorage.getItem("username") || "";
@@ -84,7 +84,7 @@
             e.preventDefault();
             localStorage.setItem(
               "username",
-              document.querySelector("#name").value
+              document.querySelector("#name").value,
             );
             render();
           });
@@ -178,7 +178,7 @@
 
               if (state.status === "next-level-wait-room") {
                 let allAreReady = Object.values(state.players).every(
-                  (obj) => obj === true
+                  (obj) => obj === true,
                 );
                 // go to next level
                 if (allAreReady) {
@@ -187,7 +187,7 @@
                   state.actionLog.push(`🎉 level ${state.level} started`);
                   Object.keys(state.players).forEach((player) => {
                     let numbers = Array.from({ length: state.level }, () =>
-                      getNumber()
+                      getNumber(),
                     );
                     numbers = numbers.sort(function (a, b) {
                       return a - b;
@@ -212,7 +212,7 @@
                   };
                 });
                 state.actionLog.push(
-                  `🔔 ${escapeHtml(action.actor)} started the game`
+                  `🔔 ${escapeHtml(action.actor)} started the game`,
                 );
               }
 
@@ -240,7 +240,7 @@
                   playerState.history[playerState.playedCards.length - 1] =
                     "❌";
                   state.actionLog.push(
-                    `❌ ${action.actor} played ${n} but it was wrong!`
+                    `❌ ${action.actor} played ${n} but it was wrong!`,
                   );
                 } else {
                   playerState.history[playerState.playedCards.length - 1] =
@@ -272,7 +272,7 @@
                   ${iff(
                     state.status === "playing" ||
                       state.status === "next-level-wait-room",
-                    `<p>🏆 level ${state.level} · 😳 ${state.errors} errors</p>`
+                    `<p>🏆 level ${state.level} · 😳 ${state.errors} errors</p>`,
                   )}
                   <h4>players</h4>
                   <ul>
@@ -283,23 +283,23 @@
                             ${escapeHtml(player)}${iff(
                               player === username,
                               " (you)",
-                              iff()
+                              iff(),
                             )}
                             ${iff(
                               isHost && player === username,
-                              ' <span style="background-color: lightgreen">host</span>'
+                              ' <span style="background-color: lightgreen">host</span>',
                             )}
                             ${iff(
                               state.status === "next-level-wait-room",
                               state.players[player] === true
                                 ? "[ready]"
-                                : "[not-ready]"
+                                : "[not-ready]",
                             )}
                             ${iff(
                               state.status === "playing",
-                              `[${state.players[player]?.history?.join?.("")}]`
+                              `[${state.players[player]?.history?.join?.("")}]`,
                             )}
-                          </li>`
+                          </li>`,
                       )
                       .join("")}
                   </ul>
@@ -315,9 +315,9 @@
                           <p>are you ready for level ${state.level + 1}?</p>
                           <button id="im-ready">i'm ready</button>
                         `,
-                        html` <p>waiting for other players...</p> `
+                        html` <p>waiting for other players...</p> `,
                       )}
-                    `
+                    `,
                   )}
                   ${iff(
                     state.status === "playing",
@@ -334,7 +334,7 @@
                                   <p>
                                     ${state.players[username]?.history?.[i]}
                                   </p>
-                                </div>`
+                                </div>`,
                             )
                             .join("")}
                           ${state.players[username]?.unplayedCards?.[0]
@@ -362,19 +362,19 @@
                                 html`<div class="reset-button playable-card">
                                   <p style="padding: 0 24px;">${card}</p>
                                   <p>⬜️</p>
-                                </div>`
+                                </div>`,
                             )
                             .join("")}
                         </div>
-                      </div> `
+                      </div> `,
                   )}
                   ${iff(
                     isHost && state.status === "waiting",
-                    html`<button id="start">Start</button>`
+                    html`<button id="start">Start</button>`,
                   )}
                   ${iff(
                     !isHost && state.status === "waiting",
-                    html`<p>waiting for host to start...</p>`
+                    html`<p>waiting for host to start...</p>`,
                   )}
                   <h4>activity</h4>
                   <ul>

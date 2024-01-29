@@ -24,7 +24,7 @@ const gameState = signal(
   ({
     version: "0",
     players: [],
-  })
+  }),
 );
 
 const server = new P2pState(
@@ -54,7 +54,7 @@ const server = new P2pState(
       gameState.value = { ...state };
     },
     onConnectionChange: () => {},
-  }
+  },
 );
 
 /**
@@ -77,7 +77,7 @@ const isHost = getQueryParam("host") === "1";
 
 function MyButton() {
   const count = useComputed(
-    () => gameState.value.players.find((p) => p.name === username)?.count || 0
+    () => gameState.value.players.find((p) => p.name === username)?.count || 0,
   );
   return h(
     "button",
@@ -85,7 +85,7 @@ function MyButton() {
       onClick: () => server.send("increment", {}),
     },
     count,
-    " clicks"
+    " clicks",
   );
 }
 
@@ -95,7 +95,7 @@ const app = h(
   null,
   "Hello World!",
   h("a", { "data-meow": "meow", href: "a" }, "hi"),
-  h(MyButton, null)
+  h(MyButton, null),
 );
 
 render(app, document.body);

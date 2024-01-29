@@ -1,7 +1,4 @@
-import {
-  html,
-  render,
-} from "https://esm.sh/lit-html@3.1.1";
+import { html, render } from "https://esm.sh/lit-html@3.1.1";
 import { words } from "./cross-clues-words.js";
 import { shuffle } from "./utils/random.js";
 import { Game } from "./utils/p2p/Game.js";
@@ -35,7 +32,6 @@ import { Game } from "./utils/p2p/Game.js";
  * }}
  */
 
-
 function wordGetter() {
   let usedWords = new Set();
 
@@ -66,11 +62,11 @@ function getUsedCoordsSet(
     words: {},
     shuffledCoords: [],
     shouldShowWrongGuesses: false,
-  }
+  },
 ) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
-    .filter(Boolean)
+    .filter(Boolean);
 
   const coords = new Set([
     ...playerCoords,
@@ -148,8 +144,8 @@ var server = new Game(
     shouldShowWrongGuesses: false,
     shuffledCoords: createShuffledCoords(),
   }),
-    /** @type {ActionMap} */
-    ({}),
+  /** @type {ActionMap} */
+  ({}),
   {
     actions: {
       syncUsers: (state, { room }) => {
@@ -188,9 +184,9 @@ var server = new Game(
         };
       },
     },
-  }
+  },
 );
-let username = '';
+let username = "";
 server.gameLogic.emitter.on("change:state", (state, action) => {
   username = server.userId;
   update();
@@ -198,7 +194,7 @@ server.gameLogic.emitter.on("change:state", (state, action) => {
 
 function ui() {
   let gameState = server.gameLogic.state;
-  server.userId
+  server.userId;
 
   /**
    *
@@ -226,7 +222,7 @@ function ui() {
         ${isGuessed === "correct"
           ? html`<div class="correct fadeInUp-animation">✅</div>`
           : html``}
-        ${(isGuessed === "miss" && gameState.shouldShowWrongGuesses)
+        ${isGuessed === "miss" && gameState.shouldShowWrongGuesses
           ? html`<div class="correct fadeInUp-animation">❌</div>`
           : html``}
       </td>`;
@@ -352,7 +348,7 @@ function ui() {
       ? html`
           <p>
             🎉🎉${Object.values(gameState.guesses).filter(
-              (result) => result === "correct"
+              (result) => result === "correct",
             ).length}/25
             correct🎉🎉
           </p>
@@ -361,27 +357,24 @@ function ui() {
     <h4>players</h4>
     <ul>
       ${Object.values(gameState.players || {}).map(
-        (player) =>
-          html`
-            <li>
-              ${player?.name} ${player?.isHost ? "(host)" : ""}
-            </li>
-          `
+        (player) => html`
+          <li>${player?.name} ${player?.isHost ? "(host)" : ""}</li>
+        `,
       )}
     </ul>
     <h4>settings</h4>
 
-      <label style="display: inline-flex; align-items: center;">
-        <input
-          type="checkbox"
-          ?checked=${gameState.shouldShowWrongGuesses}
-          @change=${(e) =>
-            server.action("updateShouldShowWrongGuesses", {
-              shouldShowWrongGuesses: e.target.checked,
-            })}
-        />
-        show wrong guesses
-      </label>
+    <label style="display: inline-flex; align-items: center;">
+      <input
+        type="checkbox"
+        ?checked=${gameState.shouldShowWrongGuesses}
+        @change=${(e) =>
+          server.action("updateShouldShowWrongGuesses", {
+            shouldShowWrongGuesses: e.target.checked,
+          })}
+      />
+      show wrong guesses
+    </label>
   `;
 }
 
@@ -397,7 +390,6 @@ function layout(children) {
 function update() {
   render(layout(ui()), document.getElementById("game"));
 }
-
 
 /**
  *

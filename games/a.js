@@ -1,40 +1,31 @@
 import van from "../deps/van.js";
 import { css } from "./utils/css.js";
 
-const {
-  div,
-  p,
-  button,
-  span,
-} = van.tags;
+const { div, p, button, span } = van.tags;
 
 let count1 = van.state(0);
 let count2 = van.state(0);
 let count3 = van.state(0);
 let yourscore = van.state(0);
 setInterval(() => {
-    yourscore.val = count1.val + count2.val + count3.val;
-})
+  yourscore.val = count1.val + count2.val + count3.val;
+});
 
 let state = {};
 
-
-
-
 css`
-.layout--div {
+  .layout--div {
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 75vh;
     justify-content: space-around;
-}
+  }
 
-.layout--center-text {
+  .layout--center-text {
     text-align: center;
-}
-`
-
+  }
+`;
 
 const layout = (content) => {
   return div(
@@ -48,7 +39,7 @@ const layout = (content) => {
         },
       },
       "count1 ",
-      count1
+      count1,
     ),
     button(
       {
@@ -57,7 +48,7 @@ const layout = (content) => {
         },
       },
       "count2 ",
-      count2
+      count2,
     ),
     button(
       {
@@ -66,12 +57,13 @@ const layout = (content) => {
         },
       },
       "count3 ",
-      count3
+      count3,
     ),
-      div(
-        { class: "layout--center-text", },
-        () => yourscore.val >= 0 ? p({ class: "fadeInUp-animation" }, "Your score: ", yourscore) : span()
-      )
+    div({ class: "layout--center-text" }, () =>
+      yourscore.val >= 0
+        ? p({ class: "fadeInUp-animation" }, "Your score: ", yourscore)
+        : span(),
+    ),
   );
 };
 

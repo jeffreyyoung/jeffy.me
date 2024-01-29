@@ -1,6 +1,9 @@
 import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 
-import { addNotificationText, addTitleScene } from "./utils/addNotificationText.js";
+import {
+  addNotificationText,
+  addTitleScene,
+} from "./utils/addNotificationText.js";
 
 // initialize context
 kaboom({
@@ -14,10 +17,11 @@ const block_size = 50;
 
 addTitleScene({
   sceneName: "initial",
-  titleText: '',
-  instructions: 'Press left side of screen to jump left and right side to jump right',
-  nextScene: 'game',
-})
+  titleText: "",
+  instructions:
+    "Press left side of screen to jump left and right side to jump right",
+  nextScene: "game",
+});
 
 go("initial");
 
@@ -46,28 +50,28 @@ scene("start", (isEnd = false) => {
 });
 
 scene("level-complete", (levelIdx = 0) => {
-    let announcement = add([
-        text(`Level ${levelIdx + 1} complete!`, { size: 18 }),
-        pos(center()),
-        anchor("center"),
-    ]);
-    function countdown(secondsLeft = 3) {
-      addNotificationText(`Next level in ${secondsLeft}...`, center().add(0, 50));
-      if (secondsLeft === 0) {
-        go("game", levelIdx + 1);
-      } else {
-        wait(1, () => {
-          countdown(secondsLeft - 1);
-        });
-      }
+  let announcement = add([
+    text(`Level ${levelIdx + 1} complete!`, { size: 18 }),
+    pos(center()),
+    anchor("center"),
+  ]);
+  function countdown(secondsLeft = 3) {
+    addNotificationText(`Next level in ${secondsLeft}...`, center().add(0, 50));
+    if (secondsLeft === 0) {
+      go("game", levelIdx + 1);
+    } else {
+      wait(1, () => {
+        countdown(secondsLeft - 1);
+      });
     }
-    countdown();
-})
+  }
+  countdown();
+});
 
 let levels = [
   [
     "==========================",
-    "=                        =" ,
+    "=                        =",
     "=                        =",
     "=                        =",
     "=  B              *      =",
@@ -184,47 +188,43 @@ scene("game", (levelIdx = 0) => {
   setGravity(3000);
   camScale(0.5, 0.5);
   console.log("level", levelIdx);
-  add([
-    text(`Level ${levelIdx + 1}`, { size: 12 }),
-    pos(5, 5),
-    fixed(),
-  ]);
+  add([text(`Level ${levelIdx + 1}`, { size: 12 }), pos(5, 5), fixed()]);
   function addControls() {
     add([
-      rect(width()/3, height()/5),
-      pos(width()/4, height()*0.8),
-      anchor('center'),
+      rect(width() / 3, height() / 5),
+      pos(width() / 4, height() * 0.8),
+      anchor("center"),
       color(255, 255, 255),
       opacity(0.35),
       fixed(),
-    ])
+    ]);
     add([
-      text('L', { size: height()/10 }),
-      pos(width()/4, height()*0.8),
-      anchor('center'),
+      text("L", { size: height() / 10 }),
+      pos(width() / 4, height() * 0.8),
+      anchor("center"),
       outline(4),
       color(255, 255, 255),
       opacity(0.55),
       fixed(),
-    ])
+    ]);
 
     add([
-      rect(width()/3, height()/5),
-      pos(width()*3/4, height()*0.8),
-      anchor('center'),
+      rect(width() / 3, height() / 5),
+      pos((width() * 3) / 4, height() * 0.8),
+      anchor("center"),
       color(255, 255, 255),
       opacity(0.35),
       fixed(),
-    ])
+    ]);
     add([
-      text('R', { size: height()/10 }),
-      pos(width()*3/4, height()*0.8),
-      anchor('center'),
+      text("R", { size: height() / 10 }),
+      pos((width() * 3) / 4, height() * 0.8),
+      anchor("center"),
       outline(4),
       color(255, 255, 255),
       opacity(0.55),
       fixed(),
-    ])
+    ]);
   }
   addControls();
   let isLastLevel = levelIdx === levels.length - 1;
@@ -232,7 +232,7 @@ scene("game", (levelIdx = 0) => {
     tileHeight: block_size,
     tileWidth: block_size,
     tiles: {
-      "_": () => [
+      _: () => [
         rect(block_size, block_size),
         color(Color.GREEN),
         area(),
@@ -286,14 +286,13 @@ scene("game", (levelIdx = 0) => {
     } else {
       bean.paused = true;
       addNotificationText("You win!", watermelon.pos);
-      wait(.5, () => {
+      wait(0.5, () => {
         if (isLastLevel) {
-          go("start", true)
+          go("start", true);
         } else {
-
-          go('game', levelIdx + 1);
+          go("game", levelIdx + 1);
         }
-      })
+      });
     }
   });
 
@@ -301,7 +300,7 @@ scene("game", (levelIdx = 0) => {
     // shake();
     addNotificationText("Ouch!", bean.pos);
     bean.paused = true;
-    wait(.5, () => go("game", levelIdx));
+    wait(0.5, () => go("game", levelIdx));
   });
 
   // add a kaboom on mouse click
@@ -325,4 +324,3 @@ scene("game", (levelIdx = 0) => {
     bean.jump(750);
   });
 });
-

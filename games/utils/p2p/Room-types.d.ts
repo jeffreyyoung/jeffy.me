@@ -1,6 +1,6 @@
 export type RoomState = {
   version: string;
-  users: (User & { isConnected: boolean, isHost: boolean })[];
+  users: (User & { isConnected: boolean; isHost: boolean })[];
   game: string;
 };
 
@@ -12,8 +12,8 @@ export type RoomActionMap = {
 };
 
 export type GameCommonActionMap = {
-  'syncUsers': { isFirstSync: boolean };
-}
+  syncUsers: { isFirstSync: boolean };
+};
 
 export type User = {
   id: string;
@@ -24,9 +24,12 @@ export type User = {
 
 export type AddRoom<T> = {
   [K in keyof T]: T[K] & { room: RoomState };
-}
+};
 
-export type Action<ActionMap, Key extends keyof ActionMap> = import('./State.js').ActionObject<ActionMap, Key>;
+export type Action<
+  ActionMap,
+  Key extends keyof ActionMap,
+> = import("./State.js").ActionObject<ActionMap, Key>;
 // export type Action<ActionMap, Key extends keyof ActionMap> = {
 //   type: Key;
 //   payload: ActionMap[Key];
@@ -44,22 +47,25 @@ export type IFrameMessageBase<ActionMap, State> = {
   gameName: string;
   action: Action<ActionMap, keyof ActionMap>;
 } & (
-  {
+  | {
       type: "action";
-    } | {
-      type: 'action-result';
+    }
+  | {
+      type: "action-result";
       resultState: State;
     }
 );
 
-export type PeerMessage<ActionMap, State> = {
-  kind: "peer-message";
-  type: 'state',
-  resultState?: State;
-  action?: Action<ActionMap, keyof ActionMap>;
-} | {
-  kind: 'peer-message',
-  type: 'iframe-relay',
-  gameName: string,
-  data: IFrameMessageBase<any, any>,
-};
+export type PeerMessage<ActionMap, State> =
+  | {
+      kind: "peer-message";
+      type: "state";
+      resultState?: State;
+      action?: Action<ActionMap, keyof ActionMap>;
+    }
+  | {
+      kind: "peer-message";
+      type: "iframe-relay";
+      gameName: string;
+      data: IFrameMessageBase<any, any>;
+    };

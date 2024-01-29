@@ -9,7 +9,7 @@ import {
 } from "./utils/game-server.js";
 
 const urlSearchParams = new URLSearchParams(
-  window.location.search.split("?")?.[1] || ""
+  window.location.search.split("?")?.[1] || "",
 );
 
 /**
@@ -94,8 +94,8 @@ let server = () =>
       console.log("onAction", state, action);
       let usedNums = new Set(
         Object.values(state.players).flatMap((player) =>
-          player.cards.map((card) => card.name)
-        )
+          player.cards.map((card) => card.name),
+        ),
       );
 
       function getUnusedNumber() {
@@ -148,7 +148,7 @@ let server = () =>
       if (state.status !== "in-level") {
         if (
           Object.values(state.players).every(
-            (player) => player.status === "ready"
+            (player) => player.status === "ready",
           )
         ) {
           state.status = "in-level";
@@ -177,7 +177,7 @@ let server = () =>
         let isCorrect = card.name === allCardsInHand[0].name;
         card.status = isCorrect ? "played-correct" : "played-incorrect";
         state.history.unshift(
-          `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`
+          `${isCorrect ? "✅" : "❌"} ${action.actor} played ${card.name}`,
         );
         if (allCardsInHand.length <= 1) {
           state.status = "level-complete";
@@ -207,7 +207,7 @@ watch(
         actor: appState.username,
       });
     }
-  }
+  },
 );
 
 function App() {
@@ -258,7 +258,10 @@ function LobbyIdForm() {
     <p>create new game</p>
     <button
       @click="${() => {
-        let lobbyId = Math.random().toString(36).substring(4, 8).toLocaleUpperCase();
+        let lobbyId = Math.random()
+          .toString(36)
+          .substring(4, 8)
+          .toLocaleUpperCase();
         window.localStorage.setItem(`isHost-${lobbyId}`, "true");
         window.location.href =
           window.location.href.split("?")[0] + "?lobbyId=" + lobbyId;
@@ -296,18 +299,17 @@ function LobbyIdForm() {
 
 let inviteLinkTimeoutId = 0;
 function InviteLink() {
-    
   return html`
     <div>
       <button
         @click="${(e) => {
-            clearTimeout(inviteLinkTimeoutId);
+          clearTimeout(inviteLinkTimeoutId);
           // copy to clipboard
           navigator.clipboard.writeText(window.location.href);
-            e.target.innerText = 'copied!';
-            inviteLinkTimeoutId = setTimeout(() => {
-                e.target.innerText = 'copy invite link';
-            }, 1000);
+          e.target.innerText = "copied!";
+          inviteLinkTimeoutId = setTimeout(() => {
+            e.target.innerText = "copy invite link";
+          }, 1000);
         }}"
       >
         copy invite link
@@ -337,7 +339,7 @@ function Game() {
 
 function ReadySection() {
   const notReadyPlayers = Object.values(appState.game.players).filter(
-    (player) => player.status !== "ready"
+    (player) => player.status !== "ready",
   );
   const me = () => appState.game.players[appState.username];
   return html` <div>
@@ -381,7 +383,7 @@ function CardsSection() {
       <div style="display: flex; flex-direction: row; flex-wrap: wrap;">
         ${() =>
           appState.game.players[appState.username].cards.map((card) =>
-            Card(card, card === playableCard)
+            Card(card, card === playableCard),
           )}
       </div>
     </div>
@@ -441,14 +443,14 @@ function PlayersSection() {
                             "played-correct": "✅",
                             "played-incorrect": "❌",
                             "in-hand": "⬜️",
-                          }[card.status])
+                          })[card.status],
                       )
                       .join("")
                   : ""}
               ${() => (player.status === "waiting" ? " (not ready)" : "")}
               ${() => (player.status === "ready" ? " (ready)" : "")}
             </li>
-          `.key(player.username)
+          `.key(player.username),
         )}
     </ul>
   `;

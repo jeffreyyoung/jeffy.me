@@ -117,7 +117,7 @@ scene("game", () => {
 
   onCollide("puck", "hitter", (puck, hitter) => {
     let angle = Vec2.fromAngle(puck.pos.angle(hitter.pos)).scale(
-      puckVelocityScale
+      puckVelocityScale,
     );
     // debugger;
     puck.yVelocity = angle.y;

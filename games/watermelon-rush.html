@@ -1,14 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Flappy watermelon feast</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <a href="/" style="position: absolute; user-select: none; padding: 2px; right: 0; z-index: 99999; background-color: rgba(255, 255, 255);">Quit</a>
+    <a
+      href="/"
+      style="
+        position: absolute;
+        user-select: none;
+        padding: 2px;
+        right: 0;
+        z-index: 99999;
+        background-color: rgba(255, 255, 255);
+      "
+      >Quit</a
+    >
     <script type="module">
       import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
-      import { addNotificationText, addTitleScene } from './utils/addNotificationText.js';
+      import {
+        addNotificationText,
+        addTitleScene,
+      } from "./utils/addNotificationText.js";
       // initialize context
       kaboom({
         background: [51, 204, 255],
@@ -22,19 +36,27 @@
 
       scene("start", () => {
         let directions = add([
-          text('Press on left side to jump left and right to jump right', { size: 14, width: width()*2/3, align: 'center' }),
+          text("Press on left side to jump left and right to jump right", {
+            size: 14,
+            width: (width() * 2) / 3,
+            align: "center",
+          }),
           pos(center()),
-          anchor('center'),
-        ])
+          anchor("center"),
+        ]);
         add([
-          text('Press anywhere to begin', { size: 14, width: width()*2/3, align: 'center' }),
+          text("Press anywhere to begin", {
+            size: 14,
+            width: (width() * 2) / 3,
+            align: "center",
+          }),
           pos(center().x, height() - 100),
-          anchor('center'),
-        ])
-        
-        onClick(() => go('game'));
-        onKeyPress(() => go('game'));
-      })
+          anchor("center"),
+        ]);
+
+        onClick(() => go("game"));
+        onKeyPress(() => go("game"));
+      });
 
       scene("end", () => {
         let clicks = 5;
@@ -74,36 +96,36 @@
         let platformWidth = 10;
         function addControls() {
           add([
-            rect(width()/3, height()/5),
-            pos(width()/4, height()*0.8),
-            anchor('center'),
+            rect(width() / 3, height() / 5),
+            pos(width() / 4, height() * 0.8),
+            anchor("center"),
             color(255, 255, 255),
-            opacity(0.35)
-          ])
+            opacity(0.35),
+          ]);
           add([
-            text('L', { size: height()/10, color: 'red' }),
-            pos(width()/4, height()*0.8),
-            anchor('center'),
+            text("L", { size: height() / 10, color: "red" }),
+            pos(width() / 4, height() * 0.8),
+            anchor("center"),
             outline(4),
             color(255, 255, 255),
-            opacity(0.55)
-          ])
+            opacity(0.55),
+          ]);
 
           add([
-            rect(width()/3, height()/5),
-            pos(width()*3/4, height()*0.8),
-            anchor('center'),
+            rect(width() / 3, height() / 5),
+            pos((width() * 3) / 4, height() * 0.8),
+            anchor("center"),
             color(255, 255, 255),
-            opacity(0.35)
-          ])
+            opacity(0.35),
+          ]);
           add([
-            text('R', { size: height()/10, color: 'red' }),
-            pos(width()*3/4, height()*0.8),
-            anchor('center'),
+            text("R", { size: height() / 10, color: "red" }),
+            pos((width() * 3) / 4, height() * 0.8),
+            anchor("center"),
             outline(4),
             color(255, 255, 255),
-            opacity(0.55)
-          ])
+            opacity(0.55),
+          ]);
         }
         addControls();
 
@@ -229,7 +251,7 @@
           score++;
           // addKaboom(food.pos);
           spawnFood();
-          addNotificationText('+1', bean.pos)
+          addNotificationText("+1", bean.pos);
           // drawText({
           //   text: 'yay!!!',
           //   pos: bean.pos

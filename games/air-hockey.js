@@ -4,7 +4,7 @@ import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 import { addNotificationText } from "./utils/addNotificationText.js";
 // initialize context
 kaboom({
-    background: [51, 204, 255],
+  background: [51, 204, 255],
 });
 let RADIUS = 50;
 scene("game", () => {
@@ -13,9 +13,9 @@ scene("game", () => {
 
   let score = add([
     text(`red: ${redPaddleScore}, blue: ${bluePaddleScore}`, { size: 18 }),
-    anchor('center'),
+    anchor("center"),
     pos(center()),
-  ])
+  ]);
 
   function updateScoreText() {
     score.text = `red: ${redPaddleScore}, blue: ${bluePaddleScore}`;
@@ -49,37 +49,42 @@ scene("game", () => {
 
   function moving() {
     let self = {
-        xVelocity: 0,
-        yVelocity: puckVelocityScale,
-        invertYVelocity() {
-            self.yVelocity = -self.yVelocity;
-        },
-        invertXVelocity() {
-            self.xVelocity = -self.xVelocity;
-        },
-        require: [ "pos" ],
-        update() {
-            if (this.pos.x <= 0 && this.xVelocity < 0) {
-                this.xVelocity = -this.xVelocity;
-            } else if (this.pos.x >= width() && this.xVelocity > 0) {
-                this.xVelocity = -this.xVelocity;
-            } else if (this.pos.y <= 0 && this.yVelocity < 0) {
-                this.yVelocity = -this.yVelocity;
-            } else if (this.pos.y >= height() && this.yVelocity > 0) {
-                this.yVelocity = -this.yVelocity;
-            }
-            if (this.pos.x < 0 || this.pos.x > width() || this.pos.y < 0 || this.pos.y > height()) {
-              this.moveTo(center());
-            }
-
-            this.move(this.xVelocity, this.yVelocity);
+      xVelocity: 0,
+      yVelocity: puckVelocityScale,
+      invertYVelocity() {
+        self.yVelocity = -self.yVelocity;
+      },
+      invertXVelocity() {
+        self.xVelocity = -self.xVelocity;
+      },
+      require: ["pos"],
+      update() {
+        if (this.pos.x <= 0 && this.xVelocity < 0) {
+          this.xVelocity = -this.xVelocity;
+        } else if (this.pos.x >= width() && this.xVelocity > 0) {
+          this.xVelocity = -this.xVelocity;
+        } else if (this.pos.y <= 0 && this.yVelocity < 0) {
+          this.yVelocity = -this.yVelocity;
+        } else if (this.pos.y >= height() && this.yVelocity > 0) {
+          this.yVelocity = -this.yVelocity;
         }
-    }
+        if (
+          this.pos.x < 0 ||
+          this.pos.x > width() ||
+          this.pos.y < 0 ||
+          this.pos.y > height()
+        ) {
+          this.moveTo(center());
+        }
+
+        this.move(this.xVelocity, this.yVelocity);
+      },
+    };
     return self;
   }
 
   let puck = add([
-    circle(RADIUS*3/4),
+    circle((RADIUS * 3) / 4),
     color(Color.BLACK),
     anchor("center"),
     pos(center().add(0, 10 + RADIUS)),
@@ -95,7 +100,7 @@ scene("game", () => {
   add([
     rect(wallWidth, height()),
     pos(0, 0),
-    area({ collisionIgnore: ['hitter']}),
+    area({ collisionIgnore: ["hitter"] }),
     body({ isStatic: true }),
     z(-1),
     "wall",
@@ -104,7 +109,7 @@ scene("game", () => {
   add([
     rect(wallWidth, height()),
     pos(width() - wallWidth, 0),
-    area({ collisionIgnore: ['hitter']}),
+    area({ collisionIgnore: ["hitter"] }),
     body({ isStatic: true }),
     z(-1),
     "wall",
@@ -114,7 +119,7 @@ scene("game", () => {
     rect(width(), wallWidth),
     pos(0, -wallWidth),
     area(),
-    body({ isStatic: true,  }),
+    body({ isStatic: true }),
     "wall",
     "topWall",
   ]);
@@ -126,23 +131,17 @@ scene("game", () => {
     "wall",
     "bottomWall",
   ]);
-  add([
-    rect(width(), 2),
-    pos(0, height()/4),
-    z(-1),
-    'quarterLine',
-  ]);
-  add([
-    rect(width(), 2),
-    pos(0, height()*3/4),
-    z(-1),
-    'quarterLine',
-  ]);
-
+  add([rect(width(), 2), pos(0, height() / 4), z(-1), "quarterLine"]);
+  add([rect(width(), 2), pos(0, (height() * 3) / 4), z(-1), "quarterLine"]);
 
   onCollide("puck", "hitter", (puck, hitter) => {
-    puckVelocityScale = Math.min(maxPuckVelocity, puckVelocityScale + puckVelocityDelta);
-    let angle = Vec2.fromAngle(puck.pos.angle(hitter.pos)).scale(puckVelocityScale);
+    puckVelocityScale = Math.min(
+      maxPuckVelocity,
+      puckVelocityScale + puckVelocityDelta,
+    );
+    let angle = Vec2.fromAngle(puck.pos.angle(hitter.pos)).scale(
+      puckVelocityScale,
+    );
     // debugger;
     puck.yVelocity = angle.y;
     puck.xVelocity = angle.x;
@@ -168,19 +167,19 @@ scene("game", () => {
   });
 
   function isRedTouch(touch) {
-    return touch.y < height() /4;
+    return touch.y < height() / 4;
   }
 
   function isBlueTouch(touch) {
-    return touch.y > (height() - height() /4);
+    return touch.y > height() - height() / 4;
   }
 
   function handleTouch(touch) {
     if (isBlueTouch(touch)) {
-        bluePaddle.moveTo(touch.x, touch.y-50);
+      bluePaddle.moveTo(touch.x, touch.y - 50);
     }
     if (isRedTouch(touch)) {
-        redPaddle.moveTo(touch.x, touch.y+50);
+      redPaddle.moveTo(touch.x, touch.y + 50);
     }
   }
 
@@ -189,34 +188,34 @@ scene("game", () => {
   onTouchMove(handleTouch);
 
   // @ts-ignore
-  onHoverUpdate(() => handleTouch(mousePos()))
+  onHoverUpdate(() => handleTouch(mousePos()));
 
-  onKeyDown('left', () => {
+  onKeyDown("left", () => {
     if (bluePaddle.pos.x < -10) {
       return;
     }
     bluePaddle.moveBy(-5, 0);
-  })
-  onKeyDown('right', () => {
+  });
+  onKeyDown("right", () => {
     if (bluePaddle.pos.x > width() + 10) {
       return;
     }
     bluePaddle.moveBy(5, 0);
-  })
+  });
 
-  onKeyDown('a', () => {
+  onKeyDown("a", () => {
     if (redPaddle.pos.x < -10) {
       return;
     }
     redPaddle.moveBy(-5, 0);
   });
-  
-  onKeyDown('d', () => {
+
+  onKeyDown("d", () => {
     if (redPaddle.pos.x > width() + 10) {
       return;
     }
     redPaddle.moveBy(5, 0);
-  })
+  });
 });
 
 go("game");

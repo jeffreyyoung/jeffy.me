@@ -3,11 +3,11 @@ import van from "../../deps/van.js";
 const { form, p, div, hr, input, button, span, h6 } = van.tags;
 
 const urlSearchParams = new URLSearchParams(
-  window.location.search.split("?")?.[1] || ""
+  window.location.search.split("?")?.[1] || "",
 );
 
 export const lobbyId = van.state(
-  Object.fromEntries(urlSearchParams.entries())?.lobbyId || ""
+  Object.fromEntries(urlSearchParams.entries())?.lobbyId || "",
 );
 export const isHost = van.derive(() => {
   return window.localStorage.getItem(`isHost-${lobbyId.val}`) === "true";
@@ -28,9 +28,10 @@ export const needsLobbyId = van.derive(() => {
 
 export function SetUserName() {
   return div(
-    { 
-      class: 'setup',
-      style: "margin-bottom: 30px" },
+    {
+      class: "setup",
+      style: "margin-bottom: 30px",
+    },
     p("What is your name?"),
     form(
       {
@@ -51,14 +52,14 @@ export function SetUserName() {
         },
       },
       input({ name: "username", placeholder: "your name" }),
-      button("join")
-    )
+      button("join"),
+    ),
   );
 }
 
 export function LobbySelection() {
   return div(
-    { style: "margin-bottom: 30px", class: 'setup' },
+    { style: "margin-bottom: 30px", class: "setup" },
     p("create new game"),
     form(
       {
@@ -69,7 +70,7 @@ export function LobbySelection() {
           window.location.href = `?lobbyId=${randomChars}`;
         },
       },
-      button("create")
+      button("create"),
     ),
     hr(),
     p("join existing game"),
@@ -95,39 +96,41 @@ export function LobbySelection() {
         placeholder: "lobby id",
         style: "padding: 6px",
       }),
-      button("join")
-    )
+      button("join"),
+    ),
   );
 }
 
 let timeoutId = 0;
 export const InviteSlot = () => {
-  return username.val && lobbyId.val ? div(
-    button(
-      {
-        onclick: (e) => {
-          e.preventDefault();
-          navigator.clipboard.writeText(window.location.href);
-          e.target.innerText = "copied!";
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            e.target.innerText = "copy invite link";
-          }, 1000);
-        },
-      },
-      "copy invite link"
-    ),
-    h6(
-      { style: "margin-top: 10px; margin-bottom: 0px; text-align: end;" },
-      `lobby id: ${lobbyId.val}`
-    )
-  ) : span();
+  return username.val && lobbyId.val
+    ? div(
+        button(
+          {
+            onclick: (e) => {
+              e.preventDefault();
+              navigator.clipboard.writeText(window.location.href);
+              e.target.innerText = "copied!";
+              clearTimeout(timeoutId);
+              timeoutId = setTimeout(() => {
+                e.target.innerText = "copy invite link";
+              }, 1000);
+            },
+          },
+          "copy invite link",
+        ),
+        h6(
+          { style: "margin-top: 10px; margin-bottom: 0px; text-align: end;" },
+          `lobby id: ${lobbyId.val}`,
+        ),
+      )
+    : span();
 };
 
 export function PreGameGate(children) {
   return div(
-    () => needsUserName.val ? SetUserName() : span(),
-    () => !needsUserName.val && needsLobbyId.val ? LobbySelection() : span(),
-    !needsUserName.val && !needsLobbyId.val ? children : span()
+    () => (needsUserName.val ? SetUserName() : span()),
+    () => (!needsUserName.val && needsLobbyId.val ? LobbySelection() : span()),
+    !needsUserName.val && !needsLobbyId.val ? children : span(),
   );
 }

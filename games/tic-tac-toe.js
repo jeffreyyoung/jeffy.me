@@ -141,7 +141,7 @@ const server = new Game(
         return state;
       },
     },
-  }
+  },
 );
 
 server.onStateChange((incoming) => {
@@ -178,33 +178,43 @@ const UI = () => {
                     style:
                       "font-size: 3em; display: flex; align-items: center; justify-content: center;",
                   },
-                  state.val.board[y][x]
+                  state.val.board[y][x],
                 );
-        })
-      )
+        }),
+      ),
     ),
     h4({ style: "text-align: center;" }, () =>
-    state.val.winner
-      ? `${state.val.winner} wins!`
-      : state.val.players.find((p) => p.id === server.userId)?.emoji ===
-        state.val.turn
-      ? "your turn"
-      : "waiting for other player"
-  ),
+      state.val.winner
+        ? `${state.val.winner} wins!`
+        : state.val.players.find((p) => p.id === server.userId)?.emoji ===
+            state.val.turn
+          ? "your turn"
+          : "waiting for other player",
+    ),
     div(
-      { style: () => `display: ${hasWinner.val ? 'flex' : 'none'}; justify-content: center;` },
+      {
+        style: () =>
+          `display: ${hasWinner.val ? "flex" : "none"}; justify-content: center;`,
+      },
       button(
         {
           onclick: () => {
             server.action("reset", {});
           },
         },
-        "reset"
-      )
+        "reset",
+      ),
     ),
     h4("player turn: ", () => state.val.turn),
     h4("players"),
-    () => ul(...state.val.players.map((p) => li(`${p.emoji} ${p.username} ${p.id === server.userId ? '(you)' : ''}`))),
+    () =>
+      ul(
+        ...state.val.players.map((p) =>
+          li(
+            `${p.emoji} ${p.username} ${p.id === server.userId ? "(you)" : ""}`,
+          ),
+        ),
+      ),
   );
 };
 

@@ -28,7 +28,7 @@ const {
 
 const mostRecentCard = van.state(
   /** @type {GameState['mostRecentCard']} */
-  (null)
+  (null),
 );
 
 const cardIndicator = van.derive(() => {
@@ -53,14 +53,14 @@ const gameState = van.state(
     level: 0,
     players: {},
     status: "before-start",
-  })
+  }),
 );
 
 const mistakeCount = van.state(0);
 
 const gameStatus = van.state(
   /** @type {GameState['status']} */
-  ("before-start")
+  ("before-start"),
 );
 
 let actor = game.userId;
@@ -93,14 +93,11 @@ const waitingOnText = van.derive(() => {
 });
 
 function App() {
-
   return div(
     () => (gameStatus.val === "in-level" ? Game() : span()),
-    () => gameStatus.val === "before-start" ? Waiting() : span(),
-    () => gameStatus.val === "level-complete"
-        ? LevelComplete()
-        : span(),
-    () => ( PlayerList() )
+    () => (gameStatus.val === "before-start" ? Waiting() : span()),
+    () => (gameStatus.val === "level-complete" ? LevelComplete() : span()),
+    () => PlayerList(),
   );
 }
 
@@ -125,9 +122,9 @@ function PlayerList() {
       ul(
         ...players.val.map((p) => {
           return li(p);
-        })
+        }),
       ),
-    p(small(mistakeCount, " mistakes so far"))
+    p(small(mistakeCount, " mistakes so far")),
   );
 }
 
@@ -138,7 +135,7 @@ function Waiting() {
     () =>
       iAmReady.val
         ? button({ onclick: () => game.action("ready", {}) }, "ready")
-        : p()
+        : p(),
   );
 }
 
@@ -150,13 +147,13 @@ function LevelComplete() {
     h1(
       { style: "text-align: center", class: "fadeInUp-animation" },
       level,
-      " complete!"
+      " complete!",
     ),
     p(waitingOnText),
     () =>
       iAmReady.val
         ? button({ onclick: () => game.action("ready", {}) }, "ready")
-        : p()
+        : p(),
   );
 }
 
@@ -169,15 +166,15 @@ function MainLayout(middle, bottom, button) {
       },
       div(),
       middle,
-      bottom
+      bottom,
     ),
     div(
       {
         style:
           "margin: 15 0; display: flex; flex-direction: column; align-items: space-between; justify-content: center",
       },
-      button
-    )
+      button,
+    ),
   );
 }
 
@@ -203,27 +200,27 @@ function Game() {
             },
             h1(
               { style: "text-align: center; margin-bottom: 0;" },
-              cardIndicator.val.name
+              cardIndicator.val.name,
             ),
             h6(
               {
                 style: `text-align: center; margin-top: 0; margin-bottom: 12px; color: ${cardIndicator.val.color}`,
               },
-              cardIndicator.val.text
-            )
+              cardIndicator.val.text,
+            ),
           )
         : span(),
     div(
       h6(
         { style: "text-align: center; margin: 0; margin-top: 15px;" },
-        "your cards"
+        "your cards",
       ),
       p(
         { style: "text-align: center; margin-top: 0" },
         ...myCards.val
           .map((c) => `${c.name}(${statusToEmoji[c.status]})`)
-          .join(", ")
-      )
+          .join(", "),
+      ),
     ),
     button(
       {
@@ -232,8 +229,8 @@ function Game() {
         onclick: () => game.action("play-card", {}),
       },
       "play ",
-      nextNumber
-    )
+      nextNumber,
+    ),
   );
 }
 

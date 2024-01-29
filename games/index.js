@@ -69,7 +69,7 @@ van.derive(() => {
   window.history.replaceState(
     {},
     "",
-    window.location.pathname + "?" + searchParams.toString()
+    window.location.pathname + "?" + searchParams.toString(),
   );
 });
 
@@ -121,7 +121,7 @@ van.add(
         style: "align-self: end;",
         onclick: () => (isModalVisible.val = !isModalVisible.val),
       },
-      h3("close")
+      h3("close"),
     ),
     h3("game"),
     div(
@@ -136,9 +136,9 @@ van.add(
               isModalVisible.val = false;
             },
           },
-          text
-        )
-      )
+          text,
+        ),
+      ),
     ),
     h3("invite link"),
     button(
@@ -154,7 +154,7 @@ van.add(
           }, 1000);
         },
       },
-      "copy invite link"
+      "copy invite link",
     ),
     h3("qr code"),
     p("scan the qr code to join"),
@@ -165,8 +165,7 @@ van.add(
       `,
       src: qrcode,
     }),
-   
-  )
+  ),
 );
 
 van.add(
@@ -194,9 +193,9 @@ van.add(
                   ? "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-up.svg"
                   : "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
             })
-          : span()
-    )
-  )
+          : span(),
+    ),
+  ),
 );
 
 van.add(
@@ -229,9 +228,9 @@ van.add(
           style: "margin-right: 12px;",
           placeholder: "your name",
         }),
-        button("set name")
-      )
-    )
+        button("set name"),
+      ),
+    ),
   ),
   div(
     {
@@ -254,8 +253,8 @@ van.add(
           game.val = e.target.value;
         },
       },
-      ...games.map(([value, text]) => option({ value }, text))
-    )
+      ...games.map(([value, text]) => option({ value }, text)),
+    ),
   ),
   div(
     {
@@ -277,7 +276,7 @@ van.add(
           lobbyId.val = Math.random().toString(36).slice(2);
         },
       },
-      "start playing"
+      "start playing",
     ),
     hr({
       style: "width: 50%; background-color: white; border: 1px solid white;",
@@ -294,8 +293,8 @@ van.add(
         style: "margin-right: 12px;",
         placeholder: "lobby id",
       }),
-      button("join lobby")
-    )
+      button("join lobby"),
+    ),
   ),
   iframe(
     {
@@ -304,8 +303,8 @@ van.add(
       style: () =>
         game.val && lobbyId.val && username.val ? "" : "display: none;",
     },
-    game
-  )
+    game,
+  ),
 
   // PreGameGate(() => {
   //   return iframe({

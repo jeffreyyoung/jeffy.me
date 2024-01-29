@@ -3,8 +3,7 @@ import { reactive, list, stateFields } from "./../deps/van-x.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { nUniqueRandomNumbers } from "./utils/random.js";
 import { doConfetti } from "./utils/confetti.js";
-import { Game } from './utils/p2p/Game.js';
-
+import { Game } from "./utils/p2p/Game.js";
 
 /**
  *
@@ -48,7 +47,7 @@ function range(start, end) {
  */
 function getNeighbors(
   index,
-  { rowCount, columnCount } = { rowCount: 9, columnCount: 9 }
+  { rowCount, columnCount } = { rowCount: 9, columnCount: 9 },
 ) {
   const [x, y] = indexToCoord(index, columnCount);
   const neighbors = [];
@@ -117,9 +116,8 @@ const state = reactive(
     rowCount: 9,
     winner: "",
     players: {},
-  })
+  }),
 );
-
 
 // @ts-ignore
 window.state = state;
@@ -148,16 +146,16 @@ function coordToIndex(x, y, rowSize = 9) {
 const colors = ["blue", "green", "red", "orange", "yellow", "purple", "pink"];
 
 const server = new Game(
-    /** @type {GameState} */
-    ({
-      version: "0",
-      board: createBoard(9, 9, 9),
-      bombCount: 9,
-      columnCount: 9,
-      rowCount: 9,
-      winner: "",
-      players: {},
-    }),
+  /** @type {GameState} */
+  ({
+    version: "0",
+    board: createBoard(9, 9, 9),
+    bombCount: 9,
+    columnCount: 9,
+    rowCount: 9,
+    winner: "",
+    players: {},
+  }),
   /** @type {{ reset: {}, move: { index: number, action: 'reveal' | 'flag' } }} */
   ({}),
   {
@@ -170,7 +168,7 @@ const server = new Game(
             color: user.color,
             score: state.players[user.id]?.score || 0,
             hasTouchedBomb: state.players[user.id]?.hasTouchedBomb || false,
-          }
+          };
         }
         return state;
       },
@@ -178,7 +176,7 @@ const server = new Game(
         recursiveAssign(state, {
           board: createBoard(9, 9, 9),
           bombCount: 9,
-        })
+        });
         Object.values(state.players).forEach((p) => {
           p.score = 0;
           p.hasTouchedBomb = false;
@@ -186,7 +184,7 @@ const server = new Game(
         return state;
       },
       move: (state, { index, action: _action }, actor) => {
-        console.log('do move', index, _action)
+        console.log("do move", index, _action);
         const action = _action;
         if (state.board[index].status !== "hidden") {
           return state;
@@ -238,7 +236,7 @@ const server = new Game(
         }
 
         const playersStillAlive = Object.values(state.players).filter(
-          (p) => !p.hasTouchedBomb
+          (p) => !p.hasTouchedBomb,
         );
         if (playersStillAlive.length === 1) {
           state.winner = playersStillAlive[0].name;
@@ -248,28 +246,26 @@ const server = new Game(
           const untouchedTiles = state.board.filter((t) => !t.revealedBy);
           if (untouchedTiles.length === 0) {
             state.winner = playersStillAlive.sort(
-              (a, b) => b.score - a.score
+              (a, b) => b.score - a.score,
             )[0].name;
           }
         }
 
         return state;
       },
-
-    }
-  }
+    },
+  },
 );
 
 server.onStateChange((nextState) => {
   console.log("state change", nextState);
-  recursiveAssign(state, nextState)
-})
+  recursiveAssign(state, nextState);
+});
 
 const remainingNonBombTiles = van.derive(() => {
   return state.board.filter((t) => t.type === "safe" && t.status === "hidden")
     .length;
 });
-
 
 const isGameOver = van.derive(() => {
   if (remainingNonBombTiles.val === 0) {
@@ -292,17 +288,17 @@ const GameUI = div(
     (...args) =>
       div(
         {
-          class: () => 'board '+ (isGameOver.val ? 'game-over' : ''),
+          class: () => "board " + (isGameOver.val ? "game-over" : ""),
           style: `user-select: none; display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
         },
-        ...args
+        ...args,
       ),
     state.board,
     (cell, remove, index) => {
       let fields = stateFields(
         /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
         // @ts-ignore
-        (state.board[index])
+        (state.board[index]),
       );
 
       let text = van.derive(() => {
@@ -325,10 +321,15 @@ const GameUI = div(
       return button(
         {
           "data-index": index,
-          style: () => [
-            state.players[cell.val.revealedBy]?.color ? `--player-color: ${state.players[cell.val.revealedBy]?.color}` : '',
-            cell.val.status === 'incorrect' ? `--final-color: pink` : '',
-          ].filter(Boolean).join('; '),
+          style: () =>
+            [
+              state.players[cell.val.revealedBy]?.color
+                ? `--player-color: ${state.players[cell.val.revealedBy]?.color}`
+                : "",
+              cell.val.status === "incorrect" ? `--final-color: pink` : "",
+            ]
+              .filter(Boolean)
+              .join("; "),
           class: () =>
             `tile ${
               cell.val.status !== "hidden"
@@ -369,31 +370,35 @@ const GameUI = div(
             });
           },
         },
-        () => text.val
+        () => text.val,
       );
-    }
+    },
   ),
   h1(
     {
       style: () =>
         `text-align: center; display: ${isGameOver.val ? "block" : "none"};`,
     },
-    () => (victor.val ? `${victor.val} wins!` : "draw!")
+    () => (victor.val ? `${victor.val} wins!` : "draw!"),
   ),
-  button({
-    onclick: () => {
-      server.action("reset", {});
-      // scroll to top
-      window.scrollTo(0, 0);
+  button(
+    {
+      onclick: () => {
+        server.action("reset", {});
+        // scroll to top
+        window.scrollTo(0, 0);
+      },
+      style: () =>
+        `display: ${isGameOver.val ? "block" : "none"}; margin: 0 auto;`,
     },
-    style: () => `display: ${isGameOver.val ? "block" : "none"}; margin: 0 auto;`,
-  }, 'play again'),
+    "play again",
+  ),
   h4(
     "remaining safe tiles ",
     remainingNonBombTiles,
     " • ",
     state.bombCount,
-    " bombs"
+    " bombs",
   ),
   h4("players"),
   list(ul, state.players, (player) =>
@@ -404,12 +409,9 @@ const GameUI = div(
       }),
       player.val.name,
       ", score ",
-      player.val.score
-    )
-  )
+      player.val.score,
+    ),
+  ),
 );
 
-van.add(
-  document.getElementById("game-slot"),
-  GameUI
-);
+van.add(document.getElementById("game-slot"), GameUI);

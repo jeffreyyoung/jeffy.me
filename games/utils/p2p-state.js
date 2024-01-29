@@ -11,7 +11,7 @@ import { Peer } from "https://esm.sh/peerjs@1.5.2?bundle-deps";
  *
  */
 
-const roomPrefix = '55555jeffy-me';
+const roomPrefix = "55555jeffy-me";
 
 /**
  * @template ActionMap
@@ -119,7 +119,6 @@ export class P2pState {
     this._emit("change:state", this.state);
   }
 
-
   /**
    *
    */
@@ -151,16 +150,16 @@ export class P2pState {
   listenForPeerConnections() {
     this.peer.on("connection", (conn) => {
       this.connections.push(conn);
-      conn.on('open', () => {
-        console.log('peer connection open');
+      conn.on("open", () => {
+        console.log("peer connection open");
         conn.send(
           /** @type {PeerJSPayload} */
           ({
             resultState: this.state,
-          })
+          }),
         );
-      })
-      
+      });
+
       conn.on("data", (data) => {
         // @ts-ignore
         this.onPeerData(data);
@@ -180,10 +179,12 @@ export class P2pState {
    *
    * */
   setupPeer() {
-    this.peer = new Peer(this.args.isHost ? roomPrefix + this.args.roomId : undefined, { debug: 1 });
+    this.peer = new Peer(
+      this.args.isHost ? roomPrefix + this.args.roomId : undefined,
+      { debug: 1 },
+    );
 
     this.peer.on("open", () => {
-      
       if (this.args.isHost) {
         this.setConnected(true);
       }
@@ -195,9 +196,9 @@ export class P2pState {
         this.listenForPeerConnections();
       }
     });
-    this.peer.on('error', (e) => {
-      console.error('peer error', e);
-    })
+    this.peer.on("error", (e) => {
+      console.error("peer error", e);
+    });
     // @ts-ignore err
     this.peer.on("close", (err) => {
       console.error("peer closed", err);
@@ -216,7 +217,7 @@ export class P2pState {
    * @param {PeerJSPayload} data
    */
   onPeerData(data) {
-    console.log('on peer data', data)
+    console.log("on peer data", data);
     const { action, resultState } = data;
 
     // check if we already have this state
@@ -236,8 +237,8 @@ export class P2pState {
         // forward this to connections
         this._sendToConnections({
           action,
-          resultState
-        })
+          resultState,
+        });
       }
       return;
     }
@@ -258,7 +259,7 @@ export class P2pState {
             appliedOnStateVersion: prevVersion,
           },
           resultState: this.state,
-        })
+        });
       }
     }
   }
@@ -270,7 +271,7 @@ export class P2pState {
     let newState = this.args.actions[action.type]?.(
       this.state,
       action.payload,
-      action.actor
+      action.actor,
     );
     newState.version = version;
     return newState;
@@ -283,7 +284,7 @@ export class P2pState {
    * @param {ActionMap[ActionType]} params
    */
   send(actionType, params) {
-    console.log('send action', actionType, params)
+    console.log("send action", actionType, params);
     /** @type {Action} */
     let action = {
       type: actionType,
