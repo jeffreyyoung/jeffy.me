@@ -38,7 +38,7 @@ van.derive(() => {
     return;
   }
   let curPartyId = partyId.val;
-  let url = window.location.pathname + "?p=" + partyId.val;
+  let url = window.location.origin + window.location.pathname + "?p=" + partyId.val;
   getQRCodeDataUrl(url).then((dataUrl) => {
     if (curPartyId !== partyId.val) return;
     qrCodeUrl.val = dataUrl;
