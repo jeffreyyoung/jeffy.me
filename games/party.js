@@ -355,7 +355,10 @@ van.add(
       br(),
       br(),
       br(),
-      a({ href: window.location.pathname }, 'leave party')
+      a({ href: window.location.pathname }, 'leave party'),
+      br(),
+      br(),
+      a({ href: '/' }, 'jeffy.me')
     )
   )
 );
