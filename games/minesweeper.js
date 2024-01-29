@@ -292,6 +292,7 @@ const GameUI = div(
     (...args) =>
       div(
         {
+          class: () => 'board '+ (isGameOver.val ? 'game-over' : ''),
           style: `user-select: none; display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
         },
         ...args
@@ -325,7 +326,7 @@ const GameUI = div(
         {
           "data-index": index,
           style: () =>
-            `--player-color: ${state.players[cell.val.revealedBy]?.color}; --final-color: ${cell.val.status === 'incorrect' ? 'pink' : 'rgba(221, 221, 221, 0.1)'};`,
+            `--player-color: ${state.players[cell.val.revealedBy]?.color};`,
           class: () =>
             `tile ${
               cell.val.status !== "hidden"

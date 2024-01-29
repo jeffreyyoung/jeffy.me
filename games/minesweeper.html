@@ -39,7 +39,12 @@
 
       .flash-player-color-animation {
         animation: 0.5s flash-player-color-key-frames;
-        background-color: var(--final-color, (221, 221, 221, 0.1));
+        background-color: var(--final-color, rgba(221, 221, 221, 0.1));
+      }
+
+      .board.game-over .tile {
+        background-color: var(--player-color);
+
       }
 
       @keyframes point-animation {
