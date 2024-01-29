@@ -28,46 +28,53 @@ import { State } from "./State.js";
  * @typedef {import('./Room-types.js').RoomState} RoomState
  */
 
+
 /**
  * @template {{ version: string }} StateShape
- * @template {{
- *   'init': { }
- *   'user-joined': { userId: string },
- *   'user-left': { userId: string },
- *   'user-updated': { userId: string },
- * }} ActionMap
+ * @template CustomActions
+ * @template {CustomActions & import('./Room-types.js').GameCommonActionMap} ActionMap
  */
-class Game {
+export class Game {
   /** @type {State<import("./Room-types.js").AddRoom<ActionMap>, StateShape>} */
   gameLogic;
 
   /** @type {RoomState} */
   room;
 
+  userId = "";
+
   /**
    * @param {StateShape} initialState
-   * @param {ActionMap} actionMap
-   * @param {StateLogicArgs<ActionMap, StateShape> & { gameName: string, userId: string, isHost: boolean }} logicArgs
+   * @param {CustomActions} customActions
+   * @param {StateLogicArgs<ActionMap, StateShape>} logicArgs
    */
-  constructor(initialState, actionMap, logicArgs) {
-    this.gameName = logicArgs.gameName;
-    this.isHost = logicArgs.isHost;
-    this.gameName = logicArgs.gameName;
-    this.userId = logicArgs.userId;
+  constructor(initialState, customActions, logicArgs) {
+    this.gameName = window.location.pathname;
     // @ts-ignore
-    this.gameLogic = new State(actionMap, initialState, logicArgs);
+    this.gameLogic = new State(
+      /** @type {ActionMap} */ ({}),
+      initialState,
+      logicArgs
+    );
 
     this.onStateChange = this.gameLogic.onStateChange.bind(this.gameLogic);
 
-    // figure out user id
-
     // listen for messages from parent
     this.listenForMessages();
+
+    // if we're not in an iframe, redirect to the player
+    if (window.location === window.parent.location) {
+        window.location.href = `/games/player.html?game=${encodeURIComponent(window.location.pathname)}`
+    }
+
+    this.action('init', {
+    });
   }
 
   listenForMessages() {
     window.addEventListener("message", (event) => {
-      if (event.data?.game === this.gameName) {
+        console.log("iframe message received", event.data);
+      if (event.data?.gameName === this.gameName) {
         this.handleMessage(event.data);
       }
     });
@@ -85,6 +92,7 @@ class Game {
     }
 
     if (message.type === "action") {
+      this.userId = message.viewerUserId;
       const result = this.gameLogic.handleAction({
         ...message.action,
         payload: {
@@ -110,8 +118,9 @@ class Game {
   }
 
   /**
-   * @param {keyof ActionMap} type
-   * @param {ActionMap[keyof ActionMap]} payload
+   * @template {keyof ActionMap} ActionType
+   * @param {ActionType} type
+   * @param {ActionMap[ActionType]} payload
    */
   action(type, payload) {
     this.sendMessage({
@@ -128,36 +137,4 @@ class Game {
   }
 }
 
-const myGame = new Game(
-  { version: "", food: 0, wood: 0, stone: 0, iron: 0, gold: 0 },
-  {
-    init: {},
-    "user-joined": { userId: "" },
-    "user-left": { userId: "" },
-    "user-updated": { userId: "" },
-    update: { resource: "", amount: 0 },
-  },
-  {
-    gameName: "resource-game",
-    userId: "123",
-    isHost: true,
-    actions: {
-      init: (state, payload, actor, extra) => {
-        return state;
-      },
-      "user-joined": (state, payload, actor, extra) => {
-        return state;
-      },
-      "user-left": (state, payload, actor, extra) => {
-        return state;
-      },
-      "user-updated": (state, payload, actor, extra) => {
-        return state;
-      },
-      update: (state, payload, actor, extra) => {
-        state[payload.resource] += payload.amount;
-        return state;
-      },
-    },
-  }
-);
+console.log("game loaded");

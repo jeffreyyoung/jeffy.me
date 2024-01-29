@@ -95,5 +95,5 @@ export function getQueryParam(name) {
 export function setQueryParam(name, value) {
   const urlParams = new URLSearchParams(window.location.search);
   urlParams.set(name, value);
-  window.history.replaceState({}, "", `${location.pathname}?${urlParams}`);
+  window.history.pushState({}, "", `${location.pathname}?${urlParams}`);
 }

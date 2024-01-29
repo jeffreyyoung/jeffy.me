@@ -11,11 +11,17 @@ export type RoomActionMap = {
   userLeave: { user: RoomState["users"][number] };
 };
 
+export type GameCommonActionMap = {
+  init: {},
+  'newUser': { userId: string };
+  'userLeft': { userId: string };
+  'userUpdate': { userId: string };
+}
 
 export type User = {
   id: string;
   name: string;
-  avatar: string;
+  emoji: string;
   color: string;
 };
 
@@ -23,7 +29,7 @@ export type AddRoom<T> = {
   [K in keyof T]: T[K] & { room: RoomState };
 }
 
-export type Action<ActionMap, Key extends keyof ActionMap> = import('./game-logic-server.js').ActionObject<ActionMap, Key>;
+export type Action<ActionMap, Key extends keyof ActionMap> = import('./State.js').ActionObject<ActionMap, Key>;
 // export type Action<ActionMap, Key extends keyof ActionMap> = {
 //   type: Key;
 //   payload: ActionMap[Key];

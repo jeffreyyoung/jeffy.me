@@ -113,6 +113,7 @@ export class State {
 
   reconcileState(resultState) {
     recursiveAssign(this.state, resultState);
+    this.setState(this.state);
     return resultState;
   }
 }

@@ -1,6 +1,6 @@
 import van from "../deps/van.js";
 import { getQRCodeDataUrl } from "./utils/qr-code.js";
-import { randomItem } from "./utils/random.js";
+import { getQueryParam, randomItem, setQueryParam } from "./utils/random.js";
 import {
   button,
   div,
@@ -18,23 +18,42 @@ import {
   input,
 } from "./utils/tags.js";
 import {
-    colors,
-    emojis,
-    partyId,
-    isHost,
-    user,
-    makePartyId,
-    makeUserId,
-} from './utils/game-values.js';
-import { P2pState } from "./utils/p2p/p2p-state.js";
+  colors,
+  emojis,
+  partyId,
+  isHost,
+  user,
+  makePartyId,
+  makeUserId,
+} from "./utils/game-values.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
-import { stateFields, reactive } from "../deps/van-x.js";
+import { stateFields, reactive, list } from "../deps/van-x.js";
+import { Room } from "./utils/p2p/Room.js";
+
+
+const qrCodeUrl = van.state("");
+van.derive(() => {
+  if (!partyId.val) {
+    qrCodeUrl.val = "";
+    return;
+  }
+  let curPartyId = partyId.val;
+  let url = window.location.href.split("?")[0] + "?party=" + partyId.val;
+  getQRCodeDataUrl(url).then((dataUrl) => {
+    if (curPartyId !== partyId.val) return;
+    qrCodeUrl.val = dataUrl;
+  });
+});
 
 const games = [
   {
-    name: 'speed minesweeper 💣',
-    url: '/games/minesweeper.html',
-    color: 'lightgray',
+    name: 'increment 🔢',
+    url: '/games/embeds/embed.html'
+  },
+  {
+    name: "speed minesweeper 💣",
+    url: "/games/minesweeper.html",
+    color: "lightgray",
   },
   {
     name: "tic-tac-toe ❌⭕️",
@@ -63,8 +82,6 @@ const games = [
   },
 ];
 
-
-
 /**
  * @typedef {{
  *   version: string,
@@ -74,87 +91,48 @@ const games = [
  * }} AppState
  */
 
-
-const appState = reactive(/** @type {AppState} */ ({
-  game: '',
-  users: [],
-  version: "",
-  gameState: {},
-}));
+const appState = reactive(
+  /** @type {import('./utils/p2p/Room-types.js').RoomState} */ ({
+    game: games.find((game) => game.url === getQueryParam("game"))?.url || "",
+    version: "",
+    users: [],
+  })
+);
+const gameStateField = stateFields(appState).game;
+van.derive(() => {
+  setQueryParam("game", gameStateField.val);
+})
 
 const selectedGameUrl = stateFields(appState).game;
 const selectedGame = van.derive(() => {
   return games.find((game) => game.url === selectedGameUrl.val);
 });
 
-const server = new P2pState(
-    /**
-     * @type {{
-     *    join: { user: AppState['users'][number] },
-     *    leave: { userId: string },
-     *    setGame: { game: string },
-     *    onGameUpdate: {
-     *        gameState: any,
-     *        action: any,
-     *    }
-     * }}
-     */
-    // @ts-ignore
-    ({}),
-    
-    appState,
+const room = new Room(appState.game);
 
-    {
-        actions: {
-            join: (state, { user }) => {
-                let u = state.users.find(u => u.id === user.id);
-                if (u) {
-                    Object.assign(u, user)
-                } else {
-                    state.users.push(user);
-                }
-                return state;
-            },
-            leave: (state, { userId }) => {
-                let index = state.users.findIndex(u => u.id === userId);
-                state.users.splice(index, 1);
-                return state;
-            },
+room.onStateChange((state) => {
+  console.log('state update', state);
+  recursiveAssign(appState, state);
+});
 
-            setGame: (state, { game }) => {
-                state.game = game;
-                return state;
-            },
-            onGameUpdate: (state, { gameState, action }) => {
-                state.gameState = gameState;
-                return state;
-            },
-        },
-        onConnectionChange(connected) {
-            if (connected && user.val?.id) {
-                server.send('join', {
-                    user: { ...user.val, connected: true, isHost: isHost.val },
-                });
-            }
-        },
-        onStateChange(state) {
-            if (appState.version !== state.version) {
-                recursiveAssign(appState, state);
-            }
-        }
-    }
-);
+room.onConnectionChange((connected) => {
+  if (!connected) {
+    return;
+  }
+  room.send("userJoin", {
+    user: {
+      ...user.val,
+      isConnected: true,
+      isHost: isHost.val,
+    },
+  });
+});
 
 van.derive(() => {
-    if (partyId.val && user.val?.id) {
-        server.connect({
-            userId: user.val?.id,
-            roomId: partyId.val,
-            isHost: isHost.val,
-        });
-    }
-})
-
+  if (partyId.val && user.val?.id) {
+    room.connect(isHost.val, user.val.id, partyId.val);
+  }
+});
 
 const mainViewContents = van.derive(() => {
   if (!user.val?.id) {
@@ -174,7 +152,7 @@ const modalIsOpen = van.state(false);
 
 const root = document.getElementById("root");
 
-const renderGames = (props) => {
+const renderGames = () => {
   return games.map((game) => {
     return button(
       {
@@ -191,7 +169,7 @@ const renderGames = (props) => {
                     };
                   `,
         onclick: () => {
-          server.send('setGame', { game: game.url });
+          room.send("setGame", { game: game.url });
           modalIsOpen.val = false;
         },
       },
@@ -210,15 +188,18 @@ van.add(
     },
     nav(
       h1("👻 ", () => selectedGame.val?.name || ""),
-      button({ onclick: () => (modalIsOpen.val = true) }, img({
-        style: 'padding: 1px; display: flex;',
-        src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg"
-      }))
+      button(
+        { onclick: () => (modalIsOpen.val = true) },
+        img({
+          style: "padding: 1px; display: flex;",
+          src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
+        })
+      )
     ),
     main(
       {
         class: "game-container",
-        style: 'background-color: white;'
+        style: "background-color: white;",
       },
 
       //   select user name
@@ -232,16 +213,16 @@ van.add(
                   : "display: none;"
               }
             `,
-            onsubmit: (e) => {
-                e.preventDefault();
-                if (e.target[0].value)
-                user.val = {
-                    id: makeUserId(),
-                    name: e.target[0].value,
-                    color: randomItem(colors),
-                    emoji: randomItem(emojis),
-                }
-            }
+          onsubmit: (e) => {
+            e.preventDefault();
+            if (e.target[0].value)
+              user.val = {
+                id: makeUserId(),
+                name: e.target[0].value,
+                color: randomItem(colors),
+                emoji: randomItem(emojis),
+              };
+          },
         },
         label(
           "whats your name?",
@@ -258,16 +239,17 @@ van.add(
         {
           style: () => `
               padding: 12px;
-              ${
-                mainViewContents.val === "select-game"
-                  ? ""
-                  : "display: none;"
-              }
+              ${mainViewContents.val === "select-game" ? "" : "display: none;"}
             `,
         },
         h2("hi ", () => user.val?.name, "! 👋"),
         p("what game do you want to play?"),
-        ...renderGames()
+        ...renderGames(),
+
+        br(),
+        br(),
+        h3("in your party"),
+        ...renderPartyUi()
       ),
 
       //   create party
@@ -281,27 +263,25 @@ van.add(
                       : "display: none;"
                   }
                 `,
-            onsubmit: (e) => {
-                e.preventDefault();
-                if (!user.val?.id) {
-                    return;
-                }
-                const userId = user.val.id;
-                
-                partyId.val = makePartyId(userId);
-
-
+          onsubmit: (e) => {
+            e.preventDefault();
+            if (!user.val?.id) {
+              return;
             }
+            const userId = user.val.id;
+
+            partyId.val = makePartyId(userId);
+          },
         },
         h2("hi ", () => user.val?.name, "! 👋"),
-        p('do you want to create a party?'),
-        button({ name: 'action', value: "create" }, "create"),
+        p("do you want to create a party?"),
+        button({ name: "action", value: "create" }, "create"),
         p("or join existing party?"),
         input({
-        name: "lobby-id",
-        placeholder: "lobby id",
+          name: "lobby-id",
+          placeholder: "lobby id",
         }),
-        button({ name: 'action', value: "join" }, "join")
+        button({ name: "action", value: "join" }, "join")
       ),
 
       //   in game
@@ -316,54 +296,6 @@ van.add(
   )
 );
 
-
-const players = van.state([
-  {
-    id: "ABDF",
-    name: "jeffy",
-    color: randomItem(colors),
-    emojis: randomItem(emojis),
-  },
-  {
-    id: "ABDF",
-    name: "&rea",
-    color: randomItem(colors),
-    emojis: randomItem(emojis),
-  },
-  {
-    id: "ABDF",
-    name: "harold",
-    color: randomItem(colors),
-    emojis: randomItem(emojis),
-  },
-  {
-    id: "ABDF",
-    name: "millie",
-    color: randomItem(colors),
-    emojis: randomItem(emojis),
-  },
-  {
-    id: "ABDF",
-    name: "sam",
-    color: randomItem(colors),
-    emojis: randomItem(emojis),
-  },
-]);
-
-const qrCodeUrl = van.state("");
-van.derive(() => {
-  
-  if (!partyId.val) {
-    qrCodeUrl.val = "";
-    return;
-  }
-  let curPartyId = partyId.val;
-  let url = window.location.href.split('?')[0]+'?party='+partyId.val;
-  getQRCodeDataUrl(url).then((dataUrl) => {
-    if (curPartyId !== partyId.val) return;
-    qrCodeUrl.val = dataUrl;
-  });
-});
 
 // menu
 van.add(
@@ -382,10 +314,13 @@ van.add(
         },
         "👻"
       ),
-      button({ onclick: () => (modalIsOpen.val = false) }, img({
-        style: 'padding: 1px; display: flex;',
-        src: "https://esm.sh/feather-icons/dist/icons/x.svg"
-      }))
+      button(
+        { onclick: () => (modalIsOpen.val = false) },
+        img({
+          style: "padding: 1px; display: flex;",
+          src: "https://esm.sh/feather-icons/dist/icons/x.svg",
+        })
+      )
     ),
     main(
       {
@@ -394,42 +329,48 @@ van.add(
       h2("games"),
       ...renderGames(),
       h2("in your party"),
-      ...players.val.map((player) => {
-        return div(
-          h3(
-            {
-              style: `display: inline-block; margin: 0; border-bottom: 2px solid ${player.color}; margin-bottom: 6px;`,
-            },
-            player.emojis,
-            " ",
-            player.name
-          )
-        );
-      }),
-      h2("invite to party"),
-      p("send an invite link"),
-      button(
-        {
-          id: 'copy-link-button',
-          onclick: () => {
-            clearTimeout(window.copyLinkTimeout);
-            navigator.clipboard.writeText(window.location.href);
-            let button = document.getElementById('copy-link-button');
-            button.innerText = 'copied!';
-            window.copyLinkTimeout = setTimeout(() => {
-              button.innerText = 'copy link';
-            }, 1000);
-          },
-        },
-        "copy link"
-      ),
-      p("or have a friend scan this qr code"),
-      () =>
-        qrCodeUrl.val
-          ? img({ src: qrCodeUrl.val, style: "width: 100%; max-width: 200px;" })
-          : div()
 
-      // div({ class: 'big' }, 'hi world')
+      ...renderPartyUi()
     )
   )
 );
+
+let copyLinkTimeout;
+
+function renderPartyUi() {
+  return [
+    list(div, appState.users, (user) => {
+      return div(
+        h3(
+          {
+            style: `display: inline-block; margin: 0; border-bottom: 2px solid ${user.val.color}; margin-bottom: 6px;`,
+          },
+          user.val.emoji,
+          " ",
+          user.val.name
+        )
+      );
+    }),
+    p("send an invite link"),
+    button(
+      {
+        id: "copy-link-button",
+        onclick: () => {
+          clearTimeout(copyLinkTimeout);
+          navigator.clipboard.writeText(window.location.href);
+          let button = document.getElementById("copy-link-button");
+          button.innerText = "copied!";
+          copyLinkTimeout = setTimeout(() => {
+            button.innerText = "copy link";
+          }, 1000);
+        },
+      },
+      "copy link"
+    ),
+    p("or have a friend scan this qr code"),
+    () =>
+      qrCodeUrl.val
+        ? img({ src: qrCodeUrl.val, style: "width: 100%; max-width: 200px;" })
+        : div(),
+  ];
+}
