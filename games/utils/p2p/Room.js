@@ -56,7 +56,7 @@ export class Room {
   /** @type {EventEmitter<{ "change:connection": [boolean] }>} */
   emitter = new EventEmitter();
 
-  /** @type {StateLogic<RoomActionMap, RoomState>, {}} */
+  /** @type {StateLogic<RoomActionMap, RoomState>} */
   roomState;
 
   /**

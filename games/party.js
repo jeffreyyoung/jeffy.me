@@ -88,7 +88,7 @@ const games = [
 /**
  * @typedef {{
  *   version: string,
- *   users: (User & { connected: boolean, isHost: boolean })[],
+ *   users: (import('./utils/p2p/Room-types.js').User & { connected: boolean, isHost: boolean })[],
  *   game: string,
  *   gameState: any,
  * }} AppState
