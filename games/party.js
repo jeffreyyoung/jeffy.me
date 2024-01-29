@@ -32,8 +32,8 @@ import {
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { stateFields, reactive, list } from "../deps/van-x.js";
 import { Room } from "./utils/p2p/Room.js";
-import { games as allGames } from './game-index.js';
-const games = allGames.filter(g => !g.hidden);
+import { games as allGames } from "./game-index.js";
+const games = allGames.filter((g) => !g.hidden);
 const qrCodeUrl = van.state("");
 van.derive(() => {
   if (!partyId.val) {
@@ -49,8 +49,6 @@ van.derive(() => {
   });
 });
 
-
-
 /**
  * @typedef {{
  *   version: string,
@@ -65,7 +63,7 @@ const appState = reactive(
     game: games.find((game) => game.url === getQueryParam("game"))?.url || "",
     version: "",
     users: [],
-  }),
+  })
 );
 const gameStateField = stateFields(appState).game;
 van.derive(() => {
@@ -75,6 +73,18 @@ van.derive(() => {
 const selectedGameUrl = stateFields(appState).game;
 const selectedGame = van.derive(() => {
   return games.find((game) => game.url === selectedGameUrl.val);
+});
+
+const iframeUrl = van.derive(() => {
+  if (!selectedGameUrl.val) return "";
+
+  if (selectedGameUrl.val.endsWith(".js")) {
+    return `/games/embeds/embed.html?game=${encodeURIComponent(
+      selectedGameUrl.val
+    )}`;
+  }
+
+  return selectedGameUrl.val;
 });
 
 const room = new Room(appState.game);
@@ -148,7 +158,7 @@ const renderGames = () => {
           modalIsOpen.val = false;
         },
       },
-      game.name,
+      game.name
     );
   });
 };
@@ -159,7 +169,7 @@ van.add(
   div(
     {
       class: () => `page`,
-      style: () => `background-color: ${selectedGame.val?.color || 'ivory'};`,
+      style: () => `background-color: ${selectedGame.val?.color || "ivory"};`,
     },
     nav(
       h3("👻 ", () => selectedGame.val?.name || ""),
@@ -180,14 +190,15 @@ van.add(
           img({
             style: "padding: 1px; display: flex;",
             src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
-          }),
-        ),
-      ),
+          })
+        )
+      )
     ),
     main(
       {
         class: "game-container",
-        style: () => `background-color: ${selectedGame.val ? 'white' : 'ivory'};`,
+        style: () =>
+          `background-color: ${selectedGame.val ? "white" : "ivory"};`,
       },
 
       //   select user name
@@ -220,8 +231,8 @@ van.add(
             name: "username",
             placeholder: "your name",
           }),
-          button("continue"),
-        ),
+          button("continue")
+        )
       ),
       //   select game
       div(
@@ -238,7 +249,7 @@ van.add(
         br(),
         br(),
         h3("in your party"),
-        ...renderPartyUi(),
+        ...renderPartyUi()
       ),
 
       //   create party
@@ -270,19 +281,19 @@ van.add(
           name: "lobby-id",
           placeholder: "lobby id",
         }),
-        button({ name: "action", value: "join" }, "join"),
+        button({ name: "action", value: "join" }, "join")
       ),
 
       //   in game
       () =>
         mainViewContents.val === "in-game"
           ? iframe({
-              src: selectedGame.val?.url,
+              src: iframeUrl,
               style: "border: none; width: 100%; height: 100%;",
             })
-          : div(),
-    ),
-  ),
+          : div()
+    )
+  )
 );
 
 // menu
@@ -300,15 +311,15 @@ van.add(
         {
           "aria-hidden": "true",
         },
-        "👻",
+        "👻"
       ),
       button(
         { onclick: () => (modalIsOpen.val = false) },
         img({
           style: "padding: 1px; display: flex;",
           src: "https://esm.sh/feather-icons/dist/icons/x.svg",
-        }),
-      ),
+        })
+      )
     ),
     main(
       {
@@ -326,9 +337,9 @@ van.add(
       a({ href: window.location.pathname }, "leave party"),
       br(),
       br(),
-      a({ href: "/" }, "jeffy.me"),
-    ),
-  ),
+      a({ href: "/" }, "jeffy.me")
+    )
+  )
 );
 
 let copyLinkTimeout;
@@ -349,11 +360,11 @@ function renderPartyUi() {
             },
             user.val.emoji,
             " ",
-            user.val.name,
+            user.val.name
           ),
           () => (user.val.isHost ? " (host)" : ""),
-          () => (user.val.id === room.userId ? " (you)" : ""),
-        ),
+          () => (user.val.id === room.userId ? " (you)" : "")
+        )
       );
     }),
     p("send an invite link"),
@@ -370,7 +381,7 @@ function renderPartyUi() {
           }, 1000);
         },
       },
-      "copy link",
+      "copy link"
     ),
     p("or have a friend scan this qr code"),
     () =>
