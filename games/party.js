@@ -342,7 +342,7 @@ van.add(
     ),
     main(
       {
-        style: "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow: scroll;",
+        style: "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
       },
       h2("games"),
       ...renderGames(),
