@@ -47,10 +47,6 @@ van.derive(() => {
 
 const games = [
   {
-    name: "increment 🔢",
-    url: "/games/embeds/embed.html",
-  },
-  {
     name: "speed minesweeper 💣",
     url: "/games/minesweeper.html",
     color: "lightgray",
@@ -71,15 +67,19 @@ const games = [
     color: "lightgreen",
   },
   {
-    name: "scum 🃏",
+    name: "increment 🔢",
+    url: "/games/embeds/embed.html",
+  },
+  {
+    name: "scum 🃏 (in progress)",
     url: "/games/scum.html",
     color: "lightpink",
   },
-  {
-    name: "air hockey 🏒",
-    url: "/games/air-hockey.html",
-    color: "aqua",
-  },
+  // {
+  //   name: "air hockey 🏒",
+  //   url: "/games/air-hockey.html",
+  //   color: "aqua",
+  // },
 ];
 
 /**
@@ -372,10 +372,10 @@ function renderPartyUi() {
     button(
       {
         id: "copy-link-button",
-        onclick: () => {
+        onclick: (e) => {
           clearTimeout(copyLinkTimeout);
           navigator.clipboard.writeText(window.location.href);
-          let button = document.getElementById("copy-link-button");
+          let button = e.target.closest("button");
           button.innerText = "copied!";
           copyLinkTimeout = setTimeout(() => {
             button.innerText = "copy link";
