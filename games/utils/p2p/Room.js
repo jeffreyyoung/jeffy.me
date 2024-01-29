@@ -331,6 +331,10 @@ export class Room {
       viewerUserId: this.userId,
     };
     let iframe = document.querySelector("iframe");
+    if (!iframe) {
+        console.error("no iframe found");
+        return;
+    }
     iframe.contentWindow.postMessage(message, "*");
   }
 
