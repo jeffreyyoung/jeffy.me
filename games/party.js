@@ -365,11 +365,18 @@ function renderPartyUi() {
       return div(
         h3(
           {
-            style: `display: inline-block; margin: 0; border-bottom: 2px solid ${user.val.color}; margin-bottom: 6px;`,
+            style: () => `display: inline-block; margin: 0; margin-bottom: 6px; font-weight: normal;`,
           },
+          span(
+            {
+              style: () => `border-bottom: 2px solid ${user.val.color}; font-weight: bold;`
+            },
           user.val.emoji,
           " ",
-          user.val.name
+          user.val.name,
+          ),
+          () => user.val.isHost ? ' (host)' : '',
+          () => user.val.id === room.userId ? ' (you)' : '',
         )
       );
     }),
