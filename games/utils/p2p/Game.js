@@ -64,7 +64,7 @@ export class Game {
 
     // if we're not in an iframe, redirect to the player
     if (window.location === window.parent.location) {
-        window.location.href = `/games/player.html?game=${encodeURIComponent(window.location.pathname)}`
+        window.location.href = `/games/party.html?game=${encodeURIComponent(window.location.pathname)}`
     }
 
     this.action('syncUsers', {
