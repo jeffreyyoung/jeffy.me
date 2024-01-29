@@ -109,7 +109,7 @@ export class Room {
     );
 
     this.roomState.emitter.on("change:state", (state, action) => {
-        this.sendRoomEventToIframe('syncUsers', {});
+        this.sendRoomEventToIframe('syncUsers', { isFirstSync: false });
     })
 
     window.addEventListener("message", (event) => {

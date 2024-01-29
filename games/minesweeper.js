@@ -162,18 +162,6 @@ const server = new Game(
   ({}),
   {
     actions: {
-      init: (state, { room }) => {
-        for (const user of room.users) {
-          state.players[user.id] = {
-            name: user.name,
-            isHost: user.isHost,
-            color: user.color,
-            score: 0,
-            hasTouchedBomb: false,
-          }
-        }
-        return state;
-      },
       syncUsers: (state, { room }) => {
         for (const user of room.users) {
           state.players[user.id] = {

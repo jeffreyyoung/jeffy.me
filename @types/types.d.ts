@@ -8,6 +8,10 @@ declare module "https://esm.sh/@arrow-js/core@1.0.0-alpha.9" {
   export * from '@arrow-js/core';
 }
 
+declare module "https://esm.sh/lit-html@3.1.1" {
+  export * from 'lit-html';
+}
+
 declare module "https://esm.sh/canvas-confetti@1.6.0" {
   export default function createConfetti(options?: any): any;
 }

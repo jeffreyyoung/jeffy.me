@@ -67,7 +67,8 @@ export class Game {
         window.location.href = `/games/player.html?game=${encodeURIComponent(window.location.pathname)}`
     }
 
-    this.action('init', {
+    this.action('syncUsers', {
+        isFirstSync: true,
     });
   }
 

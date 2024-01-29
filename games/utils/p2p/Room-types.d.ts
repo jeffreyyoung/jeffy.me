@@ -12,8 +12,7 @@ export type RoomActionMap = {
 };
 
 export type GameCommonActionMap = {
-  init: {},
-  'syncUsers': {};
+  'syncUsers': { isFirstSync: boolean };
 }
 
 export type User = {
