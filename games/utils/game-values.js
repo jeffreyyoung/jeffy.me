@@ -1,7 +1,7 @@
 import van from "../../deps/van.js";
 import { getQueryParam, setQueryParam } from "./random.js";
 
-export const partyId = van.state(getQueryParam("party") || "");
+export const partyId = van.state(getQueryParam("p") || "");
 
 /**
  * 
@@ -33,7 +33,7 @@ van.derive(() => {
 });
 
 van.derive(() => {
-    setQueryParam("party", partyId.val);
+    setQueryParam("p", partyId.val);
 })
 
 const getAlphaNumeric = () => {

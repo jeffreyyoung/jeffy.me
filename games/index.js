@@ -1,7 +1,5 @@
-import { stateFields, calc } from "../deps/van-x.js";
-import { list, reactive } from "../deps/van-x.js";
 import van from "../deps/van.js";
-import { lobbyId, PreGameGate, username } from "./utils/pre-game.js";
+import { lobbyId, username } from "./utils/pre-game.js";
 import { getQueryParam, setQueryParam } from "./utils/random.js";
 import {
   div,

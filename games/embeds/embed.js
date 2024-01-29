@@ -7,9 +7,6 @@ const game = new Game(
     },
     {
         actions: {
-            init(state, payload, actor) {
-                return state;
-            },
             syncUsers(state, payload, actor) {
                 return state;
             },
