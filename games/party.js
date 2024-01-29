@@ -17,6 +17,7 @@ import {
   br,
   input,
   span,
+  a
 } from "./utils/tags.js";
 import {
   colors,
@@ -341,13 +342,17 @@ van.add(
     ),
     main(
       {
-        style: "padding: 12px; padding-top: 0;",
+        style: "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow: scroll;",
       },
       h2("games"),
       ...renderGames(),
       h2("in your party"),
 
       ...renderPartyUi(),
+      br(),
+      br(),
+      br(),
+      a({ href: window.location.pathname }, 'leave party')
     )
   )
 );
