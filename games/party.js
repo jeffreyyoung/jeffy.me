@@ -17,7 +17,8 @@ import {
   br,
   input,
   span,
-  a
+  a,
+  h4
 } from "./utils/tags.js";
 import {
   colors,
@@ -244,9 +245,11 @@ van.add(
           },
         },
         label(
-          "whats your name?",
+          h4(
+          "enter a user name to play"),
           br(),
           input({
+            style: 'margin-right: 6px;',
             name: "username",
             placeholder: "your name",
           }),
