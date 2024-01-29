@@ -32,7 +32,8 @@ import {
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { stateFields, reactive, list } from "../deps/van-x.js";
 import { Room } from "./utils/p2p/Room.js";
-
+import { games as allGames } from './game-index.js';
+const games = allGames.filter(g => !g.hidden);
 const qrCodeUrl = van.state("");
 van.derive(() => {
   if (!partyId.val) {
@@ -48,42 +49,7 @@ van.derive(() => {
   });
 });
 
-const games = [
-  {
-    name: "speed minesweeper 💣",
-    url: "/games/minesweeper.html",
-    color: "lightgray",
-  },
-  {
-    name: "tic-tac-toe ❌⭕️",
-    url: "/games/tic-tac-toe.html",
-    color: "lightblue",
-  },
-  {
-    name: "cross-clues 🕵️",
-    url: "/games/cross-clues.html",
-    color: "lightcoral",
-  },
-  {
-    name: "the-mind 🧠",
-    url: "/games/the-mind.html",
-    color: "lightgreen",
-  },
-  {
-    name: "increment 🔢",
-    url: "/games/embeds/embed.html",
-  },
-  {
-    name: "scum 🃏 (in progress)",
-    url: "/games/scum.html",
-    color: "lightpink",
-  },
-  // {
-  //   name: "air hockey 🏒",
-  //   url: "/games/air-hockey.html",
-  //   color: "aqua",
-  // },
-];
+
 
 /**
  * @typedef {{
