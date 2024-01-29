@@ -325,8 +325,10 @@ const GameUI = div(
       return button(
         {
           "data-index": index,
-          style: () =>
-            `--player-color: ${state.players[cell.val.revealedBy]?.color}; --final-color: ${cell.val.status === 'incorrect' ? 'pink' : ''};`,
+          style: () => [
+            state.players[cell.val.revealedBy]?.color ? `--player-color: ${state.players[cell.val.revealedBy]?.color}` : '',
+            cell.val.status === 'incorrect' ? `--final-color: pink` : '',
+          ].filter(Boolean).join('; '),
           class: () =>
             `tile ${
               cell.val.status !== "hidden"
