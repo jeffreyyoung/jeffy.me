@@ -1,0 +1,14 @@
+{
+    "name": "jeffy.me games",
+    "short_name": "🍕 games",
+    "start_url": "/games/party.html",
+    "display": "standalone",
+    "background_color": "#fff",
+    "description": "A social gaming app",
+    "icons": [
+        { "src": "/assets/icon-192.png", "type": "image/png", "sizes": "192x192" },
+        { "src": "/assets/icon-512.png", "type": "image/png", "sizes": "512x512" },
+        { "src": "/assets/icon-192-maskable.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+        { "src": "/assets/icon-512-maskable.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+      ]
+  }
