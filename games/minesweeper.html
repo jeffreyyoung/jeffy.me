@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="minesweeper.js" type="module"></script>
     <style>
+      :root {
+        --player-color: rgba(221, 221, 221, 0.1);
+        --final-color: rgba(221, 221, 221, 0.1);
+        --default-color: rgba(221, 221, 221, 0.1);
+      }
       h1 {
         text-align: center;
       }
@@ -33,17 +38,17 @@
           background-color: var(--player-color);
         }
         100% {
-          background-color: var(--final-color,rgba(221, 221, 221, 0.1));
+          background-color: var(--final-color);
         }
       }
 
-      .flash-player-color-animation {
+      :not(.game-over) .flash-player-color-animation {
         animation: 0.5s flash-player-color-key-frames;
-        background-color: var(--final-color,rgba(221, 221, 221, 0.1));
+        background-color: var(--final-color);
       }
 
       .board.game-over .tile {
-        background-color: var(--player-color,rgba(221, 221, 221, 0.1));
+        background-color: var(--player-color);
       }
 
       
@@ -80,7 +85,7 @@
         color: "red" !important;
       } */
 
-      .revealed-tile {
+      .revealed-tile, .game-over .tile {
         text-align: center;
         display: flex;
         align-items: center;

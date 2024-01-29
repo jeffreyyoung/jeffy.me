@@ -47,7 +47,7 @@ function range(start, end) {
  */
 function getNeighbors(
   index,
-  { rowCount, columnCount } = { rowCount: 9, columnCount: 9 },
+  { rowCount, columnCount } = { rowCount: 9, columnCount: 9 }
 ) {
   const [x, y] = indexToCoord(index, columnCount);
   const neighbors = [];
@@ -116,7 +116,7 @@ const state = reactive(
     rowCount: 9,
     winner: "",
     players: {},
-  }),
+  })
 );
 
 // @ts-ignore
@@ -236,7 +236,7 @@ const server = new Game(
         }
 
         const playersStillAlive = Object.values(state.players).filter(
-          (p) => !p.hasTouchedBomb,
+          (p) => !p.hasTouchedBomb
         );
         if (playersStillAlive.length === 1) {
           state.winner = playersStillAlive[0].name;
@@ -246,7 +246,7 @@ const server = new Game(
           const untouchedTiles = state.board.filter((t) => !t.revealedBy);
           if (untouchedTiles.length === 0) {
             state.winner = playersStillAlive.sort(
-              (a, b) => b.score - a.score,
+              (a, b) => b.score - a.score
             )[0].name;
           }
         }
@@ -254,7 +254,7 @@ const server = new Game(
         return state;
       },
     },
-  },
+  }
 );
 
 server.onStateChange((nextState) => {
@@ -291,14 +291,14 @@ const GameUI = div(
           class: () => "board " + (isGameOver.val ? "game-over" : ""),
           style: `user-select: none; display: grid; grid-template-columns: repeat(${state.columnCount}, 1fr); grid-template-rows: repeat(${state.rowCount}, 1fr); width: 100%; aspect-ratio: 1; margin: 0 auto;`,
         },
-        ...args,
+        ...args
       ),
     state.board,
     (cell, remove, index) => {
       let fields = stateFields(
         /** @type {GameState['board'][0] & import("./../deps/van-x.js").ReactiveObj} */
         // @ts-ignore
-        (state.board[index]),
+        (state.board[index])
       );
 
       let text = van.derive(() => {
@@ -331,17 +331,20 @@ const GameUI = div(
               .filter(Boolean)
               .join("; "),
           class: () =>
-            `tile ${
-              cell.val.status !== "hidden"
-                ? `revealed-tile flash-player-color-animation tile-${cell.val.status}`
-                : ""
-            }
-              ${
-                cell.val.type === "safe"
-                  ? "tile-neighbors-" + cell.val.neighboringBombCount
-                  : ""
-              }
-              `,
+            [
+              "tile",
+              `tile-${cell.val.status}`,
+              cell.val.status !== "hidden" && !isGameOver.val
+                ? `flash-player-color-animation`
+                : "",
+              isGameOver.val || cell.val.status !== "hidden"
+                ? "revealed-tile"
+                : "",
+              
+              cell.val.type === "safe"
+                ? "tile-neighbors-" + cell.val.neighboringBombCount
+                : "",
+            ].join(" "),
           disabled: () => !!cell.val.revealedBy,
           onmousedown: (e) => {
             longPressTimeout = setTimeout(() => {
@@ -370,16 +373,16 @@ const GameUI = div(
             });
           },
         },
-        () => text.val,
+        () => text.val
       );
-    },
+    }
   ),
   h1(
     {
       style: () =>
         `text-align: center; display: ${isGameOver.val ? "block" : "none"};`,
     },
-    () => (victor.val ? `${victor.val} wins!` : "draw!"),
+    () => (victor.val ? `${victor.val} wins!` : "draw!")
   ),
   button(
     {
@@ -391,14 +394,14 @@ const GameUI = div(
       style: () =>
         `display: ${isGameOver.val ? "block" : "none"}; margin: 0 auto;`,
     },
-    "play again",
+    "play again"
   ),
   h4(
     "remaining safe tiles ",
     remainingNonBombTiles,
     " • ",
     state.bombCount,
-    " bombs",
+    " bombs"
   ),
   h4("players"),
   list(ul, state.players, (player) =>
@@ -409,9 +412,9 @@ const GameUI = div(
       }),
       player.val.name,
       ", score ",
-      player.val.score,
-    ),
-  ),
+      player.val.score
+    )
+  )
 );
 
 van.add(document.getElementById("game-slot"), GameUI);
