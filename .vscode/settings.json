@@ -1,3 +1,4 @@
 {
-  "livePreview.previewDebounceDelay": 1000
+  "livePreview.previewDebounceDelay": 1000,
+  "editor.formatOnSave": true
 }
