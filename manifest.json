@@ -1,6 +1,6 @@
 {
     "name": "jeffy.me games",
-    "short_name": "🍕 games",
+    "short_name": "jeffy.me",
     "start_url": "/games/party.html",
     "display": "standalone",
     "background_color": "#fff",
