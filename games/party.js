@@ -193,7 +193,7 @@ van.add(
   div(
     {
       class: () => `page`,
-      style: () => `background-color: ${selectedGame.val?.color};`,
+      style: () => `background-color: ${selectedGame.val?.color || 'ivory'};`,
     },
     nav(
       h3("👻 ", () => selectedGame.val?.name || ""),
@@ -221,7 +221,7 @@ van.add(
     main(
       {
         class: "game-container",
-        style: "background-color: white;",
+        style: () => `background-color: ${selectedGame.val ? 'white' : 'ivory'};`,
       },
 
       //   select user name
