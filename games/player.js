@@ -16,6 +16,7 @@ import {
   p,
   br,
   input,
+  span,
 } from "./utils/tags.js";
 import {
   colors,
@@ -29,7 +30,6 @@ import {
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { stateFields, reactive, list } from "../deps/van-x.js";
 import { Room } from "./utils/p2p/Room.js";
-
 
 const qrCodeUrl = van.state("");
 van.derive(() => {
@@ -47,8 +47,8 @@ van.derive(() => {
 
 const games = [
   {
-    name: 'increment 🔢',
-    url: '/games/embeds/embed.html'
+    name: "increment 🔢",
+    url: "/games/embeds/embed.html",
   },
   {
     name: "speed minesweeper 💣",
@@ -101,7 +101,7 @@ const appState = reactive(
 const gameStateField = stateFields(appState).game;
 van.derive(() => {
   setQueryParam("game", gameStateField.val);
-})
+});
 
 const selectedGameUrl = stateFields(appState).game;
 const selectedGame = van.derive(() => {
@@ -111,12 +111,18 @@ const selectedGame = van.derive(() => {
 const room = new Room(appState.game);
 
 room.onStateChange((state) => {
-  console.log('state update', state);
+  console.log("state update", state);
   recursiveAssign(appState, state);
 });
 
-room.onConnectionChange((connected) => {
-  if (!connected) {
+const connected = van.derive(() => {
+  return false;
+});
+
+room.onConnectionChange((_connected) => {
+  connected.val = _connected;
+
+  if (!_connected) {
     return;
   }
   room.send("userJoin", {
@@ -188,12 +194,24 @@ van.add(
     },
     nav(
       h3("👻 ", () => selectedGame.val?.name || ""),
-      button(
-        { onclick: () => (modalIsOpen.val = true) },
-        img({
-          style: "padding: 1px; display: flex;",
-          src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
-        })
+      div(
+        {
+          style: "display: flex; align-items: center; justify-content: center; gap: 6px;",
+        },
+
+          span({
+            style: () =>
+              `background-color: ${
+                connected.val ? "green" : "gold"
+              }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block;`,
+          }),
+        button(
+          { onclick: () => (modalIsOpen.val = true) },
+          img({
+            style: "padding: 1px; display: flex;",
+            src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
+          })
+        )
       )
     ),
     main(
@@ -296,7 +314,6 @@ van.add(
   )
 );
 
-
 // menu
 van.add(
   root,
@@ -330,7 +347,7 @@ van.add(
       ...renderGames(),
       h2("in your party"),
 
-      ...renderPartyUi()
+      ...renderPartyUi(),
     )
   )
 );

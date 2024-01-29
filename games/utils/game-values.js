@@ -68,7 +68,6 @@ export const colors = [
     "brown",
     "black",
     "gray",
-    "white",
 ];
 
 export const emojis = ["👻", "🤖", "👽", "👾", "🤡", "👺", "👹", "👿", "🎃", "💀"];

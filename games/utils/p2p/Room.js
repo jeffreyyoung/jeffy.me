@@ -408,7 +408,11 @@ export class Room {
   broadcastMessage(message) {
     console.log("sending message!", message);
     this.connections.forEach((conn) => {
-      conn.send(message);
+        if (conn.open) {
+            conn.send(message);
+        } else {
+            console.info('connection not open', conn);
+        }
     });
   }
 }
