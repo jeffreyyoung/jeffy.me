@@ -129,11 +129,15 @@ css`
     --chip-width: 50px;
   }
   button {
+    all: unset;
+    background-color: rgb(239, 239, 239);
+    border: 1px solid black;
+    padding: 3px 3px;
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   }
   .board {
     display: flex;
-    gap: 12px;
+    gap: 3px;
     min-height: ;
   }
 
