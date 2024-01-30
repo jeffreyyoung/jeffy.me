@@ -135,23 +135,28 @@ css`
     padding: 3px 3px;
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   }
+  button:focus {
+    outline: 2px solid dodgerblue;
+  }
   .board {
     display: flex;
     gap: 3px;
-    min-height: ;
+    justify-content: center;
+    overflow: scroll;
+    max-width: 100%;
   }
 
   .column {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     min-width: var(--chip-width);
   }
   .chips {
     display: flex;
     flex-direction: column-reverse;
-    gap: 12px;
-    min-height: calc(var(--chip-width) * 7 + 12px * 6 + 12px);
+    gap: 6px;
+    min-height: calc(var(--chip-width) * 7 + 6px * 6 + 6px);
   }
 
   .chip {

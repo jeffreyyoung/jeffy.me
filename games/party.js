@@ -139,6 +139,7 @@ const root = document.getElementById("root");
 
 const renderGames = () => {
   return games.map((game) => {
+    const selected = van.derive(() => selectedGameUrl.val === game.url);
     return button(
       {
         style: () => `
@@ -149,9 +150,7 @@ const renderGames = () => {
                     padding: 6px 12px;
                     margin-right: 6px;
                     margin-bottom: 6px;
-                    outline: 4px solid ${
-                      selectedGameUrl.val === game.url ? "gold" : "transparent"
-                    };
+                    ${selected.val ? "outline: 4px solid gold;" : ""}
                   `,
         onclick: () => {
           room.send("setGame", { game: game.url });
@@ -162,6 +161,14 @@ const renderGames = () => {
     );
   });
 };
+
+// on escape, close menu
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    modalIsOpen.val = false;
+    document.getElementById("menu-button").focus();
+  }
+});
 
 // game
 van.add(
@@ -186,9 +193,16 @@ van.add(
             }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block;`,
         }),
         button(
-          { onclick: () => (modalIsOpen.val = true) },
+          {
+            id: "menu-button",
+            onclick: () => {
+              modalIsOpen.val = true;
+              document.getElementById("close-menu-button").focus();
+            },
+          },
           img({
             style: "padding: 1px; display: flex;",
+            alt: "menu",
             src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
           })
         )
@@ -314,9 +328,16 @@ van.add(
         "👻"
       ),
       button(
-        { onclick: () => (modalIsOpen.val = false) },
+        {
+          id: "close-menu-button",
+          onclick: () => {
+            document.getElementById("menu-button").focus();
+            modalIsOpen.val = false;
+          },
+        },
         img({
           style: "padding: 1px; display: flex;",
+          alt: "close menu",
           src: "https://esm.sh/feather-icons/dist/icons/x.svg",
         })
       )
