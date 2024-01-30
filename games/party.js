@@ -181,7 +181,7 @@ van.add(
       style: () => `background-color: ${selectedGame.val?.color || "ivory"};`,
     },
     nav(
-      h3("👻 ", () => selectedGame.val?.name || ""),
+      h3(() => selectedGame.val?.name || "👻"),
       div(
         {
           style:
@@ -260,7 +260,12 @@ van.add(
         },
         h2("hi ", () => user.val?.name, "! 👋"),
         p("what game do you want to play?"),
-        ...renderGames(),
+        div(
+          {
+            style: "display: flex; flex-direction: column; align-items: start;",
+          },
+          ...renderGames()
+        ),
 
         br(),
         br(),
