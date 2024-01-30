@@ -226,9 +226,7 @@ function update(state, viewerId) {
       ? html`<h1 style="text-align: center;">
             ${state.players.find((p) => p.id === state.winner)?.name} wins!
           </h1>
-          <div
-            style="display: flex; justify-content: center; padding-top: 48px;"
-          >
+          <div style="display: flex; justify-content: center;">
             <button @click=${() => game.action("reset", {})}>reset</button>
           </div> `
       : ""}
@@ -256,7 +254,7 @@ function update(state, viewerId) {
         player to get 4 chips in a row wins!
       </p>
     </details>
-    <div style="display: flex; justify-content: center; padding-top: 48px;">
+    <div style="display: flex; justify-content: center; padding-top: 12px;">
       <button @click=${() => game.action("reset", {})}>reset</button>
     </div>
   `;

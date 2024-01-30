@@ -27,6 +27,7 @@ import { Game } from "./utils/p2p/Game.js";
 /**
  * @typedef ActionMap
  * @type {{
+ *      reset: {},
  *      guess: { actor: string, coord: string, result: "correct" | "miss" },
  *      updateShouldShowWrongGuesses: { shouldShowWrongGuesses: boolean }
  * }}
@@ -62,7 +63,7 @@ function getUsedCoordsSet(
     words: {},
     shuffledCoords: [],
     shouldShowWrongGuesses: false,
-  },
+  }
 ) {
   const playerCoords = Object.values(gameState?.players || {})
     .map((player) => player.coord)
@@ -148,6 +149,17 @@ var server = new Game(
   ({}),
   {
     actions: {
+      reset: (state) => {
+        for (const key of Object.keys(state.words)) {
+          state.words[key] = getWord();
+        }
+        state.guesses = {};
+        for (const player of Object.values(state.players)) {
+          player.coord = getUnusedCoord(state);
+        }
+        state.shuffledCoords = createShuffledCoords();
+        return state;
+      },
       syncUsers: (state, { room }) => {
         for (const user of room.users) {
           if (!state.players[user.id]) {
@@ -184,7 +196,7 @@ var server = new Game(
         };
       },
     },
-  },
+  }
 );
 let username = "";
 server.gameLogic.emitter.on("change:state", (state, action) => {
@@ -348,7 +360,7 @@ function ui() {
       ? html`
           <p>
             🎉🎉${Object.values(gameState.guesses).filter(
-              (result) => result === "correct",
+              (result) => result === "correct"
             ).length}/25
             correct🎉🎉
           </p>
@@ -359,7 +371,7 @@ function ui() {
       ${Object.values(gameState.players || {}).map(
         (player) => html`
           <li>${player?.name} ${player?.isHost ? "(host)" : ""}</li>
-        `,
+        `
       )}
     </ul>
     <h4>settings</h4>
@@ -375,6 +387,9 @@ function ui() {
       />
       show wrong guesses
     </label>
+    <br />
+    <br />
+    <button @click=${() => server.action("reset", {})}>reset game</button>
   `;
 }
 

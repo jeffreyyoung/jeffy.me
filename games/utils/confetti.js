@@ -1,6 +1,6 @@
-export function doConfetti() {
+export function doConfetti(count = 3) {
   import("https://esm.sh/canvas-confetti@1.6.0").then(async (confetti) => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < count; i++) {
       confetti.default({
         particleCount: 100,
         angle: 60,
