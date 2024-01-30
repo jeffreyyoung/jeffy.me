@@ -19,6 +19,8 @@ import {
   span,
   a,
   h4,
+  b,
+  small,
 } from "./utils/tags.js";
 import {
   colors,
@@ -262,40 +264,55 @@ van.add(
 
         br(),
         br(),
-        h3("in your party"),
+        h3("in your party "),
         ...renderPartyUi()
       ),
-
-      //   create party
-      form(
+      div(
         {
           style: () => `
-                  padding: 12px;
-                  ${
-                    mainViewContents.val === "create-party"
-                      ? ""
-                      : "display: none;"
-                  }
-                `,
-          onsubmit: (e) => {
-            e.preventDefault();
-            if (!user.val?.id) {
-              return;
-            }
-            const userId = user.val.id;
-
-            partyId.val = makePartyId(userId);
-          },
+              padding: 12px;
+              ${mainViewContents.val === "create-party" ? "" : "display: none;"}
+            `,
         },
+        //   create party
         h2("hi ", () => user.val?.name, "! 👋"),
         p("do you want to create a party?"),
-        button({ name: "action", value: "create" }, "create"),
+        form(
+          {
+            onsubmit: (e) => {
+              e.preventDefault();
+              if (!user.val?.id) {
+                return;
+              }
+              partyId.val = makePartyId(user.val.id);
+            },
+          },
+          button({ type: "submit", name: "action", value: "create" }, "create")
+        ),
         p("or join existing party?"),
-        input({
-          name: "lobby-id",
-          placeholder: "lobby id",
-        }),
-        button({ name: "action", value: "join" }, "join")
+        form(
+          {
+            onsubmit: (e) => {
+              e.preventDefault();
+              if (!user.val?.id) {
+                return;
+              }
+              const formValues = new FormData(e.target);
+              const localId = formValues.get("party-id");
+
+              if (typeof localId !== "string") return;
+
+              if (localId.length < 1) return;
+
+              partyId.val = localId;
+            },
+          },
+          input({
+            name: "party-id",
+            placeholder: "party id",
+          }),
+          button({ type: "submit", name: "action", value: "join" }, "join")
+        )
       ),
 
       //   in game
@@ -347,9 +364,21 @@ van.add(
         style:
           "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
       },
-      h2("games"),
+      h2("menu"),
+      h3("games"),
       ...renderGames(),
-      h2("in your party"),
+      h3(
+        "in your party ",
+        small(
+          {
+            style:
+              "font-weight: normal; padding: 6px; font-size: 1rem; background-color: #ddd;",
+          },
+          "(",
+          partyId,
+          ")"
+        )
+      ),
 
       ...renderPartyUi(),
       br(),

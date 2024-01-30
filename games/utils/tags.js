@@ -8,6 +8,7 @@ export const {
   li,
   nav,
   main,
+  b,
   p,
   h1,
   h2,
