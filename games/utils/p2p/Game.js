@@ -1,3 +1,4 @@
+import { getQueryParam } from "../random.js";
 import { State } from "./State.js";
 
 /**
@@ -48,12 +49,16 @@ export class Game {
    * @param {StateLogicArgs<ActionMap, StateShape>} logicArgs
    */
   constructor(initialState, customActions, logicArgs) {
-    this.gameName = window.location.pathname;
+    const pathname = window.location.pathname;
+    this.gameName =
+      pathname === "/games/embeds/embed.html"
+        ? getQueryParam("game")
+        : pathname;
     // @ts-ignore
     this.gameLogic = new State(
       /** @type {ActionMap} */ ({}),
       initialState,
-      logicArgs,
+      logicArgs
     );
 
     this.onStateChange = this.gameLogic.onStateChange.bind(this.gameLogic);
@@ -63,7 +68,9 @@ export class Game {
 
     // if we're not in an iframe, redirect to the player
     if (window.location === window.parent.location) {
-      window.location.href = `/games/party.html?game=${encodeURIComponent(window.location.pathname)}`;
+      window.location.href = `/games/party.html?game=${encodeURIComponent(
+        window.location.pathname
+      )}`;
     }
 
     this.action("syncUsers", {
@@ -91,7 +98,7 @@ export class Game {
       this.gameLogic.reconcileState(
         // @ts-expect-error
         message.resultState,
-        message.action,
+        message.action
       );
     }
 

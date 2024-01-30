@@ -1,5 +1,5 @@
-import { games } from "../game-index";
-import { getQueryParam } from "../utils/random";
+import { games } from "../game-index.js";
+import { getQueryParam } from "../utils/random.js";
 
 const game = getQueryParam("game");
 
