@@ -39,6 +39,25 @@
 """""""""``  ``    `` ``""""""""""\||/""""""""""
         </pre
       >
+      <script>
+        const pre = document.querySelector("pre");
+        let picture = pre.innerHTML;
+        let eyeIndexes = [];
+        for (let i = 0; i < picture.length; i++) {
+          if (picture[i] === "•") {
+            eyeIndexes.push(i);
+          }
+        }
+
+        setInterval(() => {
+          let shouldBlink = Math.random() < 0.4;
+          let eye = shouldBlink ? "-" : "•";
+          eyeIndexes.forEach((i) => {
+            picture = picture.slice(0, i) + eye + picture.slice(i + 1);
+          });
+          pre.innerHTML = picture;
+        }, 3000); // 20 fps
+      </script>
 
       <h3>in progress</h3>
       <ul>
