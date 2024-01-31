@@ -39,24 +39,33 @@
 """""""""``  ``    `` ``""""""""""\||/""""""""""
         </pre
       >
-      <script>
+      <script type="module">
         const pre = document.querySelector("pre");
-        let picture = pre.innerHTML;
-        let eyeIndexes = [];
-        for (let i = 0; i < picture.length; i++) {
-          if (picture[i] === "•") {
-            eyeIndexes.push(i);
+        const picture = pre.innerHTML;
+
+        function sleep(ms) {
+          return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        pre.addEventListener("click", blink);
+        await sleep(1000);
+        await blink();
+
+        while (true) {
+          await sleep(1000);
+          if (Math.random() < 0.3) {
+            await blink();
           }
         }
 
-        setInterval(() => {
-          let shouldBlink = Math.random() < 0.4;
-          let eye = shouldBlink ? "-" : "•";
-          eyeIndexes.forEach((i) => {
-            picture = picture.slice(0, i) + eye + picture.slice(i + 1);
-          });
+        async function blink() {
+          const eyesClosed = pre.innerHTML !== picture;
+          if (eyesClosed) return;
+
+          pre.innerHTML = picture.split("•").join("-");
+          await sleep(1000);
           pre.innerHTML = picture;
-        }, 3000); // 20 fps
+        }
       </script>
 
       <h3>in progress</h3>

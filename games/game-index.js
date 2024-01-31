@@ -36,6 +36,9 @@ export const games = [
     url: "/games/scum.html",
     color: "lightpink",
   },
+  // wordle race
+  // sudoku race
+  // tallest tower https://codepen.io/ste-vg/pen/ppLQNW
   // {
   //   name: "air hockey 🏒",
   //   url: "/games/air-hockey.html",
