@@ -220,6 +220,7 @@ van.add(
       //   select user name
       form(
         {
+          class: "container",
           style: () => `
               padding: 12px;
               ${
@@ -253,6 +254,7 @@ van.add(
       //   select game
       div(
         {
+          class: "container",
           style: () => `
               padding: 12px;
               ${mainViewContents.val === "select-game" ? "" : "display: none;"}
@@ -274,6 +276,7 @@ van.add(
       ),
       div(
         {
+          class: "container",
           style: () => `
               padding: 12px;
               ${mainViewContents.val === "create-party" ? "" : "display: none;"}
@@ -366,6 +369,7 @@ van.add(
     ),
     main(
       {
+        class: "container",
         style:
           "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
       },

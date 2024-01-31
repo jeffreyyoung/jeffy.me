@@ -2,6 +2,7 @@ import { html, render } from "https://esm.sh/lit-html@3.1.1";
 import { words } from "./cross-clues-words.js";
 import { shuffle } from "./utils/random.js";
 import { Game } from "./utils/p2p/Game.js";
+import { doConfetti } from "./utils/confetti.js";
 /**
  * @typedef Player
  * @type {{
@@ -199,8 +200,17 @@ var server = new Game(
   }
 );
 let username = "";
+let hasDoneConfetti = false;
 server.gameLogic.emitter.on("change:state", (state, action) => {
   username = server.userId;
+  let isDone = getUnguessedCoordCount(state) === 0;
+  if (isDone && !hasDoneConfetti) {
+    hasDoneConfetti = true;
+    doConfetti();
+  } else {
+    hasDoneConfetti = false;
+  }
+
   update();
 });
 

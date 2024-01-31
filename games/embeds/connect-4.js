@@ -1,3 +1,4 @@
+import { doConfetti } from "../utils/confetti.js";
 import { css } from "../utils/css.js";
 import { Game } from "../utils/p2p/Game.js";
 import { render, html } from "https://esm.sh/lit-html@3.1.1";
@@ -110,20 +111,19 @@ const game = new Game(
 );
 let confettiShown = false;
 game.onStateChange((state) => {
-  console.log("render!", game);
+  if (confettiShown && !state.winner) {
+    confettiShown = false;
+  }
   update(state, game.userId);
   if (state.winner && !confettiShown) {
     confettiShown = true;
-    import("../utils/confetti.js").then((confetti) => {
-      confetti.doConfetti();
-    });
+    doConfetti(1);
   }
 });
 
 const root = document.getElementById("root");
 css`
   :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     font-size: 1em;
     --chip-color: gray;
     --chip-width: 50px;
@@ -133,7 +133,7 @@ css`
     background-color: rgb(239, 239, 239);
     border: 1px solid black;
     padding: 3px 3px;
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    text-align: center;
   }
   button:focus {
     outline: 2px solid dodgerblue;
@@ -170,6 +170,10 @@ css`
     align-items: center;
     justify-content: center;
     font-size: calc(var(--chip-width) / 2);
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   @keyframes dropIn {
@@ -227,40 +231,43 @@ function update(state, viewerId) {
         `
       )}
     </div>
-    ${state.winner
-      ? html`<h1 style="text-align: center;">
-            ${state.players.find((p) => p.id === state.winner)?.name} wins!
-          </h1>
-          <div style="display: flex; justify-content: center;">
-            <button @click=${() => game.action("reset", {})}>reset</button>
-          </div> `
-      : ""}
-    <p
-      style="display: flex; align-items: center; justify-content: center; gap: 12px;"
-    >
-      <span
-        style="display: inline-block; padding: 6px; background-color: ${curPlayer.color ||
-        "gray"}"
-        >${curPlayer?.emoji}</span
-      >${curPlayer.id === viewerId ? "your" : curPlayer?.name + "'s"} turn
-    </p>
-    <ul>
-      ${state.players.map(
-        (p) =>
-          html`<li>
+    <div class="container">
+      ${state.winner
+        ? html`<h1 style="text-align: center;">
+              ${state.players.find((p) => p.id === state.winner)?.name} wins!
+            </h1>
+            <div style="display: flex; justify-content: center;">
+              <button @click=${() => game.action("reset", {})}>reset</button>
+            </div> `
+        : ""}
+      <p
+        style="display: flex; align-items: center; justify-content: center; gap: 12px;"
+      >
+        <span
+          style="display: inline-block; padding: 6px; background-color: ${curPlayer.color ||
+          "gray"}"
+          >${curPlayer?.emoji}</span
+        >${curPlayer.id === viewerId ? "your" : curPlayer?.name + "'s"} turn
+      </p>
+      <h4>players</h4>
+      <ul>
+        ${state.players.map(
+          (p) =>
+            html`<li>
             <span style="background-color: ${p.color}">${p.emoji} ${p.name}<span>
           </li>`
-      )}
-    </ul>
-    <details open>
-      <summary>how to play</summary>
-      <p>
-        Each player takes turns placing a chip in one of the columns. The first
-        player to get 4 chips in a row wins!
-      </p>
-    </details>
-    <div style="display: flex; justify-content: center; padding-top: 12px;">
-      <button @click=${() => game.action("reset", {})}>reset</button>
+        )}
+      </ul>
+      <details open>
+        <summary>how to play</summary>
+        <p>
+          Each player takes turns placing a chip in one of the columns. The
+          first player to get 4 chips in a row wins!
+        </p>
+      </details>
+      <div style="display: flex; justify-content: center; padding-top: 12px;">
+        <button @click=${() => game.action("reset", {})}>reset</button>
+      </div>
     </div>
   `;
   render(ui, root);

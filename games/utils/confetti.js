@@ -1,4 +1,4 @@
-export function doConfetti(count = 3) {
+export function doConfetti(count = 1) {
   import("https://esm.sh/canvas-confetti@1.6.0").then(async (confetti) => {
     for (let i = 0; i < count; i++) {
       confetti.default({
