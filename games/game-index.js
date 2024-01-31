@@ -44,4 +44,6 @@ export const games = [
   //   url: "/games/air-hockey.html",
   //   color: "aqua",
   // },
+  // symphony
+  // users must move touch in circles at same rate to make music
 ];

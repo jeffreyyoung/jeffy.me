@@ -368,11 +368,18 @@ function ui() {
       : ""}
     ${remainingTileCount === 0
       ? html`
-          <p>
-            🎉🎉${Object.values(gameState.guesses).filter(
+          <button
+            style="display: block; margin: 0 auto;"
+            @click=${() => server.action("reset", {})}
+          >
+            play again
+          </button>
+          <p style="text-align: center;">
+            🎉🎉
+            ${Object.values(gameState.guesses).filter(
               (result) => result === "correct"
             ).length}/25
-            correct🎉🎉
+            correct 🎉🎉
           </p>
         `
       : ""}
