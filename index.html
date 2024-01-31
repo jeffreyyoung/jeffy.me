@@ -49,22 +49,23 @@
 
         pre.addEventListener("click", blink);
         await sleep(1000);
-        await blink();
+        blink();
 
+        setIn;
         while (true) {
           await sleep(1000);
           if (Math.random() < 0.3) {
-            await blink();
+            blink();
           }
         }
-
-        async function blink() {
-          const eyesClosed = pre.innerHTML !== picture;
-          if (eyesClosed) return;
-
+        var openEyesTimeoutId = 0;
+        function blink() {
           pre.innerHTML = picture.split("•").join("-");
-          await sleep(1000);
-          pre.innerHTML = picture;
+
+          clearTimeout(openEyesTimeoutId);
+          openEyesTimeoutId = setTimeout(() => {
+            pre.innerHTML = picture;
+          }, 1000);
         }
       </script>
 
