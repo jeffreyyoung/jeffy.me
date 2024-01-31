@@ -13,7 +13,7 @@ import { colors, emojis } from "../game-values.js";
 function getAvailableColor(pref, users) {
   let available = arrayDiff(
     users.map((u) => u.color),
-    colors,
+    colors
   );
   console.log("available", available, pref);
   if (available.includes(pref)) {
@@ -31,7 +31,7 @@ function getAvailableColor(pref, users) {
 function getAvailableEmoji(pref, users) {
   let available = arrayDiff(
     users.map((u) => u.emoji),
-    emojis,
+    emojis
   );
   if (available.includes(pref)) {
     return pref;
@@ -104,12 +104,20 @@ export class Room {
             state.users[userIndex] = user;
             return state;
           },
+          kickUser: (state, { userId }, actor) => {
+            let userIndex = state.users.findIndex((u) => u.id === userId);
+            if (userIndex === -1) {
+              return state;
+            }
+            state.users.splice(userIndex, 1);
+            return state;
+          },
           setGame: (state, { game }, actor) => {
             state.game = game;
             return state;
           },
         },
-      },
+      }
     );
 
     this.roomState.emitter.on("change:state", (state, action) => {
@@ -193,9 +201,6 @@ export class Room {
     return true;
   }
 
-  setupPeerTimeoutMs = 1000;
-  connectToHostTimeoutMs = 1000;
-
   getHostRoomId() {
     return "jeffydotme-" + this.roomId;
   }
@@ -223,18 +228,14 @@ export class Room {
       console.error("setupPeer.open", e);
       if (e.type === "peer-unavailable" && !this.isHost) {
         // this probably means the host is gone
-        setTimeout(
-          () => this.connectToHost(),
-          Math.max((this.connectToHostTimeoutMs *= 2), 5000),
-        );
+        setTimeout(() => this.connectToHost(), 1000);
       }
     });
 
     this.peer.on("close", () => {
       console.error("setupPeer.close");
       this.peer.destroy();
-      setTimeout(() => this.setupPeer(), this.setupPeerTimeoutMs);
-      this.setupPeerTimeoutMs = Math.max((this.setupPeerTimeoutMs *= 2), 5000);
+      setTimeout(() => this.setupPeer(), 1000);
     });
 
     return this.peer;

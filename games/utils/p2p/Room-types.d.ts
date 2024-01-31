@@ -9,6 +9,7 @@ export type RoomActionMap = {
   userJoin: { user: RoomState["users"][number] };
   updateUser: { user: RoomState["users"][number] };
   userLeave: { user: RoomState["users"][number] };
+  kickUser: { userId: string };
 };
 
 export type GameCommonActionMap = {
@@ -28,7 +29,7 @@ export type AddRoom<T> = {
 
 export type Action<
   ActionMap,
-  Key extends keyof ActionMap,
+  Key extends keyof ActionMap
 > = import("./State.js").ActionObject<ActionMap, Key>;
 // export type Action<ActionMap, Key extends keyof ActionMap> = {
 //   type: Key;
