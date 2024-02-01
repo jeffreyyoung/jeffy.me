@@ -151,7 +151,7 @@ const renderGames = () => {
                     border: 1px solid black;
                     color: black;
                     font-size: 1.17em;
-                    padding: 6px 12px;
+                    padding: 12px 12px;
                     margin-bottom: 12px;
                     ${selected.val ? "outline: 4px solid gold;" : ""}
                   `,
@@ -372,33 +372,37 @@ van.add(
     ),
     main(
       {
-        class: "container",
-        style: "padding: 12px; padding-top: 0; padding-bottom: 36px;",
+        style: "padding: 12px; padding-top: 0; padding-bottom: 48px;",
       },
-      h2("menu"),
-      h3("games"),
-      ...renderGames(),
-      h3(
-        "in your party ",
-        small(
-          {
-            style:
-              "font-weight: normal; padding: 6px; font-size: 1rem; background-color: #ddd;",
-          },
-          "(",
-          partyId,
-          ")"
-        )
-      ),
+      div(
+        {
+          class: "container",
+        },
+        h2("menu"),
+        h3("games"),
+        ...renderGames(),
+        h3(
+          "in your party ",
+          small(
+            {
+              style:
+                "font-weight: normal; padding: 6px; font-size: 1rem; background-color: #ddd;",
+            },
+            "(",
+            partyId,
+            ")"
+          )
+        ),
 
-      ...renderPartyUi(),
-      br(),
-      br(),
-      br(),
-      a({ href: window.location.pathname }, "leave party"),
-      br(),
-      br(),
-      a({ href: "/" }, "jeffy.me")
+        ...renderPartyUi(),
+        br(),
+        br(),
+        br(),
+        a({ href: window.location.pathname }, "leave party"),
+        br(),
+        br(),
+        a({ href: "/" }, "jeffy.me")
+      )
     )
   )
 );
