@@ -16,6 +16,13 @@ css`
     align-items: center;
     flex-direction: column;
   }
+
+  .panel button {
+    background: white;
+    color: black;
+    padding: 1rem 2rem;
+    border-radius: 99999999px;
+  }
   .panel * {
     text-align: center;
   }
@@ -237,11 +244,6 @@ window.addEventListener("keydown", function (event) {
   if (event.key == " ") {
     event.preventDefault();
     eventHandler();
-    return;
-  }
-  if (event.key == "R" || event.key == "r") {
-    event.preventDefault();
-    startGame();
     return;
   }
 });
