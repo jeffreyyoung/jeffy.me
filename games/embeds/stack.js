@@ -16,6 +16,9 @@ css`
     align-items: center;
     flex-direction: column;
   }
+  .panel * {
+    text-align: center;
+  }
 `;
 let camera, scene, renderer; // ThreeJS globals
 let world; // CannonJs world
