@@ -161,7 +161,7 @@ var server = new Game(
         state.shuffledCoords = createShuffledCoords();
         return state;
       },
-      syncUsers: (state, { room }) => {
+      syncUsers: (state, _, actor, { room }) => {
         for (const user of room.users) {
           if (!state.players[user.id]) {
             state.players[user.id] = {

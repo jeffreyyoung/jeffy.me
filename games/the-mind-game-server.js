@@ -85,8 +85,8 @@ export const game = new Game(
   ({}),
   {
     actions: {
-      syncUsers: (state, payload) => {
-        for (let user of payload.room.users) {
+      syncUsers: (state, payload, actor, { room }) => {
+        for (let user of room.users) {
           if (!state.players[user.id]) {
             state.players[user.id] = {
               id: user.id,
@@ -101,7 +101,7 @@ export const game = new Game(
               let dealer = createDeck(
                 Object.values(state.players)
                   .flatMap((player) => player.cards)
-                  .map((card) => card.name),
+                  .map((card) => card.name)
               );
               for (let i = 0; i < state.level; i++) {
                 if (!dealer.hasMoreCards()) {
@@ -127,7 +127,7 @@ export const game = new Game(
 
         if (
           Object.values(state.players).every(
-            (player) => player.status === "ready",
+            (player) => player.status === "ready"
           )
         ) {
           const dealer = createDeck();
@@ -167,7 +167,7 @@ export const game = new Game(
 
         card.status = isCorrect ? "played-correct" : "played-incorrect";
         state.history.unshift(
-          `${isCorrect ? "✅" : "❌"} ${actor} played ${card.name}`,
+          `${isCorrect ? "✅" : "❌"} ${actor} played ${card.name}`
         );
         if (!isCorrect) {
           state.mistakeCount++;
@@ -190,5 +190,5 @@ export const game = new Game(
         return state;
       },
     },
-  },
+  }
 );

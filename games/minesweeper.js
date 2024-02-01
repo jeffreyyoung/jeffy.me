@@ -160,7 +160,7 @@ const server = new Game(
   ({}),
   {
     actions: {
-      syncUsers: (state, { room }) => {
+      syncUsers: (state, payload, actor, { room }) => {
         for (const user of room.users) {
           state.players[user.id] = {
             name: user.name,
@@ -340,7 +340,7 @@ const GameUI = div(
               isGameOver.val || cell.val.status !== "hidden"
                 ? "revealed-tile"
                 : "",
-              
+
               cell.val.type === "safe"
                 ? "tile-neighbors-" + cell.val.neighboringBombCount
                 : "",

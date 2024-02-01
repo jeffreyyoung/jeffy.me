@@ -131,7 +131,7 @@ const initial = {
 
 const gameState = reactive(
   /** @type {State} */
-  (JSON.parse(JSON.stringify(initial))),
+  (JSON.parse(JSON.stringify(initial)))
 );
 
 /**
@@ -150,8 +150,8 @@ const server = new Game(
 
   {
     actions: {
-      syncUsers(state, payload, actor) {
-        for (const user of payload.room.users) {
+      syncUsers(state, payload, actor, { room }) {
+        for (const user of room.users) {
           if (!state.players.find((p) => p.id === user.id)) {
             state.players.push({
               id: user.id,
@@ -170,7 +170,7 @@ const server = new Game(
         }
 
         let playerCards = Object.values(state.cards).filter((c) =>
-          c.pileName.startsWith(`player-${payload.id}`),
+          c.pileName.startsWith(`player-${payload.id}`)
         );
 
         for (let i = 0; i < playerCards.length; i++) {
@@ -222,7 +222,7 @@ const server = new Game(
         }
         // deal cards
         const shuffled = Object.values(state.cards).sort(
-          () => Math.random() - 0.5,
+          () => Math.random() - 0.5
         );
 
         for (let i = 0; i < shuffled.length; i++) {
@@ -277,7 +277,7 @@ const server = new Game(
         return state;
       },
     },
-  },
+  }
 );
 
 server.onStateChange((state) => {
@@ -304,7 +304,7 @@ const localState = reactive(
       };
       return acc;
     }, {}),
-  }),
+  })
 );
 
 // @ts-ignore
@@ -591,7 +591,7 @@ function Card(c) {
         ].join(" "),
     },
     p(valueToCharacter(c.value)),
-    p(suitToSymbol(c.suit)),
+    p(suitToSymbol(c.suit))
   );
 }
 
@@ -615,7 +615,7 @@ van.add(
           class: () => `game`,
         }),
       gameState.cards,
-      (c) => Card(c.val),
+      (c) => Card(c.val)
     ),
     list(
       () => div({ class: "player-area" }),
@@ -629,7 +629,7 @@ van.add(
               [
                 `transform: translate(${getPlayerX(
                   gameState,
-                  player.val.id,
+                  player.val.id
                 )}, 8px);`,
                 status.val === "pre-game" || player.val.id === server.userId
                   ? "display: none;"
@@ -637,8 +637,8 @@ van.add(
                 `left: ${(windowWidth() / gameState.players.length) * i}px;`,
               ].join(" "),
           },
-          () => player.val.name,
-        ),
+          () => player.val.name
+        )
     ),
     div(
       {
@@ -654,7 +654,7 @@ van.add(
               status.val === "pre-game" ? "" : "display: none;",
             ].join(" "),
         },
-        "players",
+        "players"
       ),
       list(
         () =>
@@ -664,7 +664,7 @@ van.add(
               (status.val === "pre-game" ? "" : "display: none;"),
           }),
         gameState.players,
-        (player) => li(player.val.name),
+        (player) => li(player.val.name)
       ),
       button(
         {
@@ -677,15 +677,15 @@ van.add(
             ].join(" "),
           onclick: () => server.action("start", {}),
         },
-        "start",
+        "start"
       ),
       button(
         {
           style: () => [canPass.val ? "" : "display: none;"].join(" "),
           onclick: () => server.action("pass", {}),
         },
-        "pass",
-      ),
-    ),
-  ),
+        "pass"
+      )
+    )
+  )
 );

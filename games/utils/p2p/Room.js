@@ -42,7 +42,7 @@ function getAvailableEmoji(pref, users) {
 /**
  * @typedef {import("./Room-types.js").RoomState} RoomState
  * @typedef {import("./Room-types.js").RoomActionMap} RoomActionMap
- * @typedef {import("./Room-types.js").PeerMessage<RoomActionMap, RoomState>} PeerMessage;
+ * @typedef {import("./Room-types.js").PeerMessage<RoomActionMap, RoomState, {}>} PeerMessage;
  */
 export class Room {
   /** @type {Peer} */
@@ -125,7 +125,7 @@ export class Room {
     });
 
     window.addEventListener("message", (event) => {
-      /** @type {import('./Room-types.js').IFrameMessageBase<any, any>} */
+      /** @type {import('./Room-types.js').IFrameMessageOut<any, any>} */
       let message = event.data;
 
       if (message?.kind !== "iframe-message") {
@@ -307,33 +307,34 @@ export class Room {
    * @param {import('./Room-types.js').GameCommonActionMap[Type]} payload
    */
   sendRoomEventToIframe(type, payload) {
-    /** @type {import('./Room-types.js').IFrameMessageBase<typeof type, typeof payload>} */
-    let message = {
+    this.sendToIfame({
       gameName: this.roomState.state.game,
       action: {
         actor: this.userId,
         kind: "action",
         payload,
-        // @ts-expect-error
         type,
+        meta: null,
       },
       kind: "iframe-message",
       type: "action",
-    };
-
-    this.sendToIfame(message);
+    });
   }
   /**
    * Sends a message into the iframe and decorates it with extra information
-   * @param {import('./Room-types.js').IFrameMessageBase<any, any>} messageBase
+   * @param {import('./Room-types.js').IFrameMessageOut<any, any>} messageBase
    */
   sendToIfame(messageBase) {
     /** @type {import('./Room-types.js').IFrameMessageIn<any, any>} */
     let message = {
       ...messageBase,
-      room: this.roomState.state,
-      viewerIsHost: this.isHost,
-      viewerUserId: this.userId,
+      action: {
+        ...messageBase.action,
+        meta: {
+          viewerId: this.userId,
+          room: this.roomState.state,
+        },
+      },
     };
     let iframe = document.querySelector("iframe");
     if (!iframe) {
@@ -345,7 +346,7 @@ export class Room {
 
   /**
    *
-   * @param {import('./Room-types.js').IFrameMessageBase<any, any>} message
+   * @param {import('./Room-types.js').IFrameMessageOut<any, any>} message
    */
   handleIframeMessage(message) {
     /** @type {PeerMessage} */
@@ -353,7 +354,9 @@ export class Room {
       kind: "peer-message",
       type: "iframe-relay",
       gameName: message.gameName,
-      data: message,
+      data: {
+        ...message,
+      },
     };
 
     if (message.type === "action-result" && this.isHost) {

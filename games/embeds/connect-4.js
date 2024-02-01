@@ -30,7 +30,7 @@ const game = new Game(
   ({}),
   {
     actions: {
-      syncUsers: (state, { room }, actor) => {
+      syncUsers: (state, payload, actor, { room }) => {
         state.players = room.users.map((user) => {
           return {
             id: user.id,
@@ -98,7 +98,7 @@ const game = new Game(
         console.log("state.turn", state.turn);
         return state;
       },
-      reset: (state, { room }) => {
+      reset: (state, payload, actor, { room }) => {
         state.phase = "pre-game";
         state.turn = "";
         state.winner = "";

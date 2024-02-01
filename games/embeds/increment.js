@@ -15,7 +15,7 @@ const game = new Game(
         return state;
       },
     },
-  },
+  }
 );
 
 game.onStateChange((state) => {

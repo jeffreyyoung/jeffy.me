@@ -11,8 +11,6 @@ import { State } from "./State.js";
  *    type: Key,
  *    payload: ActionMap[Key]
  * }} ActionObject
- *
- * @typedef {import('./Room-types.js').RoomActionMap} HostActionMap
  */
 
 /**
@@ -20,7 +18,7 @@ import { State } from "./State.js";
  * @template {{ version: string }} State
  * @typedef {{
  *    actions: {
- *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K] & { room: RoomState }, actor: string) => State
+ *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string, meta: import('./Room-types.js').GameMeta) => State
  *    },
  * }} StateLogicArgs
  */
@@ -35,7 +33,7 @@ import { State } from "./State.js";
  * @template {CustomActions & import('./Room-types.js').GameCommonActionMap} ActionMap
  */
 export class Game {
-  /** @type {State<import("./Room-types.js").AddRoom<ActionMap>, StateShape>} */
+  /** @type {State<ActionMap, StateShape, import('./Room-types.js').GameMeta>} */
   gameLogic;
 
   /** @type {RoomState} */
@@ -103,25 +101,24 @@ export class Game {
     }
 
     if (message.type === "action") {
-      this.userId = message.viewerUserId;
-      const result = this.gameLogic.handleAction({
-        ...message.action,
-        payload: {
-          ...message.action.payload,
-          room: message.room,
-        },
-      });
+      this.userId = message.action.meta.viewerId;
+      const result = this.gameLogic.handleAction(message.action);
+
       this.sendMessage({
         ...message,
         type: "action-result",
         resultState: result,
+        action: {
+          ...message.action,
+          meta: null,
+        },
       });
     }
   }
 
   /**
    *
-   * @param {import('./Room-types.js').IFrameMessageBase<ActionMap, StateShape>} message
+   * @param {import('./Room-types.js').IFrameMessageOut<ActionMap, StateShape>} message
    */
   sendMessage(message) {
     console.log("iframe message sent", message);
@@ -141,6 +138,7 @@ export class Game {
         type: type,
         actor: this.userId,
         payload: payload,
+        meta: null,
       },
       kind: "iframe-message",
       type: "action",

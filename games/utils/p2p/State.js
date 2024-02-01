@@ -5,11 +5,13 @@ import { EventEmitter } from "./event-emitter.js";
  *
  * @template ActionMap
  * @template {keyof ActionMap} Key
+ * @template {any} Meta
  * @typedef {{
  *    actor: string,
  *    kind: 'action',
  *    type: Key,
  *    payload: ActionMap[Key]
+ *    meta: Meta | null
  * }} ActionObject
  *
  * @typedef {{
@@ -23,9 +25,10 @@ import { EventEmitter } from "./event-emitter.js";
 /**
  * @template ActionMap
  * @template {{ version: string }} State
+ * @template Meta
  * @typedef {{
  *    actions: {
- *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string) => State
+ *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string, meta: Meta) => State
  *    },
  * }} StateLogicArgs
  */
@@ -33,22 +36,22 @@ import { EventEmitter } from "./event-emitter.js";
 /**
  * @template ActionMap
  * @template {{ version: string }} Shape
- * @template ExtraMeta
+ * @template Meta
  */
 export class State {
-  /** @type {EventEmitter<{ "change:state": [Shape, ActionObject<ActionMap, keyof ActionMap>] }>} */
+  /** @type {EventEmitter<{ "change:state": [Shape, ActionObject<ActionMap, keyof ActionMap, Meta>] }>} */
   emitter = new EventEmitter();
 
   /** @type {Shape} */
   state;
 
-  /** @type {StateLogicArgs<ActionMap, Shape>} */
+  /** @type {StateLogicArgs<ActionMap, Shape, Meta>} */
   args;
 
   /**
    * @param {ActionMap} actionMap
    * @param {Shape} initialState
-   * @param {StateLogicArgs<ActionMap, Shape>} args
+   * @param {StateLogicArgs<ActionMap, Shape, Meta>} args
    */
   constructor(actionMap, initialState, args) {
     this.state = initialState;
@@ -57,7 +60,7 @@ export class State {
 
   /**
    * @param {Shape} val
-   * @param {ActionObject<ActionMap, keyof ActionMap>} action;
+   * @param {ActionObject<ActionMap, keyof ActionMap, Meta>} action;
    * */
   setState(val, action) {
     this.state = val;
@@ -73,13 +76,14 @@ export class State {
   }
 
   /**
-   * @param {ActionObject<ActionMap, keyof ActionMap>} action;
+   * @param {ActionObject<ActionMap, keyof ActionMap, Meta>} action;
    */
   produceNextState(action, version = Math.floor(Math.random() * 100000) + "") {
     let newState = this.args.actions[action.type]?.(
       this.state,
       action.payload,
       action.actor,
+      action.meta
     );
     newState.version = version;
 
@@ -92,19 +96,21 @@ export class State {
    * @param {ActionType} actionType
    * @param {ActionMap[ActionType]} params
    * @param {string} userId
-   * @returns {ActionObject<ActionMap, ActionType>}
+   * @param {Meta} meta
+   * @returns {ActionObject<ActionMap, ActionType, Meta>}
    */
-  createAction(actionType, params, userId) {
+  createAction(actionType, params, userId, meta) {
     return {
       kind: "action",
       type: actionType,
       payload: params,
       actor: userId,
+      meta,
     };
   }
 
   /**
-   * @param {ActionObject<ActionMap, keyof ActionMap>} action
+   * @param {ActionObject<ActionMap, keyof ActionMap, Meta>} action
    */
   handleAction(action) {
     let resultState = this.produceNextState(action);
@@ -114,7 +120,7 @@ export class State {
 
   /**
    * @param {Shape} resultState
-   * @param {ActionObject<ActionMap, keyof ActionMap>} action
+   * @param {ActionObject<ActionMap, keyof ActionMap, Meta>} action
    * @returns
    */
   reconcileState(resultState, action) {
