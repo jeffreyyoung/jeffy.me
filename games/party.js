@@ -173,6 +173,46 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/**
+ *
+ * @param {{
+ * name: () => string,
+ * menuIconSrc: string,
+ * onMenuClick: () => void
+ * }} param0
+ * @returns
+ */
+function NavBar({ name, menuIconSrc, onMenuClick }) {
+  return nav(
+    h3(name),
+    div(
+      {
+        style:
+          "display: flex; align-items: center; justify-content: center; gap: 6px;",
+      },
+
+      span({
+        style: () =>
+          `background-color: ${
+            connected.val ? "green" : "gold"
+          }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block; display: ${() =>
+            partyId.val ? "inline-block" : "none"};`,
+      }),
+      button(
+        {
+          id: "menu-button",
+          onclick: onMenuClick,
+        },
+        img({
+          style: "padding: 1px; display: flex;",
+          alt: "menu",
+          src: menuIconSrc,
+        })
+      )
+    )
+  );
+}
+
 // game
 van.add(
   root,
@@ -181,36 +221,14 @@ van.add(
       class: () => `page`,
       style: () => `background-color: ${selectedGame.val?.color || "ivory"};`,
     },
-    nav(
-      h3(() => selectedGame.val?.name || "👻"),
-      div(
-        {
-          style:
-            "display: flex; align-items: center; justify-content: center; gap: 6px;",
-        },
-
-        span({
-          style: () =>
-            `background-color: ${
-              connected.val ? "green" : "gold"
-            }; width: 0.5em; height: 0.5em; border-radius: 50%; display: inline-block;`,
-        }),
-        button(
-          {
-            id: "menu-button",
-            onclick: () => {
-              modalIsOpen.val = true;
-              document.getElementById("close-menu-button").focus();
-            },
-          },
-          img({
-            style: "padding: 1px; display: flex;",
-            alt: "menu",
-            src: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
-          })
-        )
-      )
-    ),
+    NavBar({
+      name: () => selectedGame.val?.name || "👻",
+      menuIconSrc: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
+      onMenuClick: () => {
+        modalIsOpen.val = true;
+        document.getElementById("close-menu-button").focus();
+      },
+    }),
     main(
       {
         class: "game-container",
@@ -348,28 +366,14 @@ van.add(
             `,
       style: () => "background-color: ivory;",
     },
-    nav(
-      h3(
-        {
-          "aria-hidden": "true",
-        },
-        "👻"
-      ),
-      button(
-        {
-          id: "close-menu-button",
-          onclick: () => {
-            document.getElementById("menu-button").focus();
-            modalIsOpen.val = false;
-          },
-        },
-        img({
-          style: "padding: 1px; display: flex;",
-          alt: "close menu",
-          src: "https://esm.sh/feather-icons/dist/icons/x.svg",
-        })
-      )
-    ),
+    NavBar({
+      name: () => "👻 menu",
+      menuIconSrc: "https://esm.sh/feather-icons@4.29.1/dist/icons/x.svg",
+      onMenuClick: () => {
+        document.getElementById("menu-button").focus();
+        modalIsOpen.val = false;
+      },
+    }),
     main(
       {
         style: "padding: 12px; padding-top: 0; padding-bottom: 48px;",
@@ -378,9 +382,6 @@ van.add(
         {
           class: "container",
         },
-        h2("menu"),
-        h3("games"),
-        ...renderGames(),
         h3(
           "in your party ",
           small(
@@ -395,6 +396,8 @@ van.add(
         ),
 
         ...renderPartyUi(),
+        h3("games"),
+        ...renderGames(),
         br(),
         br(),
         br(),

@@ -41,11 +41,11 @@ export const games = [
   //   url: "/games/embeds/harvest.js",
   //   color: "lightgreen",
   // },
-  // {
-  //   name: "🗼 stack",
-  //   url: "/games/embeds/stack.js",
-  //   color: "purple",
-  // },
+  {
+    name: "🗼 stack",
+    url: "/games/embeds/stack.js",
+    color: "magenta",
+  },
   // wordle race
   // sudoku race
   // tallest tower https://codepen.io/ste-vg/pen/ppLQNW
