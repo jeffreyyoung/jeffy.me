@@ -146,12 +146,13 @@ const renderGames = () => {
       {
         style: () => `
                     background-color: ${game.color};
+                    display: block;
+                    width: 100%;
                     border: 1px solid black;
                     color: black;
                     font-size: 1.17em;
                     padding: 6px 12px;
-                    margin-right: 6px;
-                    margin-bottom: 6px;
+                    margin-bottom: 12px;
                     ${selected.val ? "outline: 4px solid gold;" : ""}
                   `,
         onclick: () => {
@@ -372,8 +373,7 @@ van.add(
     main(
       {
         class: "container",
-        style:
-          "padding: 12px; padding-top: 0; padding-bottom: 36px; overflow-y: scroll;",
+        style: "padding: 12px; padding-top: 0; padding-bottom: 36px;",
       },
       h2("menu"),
       h3("games"),
