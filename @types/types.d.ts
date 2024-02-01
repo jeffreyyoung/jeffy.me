@@ -56,3 +56,11 @@ declare module "https://esm.sh/htm@3.1.1" {
   import Default from "htm";
   export default Default;
 }
+
+declare module "https://esm.sh/three@0.161.0" {
+  export * from "three";
+}
+
+declare module "https://esm.sh/cannon-es@0.20.0" {
+  export * from "cannon-es";
+}

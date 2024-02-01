@@ -36,6 +36,16 @@ export const games = [
     url: "/games/scum.html",
     color: "lightpink",
   },
+  // {
+  //   name: "harvest",
+  //   url: "/games/embeds/harvest.js",
+  //   color: "lightgreen",
+  // },
+  // {
+  //   name: "🗼 stack",
+  //   url: "/games/embeds/stack.js",
+  //   color: "purple",
+  // },
   // wordle race
   // sudoku race
   // tallest tower https://codepen.io/ste-vg/pen/ppLQNW

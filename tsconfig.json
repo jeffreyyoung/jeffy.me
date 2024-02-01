@@ -10,12 +10,12 @@
     "noEmit": true,
     "declarationDir": "types",
     "declaration": true,
-    "allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "**/*.js",
     "games/utils/p2p/Room-types.d.ts",
     "@types/types.d.ts",
-    "@types/generated/main.d.ts",
-  ],
+    "@types/generated/main.d.ts"
+  ]
 }
