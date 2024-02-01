@@ -14,16 +14,6 @@ import { State } from "./State.js";
  */
 
 /**
- * @template ActionMap
- * @template {{ version: string }} State
- * @typedef {{
- *    actions: {
- *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string, meta: import('./Room-types.js').GameMeta) => State
- *    },
- * }} StateLogicArgs
- */
-
-/**
  * @typedef {import('./Room-types.js').RoomState} RoomState
  */
 
@@ -44,7 +34,7 @@ export class Game {
   /**
    * @param {StateShape} initialState
    * @param {CustomActions} customActions
-   * @param {StateLogicArgs<ActionMap, StateShape>} logicArgs
+   * @param {import('./State.js').StateLogicArgs<ActionMap, StateShape, import('./Room-types.js').GameMeta>} logicArgs
    */
   constructor(initialState, customActions, logicArgs) {
     const pathname = window.location.pathname;

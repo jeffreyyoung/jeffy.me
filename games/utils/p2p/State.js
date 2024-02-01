@@ -28,7 +28,7 @@ import { EventEmitter } from "./event-emitter.js";
  * @template Meta
  * @typedef {{
  *    actions: {
- *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string, meta: Meta) => State
+ *      [K in keyof ActionMap]: (state: State, payload: ActionMap[K], actor: string, meta: Meta, invoke: (k: keyof ActionMap, payload: ActionMap[typeof k]) => State) => State
  *    },
  * }} StateLogicArgs
  */
@@ -83,7 +83,12 @@ export class State {
       this.state,
       action.payload,
       action.actor,
-      action.meta
+      action.meta,
+      (k, p) =>
+        this.produceNextState(
+          this.createAction(k, p, action.actor, action.meta),
+          version
+        )
     );
     newState.version = version;
 

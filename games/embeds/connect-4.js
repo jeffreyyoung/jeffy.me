@@ -98,13 +98,12 @@ const game = new Game(
         console.log("state.turn", state.turn);
         return state;
       },
-      reset: (state, payload, actor, { room }) => {
+      reset: (state, payload, actor, { room }, invoke) => {
         state.phase = "pre-game";
         state.turn = "";
         state.winner = "";
         state.columns = [];
-        game.action("syncUsers", { isFirstSync: false });
-        return state;
+        return invoke("syncUsers", { isFirstSync: false });
       },
     },
   }
