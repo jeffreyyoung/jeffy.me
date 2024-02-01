@@ -5,6 +5,16 @@ window.focus(); // Capture keys right away (by default focus is on editor)
 css`
   .panel {
     display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 2rem;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
   }
 `;
 let camera, scene, renderer; // ThreeJS globals
@@ -21,26 +31,26 @@ let robotPrecision; // Determines how precise the game is on autopilot
 document.body.innerHTML =
   document.body.innerHTML +
   `
-<div class="panel" id="score"></div>
-
 <div class="panel" id="instructions">
     <h1>Stack</h1>
-    <p>Click or press space to drop the block</p>
-    <p>Press R to restart</p>
+    <p>stack the blocks as high as you can</p>
+    <button>start</button>
 </div>
 
 <div class="panel" id="results">
-
     <h1>Game Over</h1>
     <p>Score: <span id="score">0</span></p>
-
-    <button onclick="startGame()">Restart</button>
-
+    <button>restart</button>
 </div>
 `;
 const scoreElement = document.getElementById("score");
 const instructionsElement = document.getElementById("instructions");
 const resultsElement = document.getElementById("results");
+
+document.querySelector("#results button").addEventListener("click", startGame);
+document
+  .querySelector("#instructions button")
+  .addEventListener("click", startGame);
 
 init();
 
@@ -50,6 +60,7 @@ function setRobotPrecision() {
 }
 
 function init() {
+  instructionsElement.style.display = "flex";
   autopilot = true;
   gameEnded = false;
   lastTime = 0;
@@ -120,9 +131,9 @@ function startGame() {
   stack = [];
   overhangs = [];
 
-  if (instructionsElement) instructionsElement.style.display = "none";
-  if (resultsElement) resultsElement.style.display = "none";
-  if (scoreElement) scoreElement.innerText = 0;
+  instructionsElement.style.display = "none";
+  resultsElement.style.display = "none";
+  scoreElement.innerText = "0";
 
   if (world) {
     // Remove every object from world
@@ -277,7 +288,7 @@ function splitBlockAndAddNextOneIfOverlaps() {
     const newDepth = topLayer.depth; // New layer has the same size as the cut top layer
     const nextDirection = direction == "x" ? "z" : "x";
 
-    if (scoreElement) scoreElement.innerText = stack.length - 1;
+    scoreElement.innerText = String(stack.length - 1);
     addLayer(nextX, nextZ, newWidth, newDepth, nextDirection);
   } else {
     missedTheSpot();
@@ -294,11 +305,11 @@ function missedTheSpot() {
     topLayer.width,
     topLayer.depth
   );
-  world.remove(topLayer.cannonjs);
+  world.removeBody(topLayer.cannonjs);
   scene.remove(topLayer.threejs);
 
   gameEnded = true;
-  if (resultsElement && !autopilot) resultsElement.style.display = "flex";
+  if (!autopilot) resultsElement.style.display = "flex";
 }
 
 function animation(time) {
