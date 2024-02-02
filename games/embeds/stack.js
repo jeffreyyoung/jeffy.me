@@ -1,7 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.161.0";
 import * as CANNON from "https://esm.sh/cannon-es@0.20.0";
 import { css } from "../utils/css.js";
-window.focus(); // Capture keys right away (by default focus is on editor)
+// window.focus(); // Capture keys right away (by default focus is on editor)
 css`
   .panel {
     display: none;
@@ -80,7 +80,7 @@ function init() {
 
   // Initialize CannonJS
   world = new CANNON.World();
-  world.gravity.set(0, -10, 0); // Gravity pulls things down
+  world.gravity.set(0, -20, 0); // Gravity pulls things down
   world.broadphase = new CANNON.NaiveBroadphase();
   world.solver.iterations = 40;
 
@@ -268,36 +268,37 @@ function splitBlockAndAddNextOneIfOverlaps() {
   const overhangSize = Math.abs(delta);
   const overlap = size - overhangSize;
 
-  if (overlap > 0) {
-    cutBox(topLayer, overlap, size, delta);
-
-    // Overhang
-    const overhangShift = (overlap / 2 + overhangSize / 2) * Math.sign(delta);
-    const overhangX =
-      direction == "x"
-        ? topLayer.threejs.position.x + overhangShift
-        : topLayer.threejs.position.x;
-    const overhangZ =
-      direction == "z"
-        ? topLayer.threejs.position.z + overhangShift
-        : topLayer.threejs.position.z;
-    const overhangWidth = direction == "x" ? overhangSize : topLayer.width;
-    const overhangDepth = direction == "z" ? overhangSize : topLayer.depth;
-
-    addOverhang(overhangX, overhangZ, overhangWidth, overhangDepth);
-
-    // Next layer
-    const nextX = direction == "x" ? topLayer.threejs.position.x : -10;
-    const nextZ = direction == "z" ? topLayer.threejs.position.z : -10;
-    const newWidth = topLayer.width; // New layer has the same size as the cut top layer
-    const newDepth = topLayer.depth; // New layer has the same size as the cut top layer
-    const nextDirection = direction == "x" ? "z" : "x";
-
-    scoreElement.innerText = String(stack.length - 1);
-    addLayer(nextX, nextZ, newWidth, newDepth, nextDirection);
-  } else {
+  if (overlap <= 0) {
     missedTheSpot();
+    return;
   }
+
+  cutBox(topLayer, overlap, size, delta);
+
+  // Overhang
+  const overhangShift = (overlap / 2 + overhangSize / 2) * Math.sign(delta);
+  const overhangX =
+    direction == "x"
+      ? topLayer.threejs.position.x + overhangShift
+      : topLayer.threejs.position.x;
+  const overhangZ =
+    direction == "z"
+      ? topLayer.threejs.position.z + overhangShift
+      : topLayer.threejs.position.z;
+  const overhangWidth = direction == "x" ? overhangSize : topLayer.width;
+  const overhangDepth = direction == "z" ? overhangSize : topLayer.depth;
+
+  addOverhang(overhangX, overhangZ, overhangWidth, overhangDepth);
+
+  // Next layer
+  const nextX = direction == "x" ? topLayer.threejs.position.x : -10;
+  const nextZ = direction == "z" ? topLayer.threejs.position.z : -10;
+  const newWidth = topLayer.width; // New layer has the same size as the cut top layer
+  const newDepth = topLayer.depth; // New layer has the same size as the cut top layer
+  const nextDirection = direction == "x" ? "z" : "x";
+
+  scoreElement.innerText = String(stack.length - 1);
+  addLayer(nextX, nextZ, newWidth, newDepth, nextDirection);
 }
 
 function missedTheSpot() {
