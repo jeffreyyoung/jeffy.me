@@ -64,3 +64,7 @@ declare module "https://esm.sh/three@0.161.0" {
 declare module "https://esm.sh/cannon-es@0.20.0" {
   export * from "cannon-es";
 }
+
+declare module "https://esm.sh/three-stdlib@2.29.4?deps=three@0.161.0" {
+  export * from "three-stdlib";
+}

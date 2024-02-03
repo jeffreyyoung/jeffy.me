@@ -24,6 +24,7 @@
     "react-dom": "^18.2.0",
     "sonner": "^1.3.1",
     "three": "^0.161.0",
+    "three-stdlib": "^2.29.4",
     "vanjs": "^0.1.1",
     "vanjs-ext": "^0.2.0",
     "vaul": "^0.8.9",
