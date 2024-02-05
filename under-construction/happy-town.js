@@ -85,7 +85,7 @@ controls.enablePan = true;
 /** @type {GameState} */
 let data = {
   "0_0": "skyblue",
-  "0_2": "green",
+  "-1_1": "green",
 };
 
 for (const [key, color] of Object.entries(data)) {
