@@ -33,6 +33,7 @@ import {
   user,
   makePartyId,
   makeUserId,
+  clearUser,
 } from "./utils/game-values.js";
 import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { stateFields, reactive, list } from "../deps/van-x.js";
@@ -450,6 +451,17 @@ van.add(
         br(),
         br(),
         a({ href: window.location.pathname }, "leave party"),
+        br(),
+        br(),
+        a(
+          {
+            href: window.location.pathname,
+            onclick: () => {
+              clearUser();
+            },
+          },
+          "logout"
+        ),
         br(),
         br(),
         a({ href: "/" }, "jeffy.me"),

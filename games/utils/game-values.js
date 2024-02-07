@@ -27,8 +27,13 @@ export const user = van.state(
     id: "",
     color: "",
     emoji: "",
-  },
+  }
 );
+
+export function clearUser() {
+  localStorage.removeItem("user");
+  user.val = { name: "", id: "", color: "", emoji: "" };
+}
 
 van.derive(() => {
   localStorage.setItem("user", JSON.stringify(user.val));
