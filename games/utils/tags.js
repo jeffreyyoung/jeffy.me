@@ -22,6 +22,7 @@ export const {
   div,
   span,
   summary,
+  pre,
   details,
   small,
   input,

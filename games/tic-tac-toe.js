@@ -63,7 +63,7 @@ const server = new Game(
           }
         }
         if (!state.turn) {
-          state.turn = state.players[0].emoji;
+          state.turn = state.players[0]?.emoji;
         }
         return state;
       },

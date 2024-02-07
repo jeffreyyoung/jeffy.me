@@ -21,6 +21,9 @@ import {
   h4,
   b,
   small,
+  details,
+  summary,
+  pre,
 } from "./utils/tags.js";
 import {
   colors,
@@ -35,6 +38,7 @@ import { recursiveAssign } from "./utils/recursiveAssign.js";
 import { stateFields, reactive, list } from "../deps/van-x.js";
 import { Room } from "./utils/p2p/Room.js";
 import { games as allGames } from "./game-index.js";
+import { safeStringify } from "./utils/safe-stringify.js";
 const games = allGames.filter((g) => !g.hidden);
 const qrCodeUrl = van.state("");
 van.derive(() => {
@@ -89,16 +93,29 @@ const iframeUrl = van.derive(() => {
   return selectedGameUrl.val;
 });
 
-const room = new Room(appState.game);
+// debug messages
+let messages = [];
+
+const room = new Room(appState.game, (name, ...args) => {
+  let stringified = safeStringify(name) + "\n" + safeStringify(args, null, 1);
+
+  console.log("room event", stringified);
+  messages.push(stringified);
+  let el = document.getElementById("debug-message");
+  if (!el) {
+    return;
+  }
+  el.querySelector("pre").innerText = messages.join(
+    "\n------------------------------------------------\n"
+  );
+});
 
 room.onStateChange((state) => {
   console.log("state update", state);
   recursiveAssign(appState, state);
 });
 
-const connected = van.derive(() => {
-  return false;
-});
+const connected = van.state(false);
 
 room.onConnectionChange((_connected) => {
   connected.val = _connected;
@@ -116,6 +133,7 @@ room.onConnectionChange((_connected) => {
 });
 
 van.derive(() => {
+  console.log("derive!");
   if (partyId.val && user.val?.id) {
     room.connect(isHost.val, user.val.id, partyId.val);
   }
@@ -434,7 +452,16 @@ van.add(
         a({ href: window.location.pathname }, "leave party"),
         br(),
         br(),
-        a({ href: "/" }, "jeffy.me")
+        a({ href: "/" }, "jeffy.me"),
+        br(),
+        br(),
+        details(
+          { id: "debug-message" },
+          summary("debug messages"),
+          pre({
+            style: "overflow-x: scroll; background-color: white; padding: 6px;",
+          })
+        )
       )
     )
   )

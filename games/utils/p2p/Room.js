@@ -59,10 +59,13 @@ export class Room {
   /** @type {StateLogic<RoomActionMap, RoomState>} */
   roomState;
 
+  /** @type {typeof console.log} */
+  log;
+
   /**
    * @param {string} initialGame
    */
-  constructor(initialGame = "") {
+  constructor(initialGame = "", onDebugMessage = console.log) {
     /** @type {RoomState} */
     const initialState = {
       version: "",
@@ -70,6 +73,9 @@ export class Room {
       users: [],
     };
 
+    this.log = onDebugMessage;
+
+    this.log("room: initialize room", initialState);
     this.roomState = new StateLogic(
       /** @type {RoomActionMap} */
       // @ts-ignore
@@ -78,6 +84,7 @@ export class Room {
       {
         actions: {
           userLeave: (state, { user }, actor) => {
+            this.log("room: userLeave", user);
             let userIndex = state.users.findIndex((u) => u.id === user.id);
             if (userIndex === -1) {
               return state;
@@ -86,6 +93,7 @@ export class Room {
             return state;
           },
           userJoin: (state, { user }, actor) => {
+            this.log("room: userJoin", user);
             if (state.users.find((u) => u.id === user.id)) {
               return state;
             }
@@ -95,6 +103,7 @@ export class Room {
             return state;
           },
           updateUser: (state, { user }, actor) => {
+            this.log("room: updateUser", user);
             let userIndex = state.users.findIndex((u) => u.id === user.id);
             if (userIndex === -1) {
               return state;
@@ -105,6 +114,7 @@ export class Room {
             return state;
           },
           kickUser: (state, { userId }, actor) => {
+            this.log("room: kickUser", userId);
             let userIndex = state.users.findIndex((u) => u.id === userId);
             if (userIndex === -1) {
               return state;
@@ -113,6 +123,7 @@ export class Room {
             return state;
           },
           setGame: (state, { game }, actor) => {
+            this.log("room: setGame", game);
             state.game = game;
             return state;
           },
@@ -176,12 +187,14 @@ export class Room {
 
   /** @param {boolean} connected */
   setConnected(connected) {
+    this.log("room: setConnected", connected);
     this.connected = connected;
     this.emitter.emit("change:connection", this.connected);
   }
 
   /** @param {(connected: boolean) => void} cb */
   onConnectionChange(cb) {
+    this.log("room: onConnectionChange");
     return this.emitter.on("change:connection", cb);
   }
 
@@ -194,7 +207,9 @@ export class Room {
     this.isHost = isHost;
     this.userId = userId;
     this.roomId = roomId;
+    this.log("room: connect", { isHost, userId, roomId });
     if (this.peer) {
+      this.log("room: Err already connected");
       throw new Error("Already connected");
     }
     this.peer = this.setupPeer();
@@ -206,12 +221,13 @@ export class Room {
   }
 
   setupPeer() {
+    let myPeerId = this.isHost ? this.getHostRoomId() : undefined;
+    this.log("room: setupPeer", myPeerId);
     this.peer = new Peer(this.isHost ? this.getHostRoomId() : undefined, {
       debug: 1,
     });
-    console.log("setupPeer", this.peer);
     this.peer.on("open", (id) => {
-      console.log("setupPeer.open", id);
+      this.log("room: peer open", id);
 
       if (this.isHost) {
         this.setConnected(true);
@@ -225,7 +241,7 @@ export class Room {
     });
 
     this.peer.on("error", (e) => {
-      console.error("setupPeer.open", e);
+      this.log("room: peer error", e);
       if (e.type === "peer-unavailable" && !this.isHost) {
         // this probably means the host is gone
         setTimeout(() => this.connectToHost(), 1000);
@@ -233,7 +249,7 @@ export class Room {
     });
 
     this.peer.on("close", () => {
-      console.error("setupPeer.close");
+      this.log("room: peer close");
       this.peer.destroy();
       setTimeout(() => this.setupPeer(), 1000);
     });
@@ -243,7 +259,7 @@ export class Room {
 
   listenForPeerConnections() {
     this.peer.on("connection", (conn) => {
-      console.log("listenForPeerConnections.connection", conn);
+      this.log("room: on connection - ", conn?.connectionId);
       this.connections.push(conn);
       conn.on("open", () => {
         /** @type {PeerMessage} */
@@ -252,21 +268,23 @@ export class Room {
           type: "state",
           resultState: this.roomState.state,
         };
-        console.log("peer connection open");
+        this.log("room: on connection open", initialMessage);
         conn.send(initialMessage);
       });
 
       conn.on("data", (data) => {
+        this.log("room: on connection data", data);
         console.log("listenForPeerConnections.data", data);
 
         // @ts-ignore
         this.onPeerMessage(data);
       });
       conn.on("close", () => {
-        console.log("listenForPeerConnections.close");
+        this.log("room: on connection close");
         this.connections = this.connections.filter((c) => c !== conn);
       });
       conn.on("error", (err) => {
+        this.log("room: on connection error", err);
         console.error("connection error", err);
         console.log("listenForPeerConnections.error");
       });
@@ -277,20 +295,24 @@ export class Room {
   connections = [];
 
   connectToHost() {
+    this.log("room: connectToHost");
     let conn = this.peer.connect(this.getHostRoomId());
     conn.on("error", (e) => {
+      this.log("room: host connection error", e);
       console.log("host connection error", e);
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("close", () => {
+      this.log("room: host connection closed");
       console.log("host connection closed");
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("open", () => {
+      this.log("room: host connection open");
       console.log("host connection open");
       this.connections.push(conn);
       this.setConnected(true);
