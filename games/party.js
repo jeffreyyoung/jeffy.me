@@ -473,7 +473,9 @@ van.add(
           pre({
             style: "overflow-x: scroll; background-color: white; padding: 6px;",
           })
-        )
+        ),
+        br(),
+        br()
       )
     )
   )

@@ -209,7 +209,7 @@ export class Room {
     this.roomId = roomId;
     this.log("room: connect", { isHost, userId, roomId });
     if (this.peer) {
-      this.log("room: Err already connected");
+      this.log("room: connect - err - already connected");
       throw new Error("Already connected");
     }
     this.peer = this.setupPeer();
@@ -221,13 +221,12 @@ export class Room {
   }
 
   setupPeer() {
-    let myPeerId = this.isHost ? this.getHostRoomId() : undefined;
-    this.log("room: setupPeer", myPeerId);
     this.peer = new Peer(this.isHost ? this.getHostRoomId() : undefined, {
       debug: 1,
     });
+    this.log("room: setupPeer - connecting as ", this.peer.id);
     this.peer.on("open", (id) => {
-      this.log("room: peer open", id);
+      this.log("room: setupPeer - open");
 
       if (this.isHost) {
         this.setConnected(true);
@@ -241,7 +240,7 @@ export class Room {
     });
 
     this.peer.on("error", (e) => {
-      this.log("room: peer error", e);
+      this.log("room: setupPeer - error", e);
       if (e.type === "peer-unavailable" && !this.isHost) {
         // this probably means the host is gone
         setTimeout(() => this.connectToHost(), 1000);
@@ -249,7 +248,7 @@ export class Room {
     });
 
     this.peer.on("close", () => {
-      this.log("room: peer close");
+      this.log("room: setupPeer - close");
       this.peer.destroy();
       setTimeout(() => this.setupPeer(), 1000);
     });
@@ -268,7 +267,7 @@ export class Room {
           type: "state",
           resultState: this.roomState.state,
         };
-        this.log("room: on connection open", initialMessage);
+        this.log("room: on connection open");
         conn.send(initialMessage);
       });
 
@@ -298,22 +297,22 @@ export class Room {
     this.log("room: connectToHost");
     let conn = this.peer.connect(this.getHostRoomId());
     conn.on("error", (e) => {
-      this.log("room: host connection error", e);
-      console.log("host connection error", e);
+      this.log("room: connectToHost - error", e);
+      console.log("connectToHost - error", e);
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("close", () => {
-      this.log("room: host connection closed");
-      console.log("host connection closed");
+      this.log("room: connectToHost - closed");
+      console.log("connectToHost - closed");
       this.connections = this.connections.filter((c) => c !== conn);
       this.setConnected(false);
       setTimeout(() => this.connectToHost(), 1000);
     });
     conn.on("open", () => {
-      this.log("room: host connection open");
-      console.log("host connection open");
+      this.log("room: connectToHost - open");
+      console.log("connectToHost - open");
       this.connections.push(conn);
       this.setConnected(true);
       conn.on("data", (data) => {
