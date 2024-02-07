@@ -136,10 +136,11 @@ const mainViewContents = van.derive(() => {
 });
 
 const modalIsOpen = van.state(false);
+const gamePickerIsOpen = van.state(false);
 
 const root = document.getElementById("root");
 
-const renderGames = () => {
+const renderGames = (onClick = () => {}) => {
   return games.map((game) => {
     const selected = van.derive(() => selectedGameUrl.val === game.url);
     return button(
@@ -158,6 +159,7 @@ const renderGames = () => {
         onclick: () => {
           room.send("setGame", { game: game.url });
           modalIsOpen.val = false;
+          onClick();
         },
       },
       game.name
@@ -176,9 +178,10 @@ document.addEventListener("keydown", (e) => {
 /**
  *
  * @param {{
- * name: () => string,
+ * name: () => any,
  * menuIconSrc: string,
  * onMenuClick: () => void
+ * onNameClick?: () => void
  * }} param0
  * @returns
  */
@@ -222,8 +225,27 @@ van.add(
       style: () => `background-color: ${selectedGame.val?.color || "ivory"};`,
     },
     NavBar({
-      name: () => selectedGame.val?.name || "👻",
-      menuIconSrc: "https://esm.sh/feather-icons@4.29.1/dist/icons/menu.svg",
+      name: () =>
+        selectedGame.val?.name
+          ? button(
+              {
+                style:
+                  "display: inline-flex; align-items: center; gap: 6px; border: none; background: none; cursor: pointer; text-align: start; padding: 0; color: black;",
+                onclick: () => {
+                  gamePickerIsOpen.val = !gamePickerIsOpen.val;
+                },
+              },
+              span(selectedGame.val.name),
+              img({
+                alt: "show game picker",
+                src: () =>
+                  gamePickerIsOpen.val
+                    ? "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-up.svg"
+                    : "https://esm.sh/feather-icons@4.29.1/dist/icons/chevron-down.svg",
+              })
+            )
+          : span("👻"),
+      menuIconSrc: "https://esm.sh/feather-icons@4.29.1/dist/icons/users.svg",
       onMenuClick: () => {
         modalIsOpen.val = true;
         document.getElementById("close-menu-button").focus();
@@ -279,19 +301,13 @@ van.add(
               ${mainViewContents.val === "select-game" ? "" : "display: none;"}
             `,
         },
-        h2("hi ", () => user.val?.name, "! 👋"),
-        p("what game do you want to play?"),
+        h2("what game do you want to play?"),
         div(
           {
             style: "display: flex; flex-direction: column; align-items: start;",
           },
           ...renderGames()
-        ),
-
-        br(),
-        br(),
-        h3("in your party "),
-        ...renderPartyUi()
+        )
       ),
       div(
         {
@@ -351,7 +367,23 @@ van.add(
               style:
                 "border: none; width: 100%; height: 100%; top: 0; left: 0; bottom: 0; right: 0; position: absolute;",
             })
-          : div()
+          : div(),
+      div(
+        {
+          style: () => `
+            display: ${gamePickerIsOpen.val ? "block" : "none"};
+            padding: 12px;
+            background-color: ${selectedGame.val?.color || "ivory"};
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            max-height: 100%;
+            overflow-y: auto;
+          `,
+        },
+        ...renderGames(() => (gamePickerIsOpen.val = false))
+      )
     )
   )
 );
@@ -396,8 +428,6 @@ van.add(
         ),
 
         ...renderPartyUi(),
-        h3("games"),
-        ...renderGames(),
         br(),
         br(),
         br(),
