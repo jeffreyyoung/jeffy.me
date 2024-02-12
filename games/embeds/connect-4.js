@@ -1,6 +1,7 @@
 import { doConfetti } from "../utils/confetti.js";
 import { css } from "../utils/css.js";
 import { Game } from "../utils/p2p/Game.js";
+import { randomItem } from "../utils/random.js";
 import { render, html } from "https://esm.sh/lit-html@3.1.1";
 /**
  * @typedef {{ reset: {}, place: { column: number } }} ActionMap
@@ -39,8 +40,8 @@ const game = new Game(
             emoji: user.emoji,
           };
         });
-        if (!state.players.find((p) => p.id === state.turn)) {
-          state.turn = state.players[0]?.id;
+        if (state.players.length > 0 && !state.players.find((p) => p.id === state.turn)) {
+          state.turn = randomItem(state.players)?.id;
         }
         console.log("syncUsers");
         let columns = Math.max(
