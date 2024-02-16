@@ -15,7 +15,16 @@
       * {
         font-family: monospace;
       }
+      html {
+        background-color: var(--bg-color, white);
+      }
     </style>
+    <script>
+      document.documentElement.style.setProperty(
+        "--bg-color",
+        `hsl(${Math.random() * 360}, 100%, 96%)`
+      );
+    </script>
   </head>
   <body style="font-size: 16px">
     <main style="max-width: 600px; margin: 0 auto">
@@ -82,16 +91,7 @@
       <h3>my games</h3>
       <ul class="games">
         <li>
-          <a
-            href="games/party.html"
-            style="
-              background-color: beige;
-              padding: 6px 12px;
-              margin-right: 6px;
-              line-height: calc(1rem + 12px);
-            "
-            >party</a
-          >
+          <a href="games/party.html">party</a>
           - play games in a group or solo. game state is shared peer to peer
           using webRTC
           <ul>
@@ -107,10 +107,9 @@
               <a href="games/minesweeper.html">speed minesweeper</a> - reveal
               the most tiles to win
             </li>
-            <li>connect 4</li>
           </ul>
         </li>
-        <li>
+        <!-- <li>
           <a href="games/block-dude.html">block dude</a> - a remake of the ti-83
           game
         </li>
@@ -133,7 +132,7 @@
         <li>
           <a href="games/flappy-watermelon-feast.html">catch the watermelons</a>
           - catch as many watermelons as you can (kaboom.js)
-        </li>
+        </li> -->
       </ul>
 
       <h3>my pages</h3>
